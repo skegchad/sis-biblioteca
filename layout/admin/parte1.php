@@ -264,7 +264,7 @@
                     alt="User Image"
                   />
                   <p>
-                    <?php echo $nombre; ?> - <?php echo $nombreusuario; ?>
+                    <?php echo $nombre.' '.$apellidos; ?> - <?php echo $nombreusuario; ?>
                   </p>
                 </li>
                 <!--end::User Image-->
@@ -305,7 +305,7 @@
         <!--begin::Sidebar Brand-->
         <div class="sidebar-brand">
           <!--begin::Brand Link-->
-          <a href="#" class="brand-link">
+          <a href="<?php echo $URL;?>/admin" class="brand-link">
             <!--begin::Brand Image-->
             <img
               src="<?php echo $URL;?>/public/assets/img/grupoProyecto/libros.png"
@@ -343,13 +343,13 @@
                 </a>
                 <ul class="nav nav-treeview">
                   <li class="nav-item">
-                    <a href="#" class="nav-link active">
+                    <a href="<?php echo $URL; ?>/admin/usuarios" class="nav-link active">
                       <i class="nav-icon bi bi-circle"></i>
                       <p>Listado de usuarios</p>
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a href="#" class="nav-link active">
+                    <a href="<?php echo $URL; ?>/admin/usuarios/create.php" class="nav-link active">
                       <i class="nav-icon bi bi-circle"></i>
                       <p>Crear usuarios</p>
                     </a>

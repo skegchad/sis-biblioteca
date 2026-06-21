@@ -21,11 +21,13 @@ include("../layout/admin/parte1.php");?>
                   <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
                 </ol>
               </div>
+              <hr>
             </div>
             <!--end::Row-->
           </div>
           <!--end::Container-->
         </div>
+
         <!--end::App Content Header-->
           <div class="row">
             <div class="col-md-4"></div>
