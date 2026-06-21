@@ -42,6 +42,7 @@
       onload="this.media = 'all'"
     />
     <!--end::Fonts-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
 
     <!--begin::Third Party Plugin(OverlayScrollbars)-->
     <link
