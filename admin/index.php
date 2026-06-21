@@ -58,7 +58,7 @@ include("../layout/admin/parte1.php");?>
                     </tr>
                     <tr>
                       <th scope="row">Fecha de nacimiento</th>
-                      <td><?php echo $fecha; ?></td>
+                      <td></td>
                     </tr>
                   </tbody>
                 </table>
