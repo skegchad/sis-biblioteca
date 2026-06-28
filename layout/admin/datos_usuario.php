@@ -17,4 +17,8 @@ foreach ($usuarios as $usuario){
     $paralelo = $usuario['paralelo'];
     $rutaFoto = $usuario['foto'];
 }
+
+if ($rutaFoto==""){
+    $rutaFoto="public/uploads/img/admin/default.jpg";
+}
 ?>

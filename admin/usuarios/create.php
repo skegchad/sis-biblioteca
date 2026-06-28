@@ -120,7 +120,7 @@ include("../../layout/admin/parte1.php");?>
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <button class="btn btn-primary" onclick="return confirm('¿Estás seguro de que esta información es correcta?')" type="submit">Registar Usuario</button>
+                                            <button class="btn btn-primary" type="button" onclick="confirmarRegistro(this)">Registrar Usuario</button>
                                         </div>
                                     </div>
                                     <div class="col-md-2"></div>
@@ -133,6 +133,30 @@ include("../../layout/admin/parte1.php");?>
             </div>
     </main>
 <script>
+function confirmarRegistro(btn) {
+  const form = btn.closest('form');
+
+  // Dispara la validación nativa del navegador
+  if (!form.checkValidity()) {
+    form.reportValidity(); // muestra los mensajes de error
+    return;
+  }
+
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: '¿Esta información es correcta?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, registrar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#0d6efd',
+    cancelButtonColor: '#6c757d',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      form.submit();
+    }
+  });
+}
 function mostrarCurso(select) {
     const seccion = document.getElementById('seccion-curso');
     const curso = document.getElementById('Curso');

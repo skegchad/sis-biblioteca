@@ -83,6 +83,7 @@
           z-index: 1;
       }
     </style>
+    <link rel="icon" href="<?php echo $URL; ?>/public/assets/img/grupoProyecto/cenaculo.png" type="image/png">
   </head>
   <!--end::Head-->
   <!--begin::Body-->
