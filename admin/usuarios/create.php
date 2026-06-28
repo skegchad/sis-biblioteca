@@ -27,7 +27,7 @@ include("../../layout/admin/parte1.php");?>
                         <h5 class="card-header">Llene la información con mucho cuidado</h5>
                         
                         <div class="card-body">
-                            <form action="controller_create.php" method="post">    
+                            <form action="controller_create.php" method="post" enctype="multipart/form-data">    
                                 <div class="row">
                                     <div class="col-md-4">
                                         <label for="Nombre" class="form-label">Nombre</label>
@@ -112,6 +112,17 @@ include("../../layout/admin/parte1.php");?>
                                 </div>
                                 <hr>
                                 <div class="row">
+                                    <div class="mb-3">
+                                        <label class="form-label">Foto de perfil</label>
+                                        <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
+                                        
+                                        <!-- Preview opcional -->
+                                        <img id="preview" src="<?php echo $URL;?>/public/uploads/img/admin/default.jpg" 
+                                            class="mt-2 rounded-circle" width="80" height="80" style="object-fit:cover;">
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
                                     <div class="col-md-2"></div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
@@ -133,6 +144,13 @@ include("../../layout/admin/parte1.php");?>
             </div>
     </main>
 <script>
+// Preview de la foto
+document.getElementById('foto').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        document.getElementById('preview').src = URL.createObjectURL(file);
+    }
+});
 function confirmarRegistro(btn) {
   const form = btn.closest('form');
 
