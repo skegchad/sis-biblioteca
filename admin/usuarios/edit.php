@@ -35,7 +35,7 @@ foreach($usuarios as $usuario){
                         <h5 class="card-header" style="background-color: #00a716; color: white">Llene la información con mucho cuidado</h5>
                         
                         <div class="card-body">
-                            <form action="controller_edit.php" method="post">    
+                            <form action="controller_edit.php?id=<?php echo $id_get;?>" method="post">    
                                 <div class="row">
                                     <div class="col-md-4">
                                         <label for="Nombre" class="form-label">Nombre</label>

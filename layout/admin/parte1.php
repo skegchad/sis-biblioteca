@@ -31,7 +31,7 @@
     <meta name="supported-color-schemes" content="light dark" />
     <link rel="preload" href="<?php echo $URL;?>/public/css/adminlte.css" as="style" />
     <!--end::Accessibility Features-->
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!--begin::Fonts-->
     <link
       rel="stylesheet"
