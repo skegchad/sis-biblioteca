@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Admin | SISTEMA BIBLIOTECA</title>
-
+    <link rel="icon" href="<?php echo $URL; ?>/public/assets/img/grupoProyecto/cenaculo.png" type="image/png">
     <!--begin::Accessibility Meta Tags-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
     <meta name="color-scheme" content="light dark" />
@@ -250,7 +250,9 @@
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
                 <img
+
                   src="<?php echo $URL;?>/<?php echo $rutaFoto;?>"
+                  
                   class="user-image rounded-circle shadow"
                   alt="User Image"
                 />
@@ -266,6 +268,10 @@
                   />
                   <p>
                     <?php echo $nombre.' '.$apellidos; ?> - <?php echo $nombreusuario; ?>
+                  </p>
+                  <p><strong>
+                    <?php echo $cargo;?>
+                  </strong>
                   </p>
                 </li>
                 <!--end::User Image-->

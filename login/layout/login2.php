@@ -24,7 +24,7 @@
                   <button type="submit" class="btn btn-primary">
                       <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
                   </button>
-                  <button type="button" class="btn btn-secondary" onclick="window.location.href='../index.html'">
+                  <button type="button" class="btn btn-secondary" onclick="window.location.href='<?php echo $URL;?>/layout/user'">
                       <i class="bi bi-x-circle me-2"></i>Cancelar
                   </button>
               </div>
