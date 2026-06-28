@@ -54,10 +54,11 @@ include ('../../app/config/conexion.php');
 
 <head>
   <meta charset="utf-8">
-  <title>Eterna - Professional bootstrap site template for corporate business</title>
+  <title>BIBLIOTECA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Your page description here" />
   <meta name="author" content="" />
+  <link rel="icon" href="<?php echo $URL; ?>/public/assets/img/grupoProyecto/cenaculo.png" type="image/png">
 
   <!-- css -->
   <link href="https://fonts.googleapis.com/css?family=Handlee|Open+Sans:300,400,600,700,800" rel="stylesheet">
@@ -212,6 +213,14 @@ include ('../../app/config/conexion.php');
 
                     <li>
                       <a href="<?php echo $URL; ?>/app/templeates/Eterna/contact.html">Contacto</a>
+                    </li>
+
+                    <li>
+                      <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.html">Conoce a BMO</a>
+                    </li>
+
+                    <li>
+                      <a href="<?php echo $URL; ?>/login">INICIAR SESIÓN</a>
                     </li>
                     
                   </ul>

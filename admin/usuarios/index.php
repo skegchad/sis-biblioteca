@@ -23,6 +23,22 @@ $contador = 0;?>
     gap: 8px;
     animation: entrar 0.4s ease, salir 0.5s ease 3s forwards;
 }
+#toast-success-eliminado {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff0000;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: entrar 0.4s ease, salir 0.5s ease 3s forwards;
+}
 
 @keyframes entrar {
     from { transform: translateX(120%); opacity: 0; }
@@ -38,6 +54,16 @@ $contador = 0;?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
 <div id="toast-success">
     <i class="ti ti-circle-check"></i> ¡Usuario registrado!
+</div>
+<?php endif; ?>
+<?php if(isset($_GET['success']) && $_GET['success'] === 'actualizado'): ?>
+<div id="toast-success">
+    <i class="ti ti-circle-check"></i> ¡Usuario actualizado!
+</div>
+<?php endif; ?>
+<?php if(isset($_GET['success']) && $_GET['success'] === 'eliminado'): ?>
+<div id="toast-success-eliminado">
+    <i class="bi bi-trash"></i> ¡Usuario eliminado!
 </div>
 <?php endif; ?>
 
@@ -57,7 +83,7 @@ $contador = 0;?>
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th scope="col">Id</th>
+                                <th scope="col">Num</th>
                                 <th scope="col">Nombres</th>
                                 <th scope="col">Apellidos</th>
                                 <th scope="col">Cedula</th>
