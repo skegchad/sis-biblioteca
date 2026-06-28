@@ -16,7 +16,7 @@ define("BD_SISTEMA","bd_sis_biblioteca");
 */
 
 $URL='http://localhost/www.sis_biblioteca.com';
-
+$ROOT    = $_SERVER['DOCUMENT_ROOT'] . "/www.sis_biblioteca.com/";
 date_default_timezone_set("America/Guayaquil");
     
 $fyh_actual = date("Y-m-d H:i:s");
