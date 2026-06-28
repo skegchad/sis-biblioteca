@@ -31,7 +31,7 @@
     <meta name="supported-color-schemes" content="light dark" />
     <link rel="preload" href="<?php echo $URL;?>/public/css/adminlte.css" as="style" />
     <!--end::Accessibility Features-->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!--begin::Fonts-->
     <link
       rel="stylesheet"
@@ -59,7 +59,14 @@
       crossorigin="anonymous"
     />
     <!--end::Third Party Plugin(Bootstrap Icons)-->
-
+    <!--DATATABLES -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css" />
+    <script src="https://cdn.datatables.net/2.3.8/js/dataTables.js"></script>
+    <!--sweetalert2-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!--JQUERY-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
     <!--begin::Required Plugin(AdminLTE)-->
     <link rel="stylesheet" href="<?php echo $URL;?>/public/css/adminlte.css" />
     <!--end::Required Plugin(AdminLTE)-->

@@ -113,7 +113,7 @@ include("../../layout/admin/parte1.php");?>
                                 <hr>
                                 <div class="row">
                                     <div class="mb-3">
-                                        <label class="form-label">Foto de perfil</label>
+                                        <label class="form-label">Foto de perfil (OPCIONAL)</label>
                                         <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
                                         
                                         <!-- Preview opcional -->

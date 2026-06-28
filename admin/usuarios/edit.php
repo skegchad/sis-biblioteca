@@ -17,6 +17,7 @@ foreach($usuarios as $usuario){
     $cargo = $usuario['cargo'];
     $curso = $usuario['curso'];
     $paralelo = $usuario['paralelo'];
+    $foto = $usuario['foto'];
 }?>
     <main class="app-main">
             <!--begin::App Content Header-->
@@ -35,7 +36,7 @@ foreach($usuarios as $usuario){
                         <h5 class="card-header" style="background-color: #00a716; color: white">Llene la información con mucho cuidado</h5>
                         
                         <div class="card-body">
-                            <form action="controller_edit.php?id=<?php echo $id_get;?>" method="post">    
+                            <form action="controller_edit.php?id=<?php echo $id_get;?>" method="post" enctype="multipart/form-data">    
                                 <div class="row">
                                     <div class="col-md-4">
                                         <label for="Nombre" class="form-label">Nombre</label>
@@ -108,6 +109,17 @@ foreach($usuarios as $usuario){
                                 </div>
                                 <hr>
                                 <div class="row">
+                                    <div class="mb-3">
+                                        <label class="form-label">Foto de perfil (OPCIONAL)</label>
+                                        <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
+                                        
+                                        <!-- Preview con la foto actual -->
+                                        <img id="preview" src="<?php echo $URL;?>/<?php echo $foto;?>" 
+                                            class="mt-2 rounded-circle" width="80" height="80" style="object-fit:cover;">
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
                                     <div class="col-md-2"></div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
@@ -116,7 +128,7 @@ foreach($usuarios as $usuario){
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <button class="btn btn-success" onclick="return confirm('¿Estás seguro de que esta información es correcta?')" type="submit">Actualizar Usuario</button>
+                                            <button class="btn btn-success" onclick="confirmarActualizar(this)" type="button">Actualizar Usuario</button>
                                         </div>
                                     </div>
                                     <div class="col-md-2"></div>
@@ -129,6 +141,36 @@ foreach($usuarios as $usuario){
             </div>
     </main>
 <script>
+document.getElementById('foto').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        document.getElementById('preview').src = URL.createObjectURL(file);
+    }
+});    
+function confirmarActualizar(btn) {
+  const form = btn.closest('form');
+
+  // Dispara la validación nativa del navegador
+  if (!form.checkValidity()) {
+    form.reportValidity(); // muestra los mensajes de error
+    return;
+  }
+
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: '¿Esta información es correcta?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, actualizar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#0d6efd',
+    cancelButtonColor: '#6c757d',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      form.submit();
+    }
+  });
+}
 function mostrarCurso(select) {
     const seccion = document.getElementById('seccion-curso');
     const curso = document.getElementById('Curso');
