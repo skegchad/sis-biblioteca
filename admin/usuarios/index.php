@@ -49,6 +49,81 @@ $contador = 0;?>
     from { transform: translateX(0);    opacity: 1; }
     to   { transform: translateX(120%); opacity: 0; }
 }
+/* Contenedor de paginación */
+.dataTables_paginate {
+  margin-top: 10px;
+}
+
+/* Todos los botones */
+.dataTables_paginate .paginate_button {
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: 1px solid #3b3b3b;
+  cursor: pointer;
+  background: #3b3b3b;
+  color: #ffffff !important;
+  transition: all 0.2s;
+}
+
+/* Hover */
+.dataTables_paginate .paginate_button:hover {
+  background: #0d6efd;
+  color: #ffffff !important;
+  border-color: #0d6efd;
+}
+
+/* Página activa */
+.dataTables_paginate .paginate_button.current {
+  background: #0d6efd;
+  color: #ffffff !important;
+  border-color: #0d6efd;
+  font-weight: bold;
+}
+
+/* Botones deshabilitados */
+.dataTables_paginate .paginate_button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.dataTables_wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* "Mostrar X registros" → izquierda arriba */
+.dataTables_length {
+  order: 1;
+  flex: 1;
+}
+
+/* Buscador → derecha arriba */
+.dataTables_filter {
+  order: 2;
+  text-align: right;
+}
+
+/* Info ("Mostrando 1 a 10...") → abajo izquierda */
+.dataTables_info {
+  order: 3;
+  flex: 1;
+}
+
+/* Paginación → abajo derecha */
+.dataTables_paginate {
+  order: 4;
+}
+
+/* La tabla ocupa todo el ancho */
+.dataTables_scroll,
+table.dataTable {
+  order: 5;
+  width: 100% !important;
+  flex-basis: 100%;
+}
 </style>
 
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
@@ -80,7 +155,25 @@ $contador = 0;?>
                     </div>
                     <hr>
                     <!--end::Row-->
-                    <table class="table table-hover">
+                    <script>
+                        $(document).ready(function() {
+                            $('#tablaUsuarios').DataTable({
+                                pageLength: 5,        // filas por página
+                                ordering: true,        // ordenar columnas al hacer clic
+                                searching: true,       // buscador (true por defecto)
+                                language: {
+                                    search: "Buscar:",
+                                    lengthMenu: "Mostrar _MENU_ registros",
+                                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                                    paginate: {
+                                    previous: "Anterior",
+                                    next: "Siguiente"
+                                    }
+                                }
+                                });
+                        });
+                    </script>
+                    <table id="tablaUsuarios" class="table table-hover">
                         <thead>
                             <tr>
                                 <th scope="col">Num</th>

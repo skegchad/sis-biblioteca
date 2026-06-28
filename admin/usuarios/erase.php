@@ -16,6 +16,7 @@ foreach($usuarios as $usuario){
     $cargo = $usuario['cargo'];
     $curso = $usuario['curso'];
     $paralelo = $usuario['paralelo'];
+    $foto = $usuario['foto'];
 }?>
     <main class="app-main">
             <!--begin::App Content Header-->
@@ -32,7 +33,6 @@ foreach($usuarios as $usuario){
                     <!--end::Row-->
                     <div class="card">
                         <h5 class="card-header" style="background-color: #ff0000; color: white">¿Desea eliminar el usuario?</h5>
-                        
                         <div class="card-body">
                             <form action="controller_erase.php?id=<?php echo $id_get;?>" method="post">    
                                 <div class="row">
@@ -103,6 +103,17 @@ foreach($usuarios as $usuario){
                                             <option value="electromecanica">ELECTROMECANICA</option>
                                             <option value="contabilidad">CONTABILIDAD</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="mb-3">
+                                        <label class="form-label">Foto de perfil (OPCIONAL)</label>
+                                        <br>
+                                        
+                                        <!-- Preview con la foto actual -->
+                                        <img id="preview" src="<?php echo $URL;?>/<?php echo $foto;?>" 
+                                            class="mt-2 rounded-circle" width="80" height="80" style="object-fit:cover;" disabled>
                                     </div>
                                 </div>
                                 <hr>
