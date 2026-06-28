@@ -204,7 +204,7 @@ include ('../../app/config/conexion.php');
                       <a href="#"><i class="icon-home"></i> Inicio </a>
                     </li>
                     <li>
-                      <a href="<?php echo $URL; ?>/app/templeates/free boosk/index.html">Catalogación</a>
+                      <a href="<?php echo $URL; ?>/layout/user/catalogo.php">Catalogación</a>
                     </li>
 
                     <li>
