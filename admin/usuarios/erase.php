@@ -110,7 +110,6 @@ foreach($usuarios as $usuario){
                                     <div class="mb-3">
                                         <label class="form-label">Foto de perfil (OPCIONAL)</label>
                                         <br>
-                                        
                                         <!-- Preview con la foto actual -->
                                         <img id="preview" src="<?php echo $URL;?>/<?php echo $foto;?>" 
                                             class="mt-2 rounded-circle" width="80" height="80" style="object-fit:cover;" disabled>
