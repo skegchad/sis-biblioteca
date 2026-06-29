@@ -216,7 +216,7 @@ include ('../../app/config/conexion.php');
                     </li>
 
                     <li>
-                      <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.html">Conoce a BMO!</a>
+                      <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.html">Conoce a BMO!!!!</a>
                     </li>
 
                     <li>
