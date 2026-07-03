@@ -56,10 +56,6 @@ include("../layout/admin/parte1.php");?>
                       <th scope="row">Cargo</th>
                       <td><?php echo $cargo; ?></td>
                     </tr>
-                    <tr>
-                      <th scope="row">Fecha de nacimiento</th>
-                      <td></td>
-                    </tr>
                   </tbody>
                 </table>
             </div>

@@ -45,7 +45,6 @@ if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
         exit;
     }
 }
-// ──────────────────────────────────────────────────────────────────────
 
 $sentencia = $pdo->prepare("UPDATE tb_usuarios SET
     nombre_completo    = :nombre_completo,
