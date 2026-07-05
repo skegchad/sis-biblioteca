@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menú</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #0c0c0d;
+    --paper: #f2ede4;
+    --teal: #2e9c93;
+    --crimson: #e63950;
+    --gold: #e8b84b;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background: #111;
+    font-family: 'Oswald', sans-serif;
+    overflow:hidden;
+  }
+
+  /* ============ FONDO ============
+     Reemplaza la imagen de abajo por la tuya:
+     background-image: url('tu-imagen.jpg');
+     o pon un <img> dentro de #bg si prefieres.
+  =================================== */
+  #bg{
+    position:fixed;
+    inset:0;
+    background-color:#1c2b2a;
+    background-image:
+      linear-gradient(120deg, rgba(46,156,147,.35), rgba(0,0,0,.15) 60%),
+      url('https://preview.redd.it/rose7it15g5b1.jpg?vthumb=1&s=1354082e9edffb92d58066402bdcaf8f697252fc');
+    background-size: cover;
+    background-position: center;
+    z-index:0;
+  }
+
+  #bg::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 45%);
+    pointer-events:none;
+  }
+
+  .stage{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    z-index:2;
+  }
+
+  /* Manchas decorativas de color, estilo salpicadura */
+  .splash{
+    position:absolute;
+    pointer-events:none;
+    mix-blend-mode: normal;
+    opacity:.92;
+  }
+  .splash.teal{
+    right:-6%;
+    top:6%;
+    width:46vw;
+    height:60vh;
+    background: var(--teal);
+    clip-path: polygon(8% 0%, 92% 4%, 100% 38%, 88% 60%, 96% 100%, 40% 92%, 10% 70%, 0% 30%);
+    filter: blur(.3px);
+  }
+  .splash.crimson{
+    right:2%;
+    bottom:-8%;
+    width:38vw;
+    height:46vh;
+    background: var(--crimson);
+    clip-path: polygon(20% 0%, 100% 10%, 88% 55%, 100% 100%, 50% 90%, 0% 100%, 10% 40%);
+  }
+
+  /* ============ MENÚ ============ */
+  nav.menu{
+    position:absolute;
+    top:0;
+    right:0;
+    height:100%;
+    width:min(78vw, 1100px);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-end;
+    gap:.15em;
+    padding: 4vh 4vw 4vh 2vw;
+    text-align:right;
+  }
+
+  nav.menu a{
+    position:relative;
+    display:block;
+    text-decoration:none;
+    font-family:'Anton', sans-serif;
+    letter-spacing: .01em;
+    line-height:.86;
+    font-style: italic;
+    transform: skewX(-6deg);
+    -webkit-text-stroke: 0.5px rgba(0,0,0,.15);
+    transition: transform .25s ease, letter-spacing .25s ease, filter .25s ease;
+    white-space: nowrap;
+  }
+
+  nav.menu a:hover,
+  nav.menu a:focus-visible{
+    transform: skewX(-6deg) translateX(-14px) scale(1.03);
+    letter-spacing: .03em;
+    filter: brightness(1.15);
+    outline:none;
+  }
+
+  /* tamaños jerárquicos, como en la referencia */
+  .item--xl   { font-size: clamp(3.2rem, 8vw, 7rem);   color: var(--paper); }
+  .item--lg   { font-size: clamp(2.4rem, 6vw, 5.2rem);  color: var(--ink); }
+  .item--md   { font-size: clamp(1.6rem, 4vw, 3.4rem);  color: var(--paper); }
+  .item--sm   { font-size: clamp(1.1rem, 2.6vw, 2.1rem); color: var(--paper); }
+
+  /* leve rotación alterna, como recortes superpuestos */
+  nav.menu a:nth-child(odd){ transform: skewX(-6deg) rotate(-1.2deg); }
+  nav.menu a:nth-child(even){ transform: skewX(-6deg) rotate(0.8deg); }
+  nav.menu a:nth-child(odd):hover{ transform: skewX(-6deg) rotate(-1.2deg) translateX(-14px) scale(1.03); }
+  nav.menu a:nth-child(even):hover{ transform: skewX(-6deg) rotate(0.8deg) translateX(-14px) scale(1.03); }
+
+  .tag{
+    font-family:'Oswald', sans-serif;
+    font-style: normal;
+    font-weight:600;
+    font-size: clamp(.7rem, 1.4vw, 1rem);
+    letter-spacing:.35em;
+    color: var(--paper);
+    background: var(--ink);
+    padding: .35em .8em;
+    display:inline-block;
+    margin: .4em 0 .2em;
+    text-transform: uppercase;
+  }
+
+  /* ============ HUD inferior derecha ============ */
+  .hud{
+    position:absolute;
+    bottom: 3vh;
+    right: 3vw;
+    z-index:3;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:.5em;
+    font-family:'Oswald', sans-serif;
+    color: var(--paper);
+  }
+  .hud .row{
+    display:flex;
+    align-items:baseline;
+    gap:1.2em;
+    border-bottom: 1px solid rgba(255,255,255,.25);
+    padding-bottom:.2em;
+    min-width: 260px;
+    justify-content:flex-end;
+  }
+  .hud .label{
+    font-size:.75rem;
+    letter-spacing:.3em;
+    text-transform:uppercase;
+    opacity:.75;
+  }
+  .hud .value{
+    font-family:'Anton', sans-serif;
+    font-style: italic;
+    font-size:1.6rem;
+  }
+  .confirm{
+    display:flex;
+    align-items:center;
+    gap:.6em;
+    margin-top:.6em;
+    font-size:.85rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    opacity:.85;
+  }
+  .confirm .btn{
+    width:22px; height:22px;
+    border-radius:50%;
+    background: var(--gold);
+    color:#111;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Anton', sans-serif;
+    font-size:.85rem;
+  }
+
+  @media (max-width: 700px){
+    nav.menu{ width:100%; align-items:flex-end; padding:3vh 5vw; }
+    .item--xl{ font-size: 2.4rem; }
+    .item--lg{ font-size: 1.9rem; }
+    .item--md{ font-size: 1.4rem; }
+    .item--sm{ font-size: 1rem; }
+    .splash.teal, .splash.crimson{ opacity:.5; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="bg"></div>
+
+  <div class="stage">
+    <div class="splash teal"></div>
+    <div class="splash crimson"></div>
+
+    <nav class="menu" aria-label="Menú principal">
+      <a href="#skill"      class="item--xl">SKILL</a>
+      <a href="#item"       class="item--xl">ITEM</a>
+      <a href="#equipment"  class="item--lg">EQUIPMENT</a>
+    </nav>
+
+    <div class="hud">
+      <div class="row">
+        <span class="label">Money</span>
+        <span class="value">10,000</span>
+      </div>
+      <div class="row">
+        <span class="label">Mag</span>
+        <span class="value">2,000</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

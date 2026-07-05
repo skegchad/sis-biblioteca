@@ -26,7 +26,7 @@ include ("../layout/user/part1.php");
 
         <div class="catalogo-contenedor">
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS SOCIALES.png');"></div>
+            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS SOCIALES.png');"></div></a>
 
             <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/LITERATURA RETÓRICA.png');"></div>
 
