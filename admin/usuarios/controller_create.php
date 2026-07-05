@@ -13,6 +13,15 @@ $password        = $_POST['Password'];
 $verifyPassword  = $_POST['verifyPassword'];
 $passwordbd      = password_hash($password, PASSWORD_DEFAULT);
 
+$userUsuarios=$pdo->prepare("SELECT * FROM tb_usuarios WHERE estado = '1' ");
+$userUsuarios->execute();
+foreach($userUsuarios as $userUsuario){
+    if($nombre_usuario == $userUsuario['nombre_usuario']){
+        header("Location: " . $URL . "/admin/usuarios/create.php?error=username");
+        exit;
+    }
+}
+
 // ✅ Valor por defecto
 $rutaFoto = "public/uploads/img/admin/default.jpg";
 

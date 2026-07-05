@@ -3,6 +3,7 @@ include ("../../app/config/config.php");
 include ("../../app/config/conexion.php");
 include ("../../layout/admin/login.php");
 include ("../../layout/admin/datos_usuario.php");
+include ("../../layout/admin/comprueba_admin.php");
 include("../../layout/admin/parte1.php");?>
     <main class="app-main">
             <!--begin::App Content Header-->
@@ -18,6 +19,9 @@ include("../../layout/admin/parte1.php");?>
                     <hr>
                     <?php
                             $error = $_GET['error'] ?? null;
+                            if ($error === 'username') {
+                                echo '<div class="alert alert-danger">¡Hay otro usuario con ese mismo nombre de usuario!</div>';
+                            }
                             if ($error === 'contrasena') {
                                 echo '<div class="alert alert-danger">¡Las contraseñas no coinciden!</div>';
                             }

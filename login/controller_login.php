@@ -16,7 +16,14 @@ foreach ($usuarios as $usuario){
     $contador++;
     $nombres = $usuario['nombre_completo'];
     $nombreusuario = $usuario['nombre_usuario'];
+    $cargo = $usuario['cargo'];
     $passwordBD = $usuario['password'];
+}
+
+if($cargo!='Administrador'){
+    $ruta = $URL.'/user/';
+}else{
+    $ruta = $URL.'/admin/';
 }
 
 if($contador>0){
@@ -26,7 +33,7 @@ if($contador>0){
     $_SESSION['sesion_user']=$user;
     echo "<script>
         alert('Bienvenido $nombreusuario.');
-        window.location.href = '".$URL."/admin/';
+        window.location.href = '$ruta';
     </script>";
     
 } else {
