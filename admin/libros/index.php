@@ -3,6 +3,7 @@ include ("../../app/config/config.php");
 include ("../../app/config/conexion.php");
 include ("../../layout/admin/login.php");
 include ("../../layout/admin/datos_usuario.php");
+include ("../../layout/admin/comprueba_admin.php");
 include("../../layout/admin/parte1.php");
 $contador = 0;?>
 
@@ -150,14 +151,14 @@ table.dataTable {
                     <!--begin::Row-->
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="mb-0">Listado de usuarios</h3>
+                            <h3 class="mb-0">Listado de libros</h3>
                         </div>
                     </div>
                     <hr>
                     <!--end::Row-->
                     <script>
                         $(document).ready(function() {
-                            $('#tablaUsuarios').DataTable({
+                            $('#tablaLibros').DataTable({
                                 pageLength: 5,        // filas por página
                                 ordering: true,        // ordenar columnas al hacer clic
                                 searching: true,       // buscador (true por defecto)
@@ -173,7 +174,7 @@ table.dataTable {
                                 });
                         });
                     </script>
-                    <table id="tablaUsuarios" class="table table-hover">
+                    <table id="tablaLibros" class="table table-hover">
                         <thead>
                             <tr>
                                 <th scope="col">Num</th>
@@ -197,26 +198,48 @@ table.dataTable {
                         </thead>
                         <tbody class="table-group-divider">
                             <?php
-                                $query = $pdo->prepare('SELECT * FROM tb_usuarios WHERE estado="1" ');
+                                $query = $pdo->prepare('SELECT * FROM tb_libros WHERE estado="1" ');
                                 $query->execute();
-                                $usuarios=$query->fetchAll(PDO::FETCH_ASSOC);
-                                foreach($usuarios as $usuario){
+                                $libros=$query->fetchAll(PDO::FETCH_ASSOC);
+                                foreach($libros as $libro){
 
-                                    $id = $usuario['id_usuario'];
-                                    $nombre = $usuario['nombre_completo'];
-                                    $apellidos = $usuario['apellidos'];
-                                    $nombreusuario = $usuario['nombre_usuario'];
-                                    $cedula = $usuario['cedula'];
-                                    $cargo = $usuario['cargo'];
-                                    $contador = $contador +1;
+                                    $id = $libro['id_libro'];
+                                    $titulo = $libro['titulo'];
+                                    $descripcion = $libro['descripcion'];
+                                    $idioma = $libro['idioma'];
+                                    $disponibilidad = $libro['disponibilidad'];
+                                    $temas = $libro['temas'];
+                                    $edicion = $libro['edicion'];
+                                    $ano = $libro['ano'];
+                                    $cdd = $libro['cdd'];
+                                    $bloque = $libro['bloque'];
+                                    $categoria = $libro['categoria'];
+                                    $subcategoria = $libro['subcategoria'];
+                                    $seccion = $libro['seccion'];
+                                    $editorial = $libro['editorial'];
+                                    $ejemplares = $libro['ejemplares'];
+                                    $prestados = $libro['prestados'];
+                                    
+                                    $contador = $libro +1;
                                 ?>
                                     <tr>
                                         <td><?php echo $contador;?></td>
-                                        <td><?php echo $nombre;?></td>
-                                        <td><?php echo $apellidos;?></td>
-                                        <td><?php echo $cedula;?></td>
-                                        <td><?php echo $nombreusuario;?></td>
-                                        <td><?php echo $cargo;?></td>
+                                        <td><?php echo $titulo;?></td>
+                                        <td><?php echo $descripcion;?></td>
+                                        <td><?php echo $idioma;?></td>
+                                        <td><?php echo $disponibilidad;?></td>
+                                        <td><?php echo $temas;?></td>
+                                        <td><?php echo $tipo;?></td>
+                                        <td><?php echo $edicion;?></td>
+                                        <td><?php echo $ano;?></td>
+                                        <td><?php echo $cdd;?></td>
+                                        <td><?php echo $bloque;?></td>
+                                        <td><?php echo $categoria;?></td>
+                                        <td><?php echo $subcategoria;?></td>
+                                        <td><?php echo $seccion;?></td>
+                                        <td><?php echo $editorial;?></td>
+                                        <td><?php echo $ejemplares;?></td>
+                                        <td><?php echo $prestados;?></td>
                                         <td>
                                             <center>
                                                 <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">
