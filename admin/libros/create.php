@@ -4,7 +4,51 @@ include ("../../app/config/conexion.php");
 include ("../../layout/admin/login.php");
 include ("../../layout/admin/datos_usuario.php");
 include ("../../layout/admin/comprueba_admin.php");
-include("../../layout/admin/parte1.php");?>
+include("../../layout/admin/parte1.php");
+
+$categorias= $pdo->prepare("SELECT id, nombre, foto FROM categorias");
+$categorias->execute();
+$id_categoria=[];
+$categoria_nombre=[];
+$foto=[];
+$i=0;
+foreach($categorias as $categoria){
+    $id_categoria[$i]=$categoria['id'];
+    $categoria_nombre[$i]=$categoria['nombre'];
+    $foto[$i]=$categoria['foto'];
+    $i++;
+}
+$tipos = $pdo->prepare("SELECT id, nombre FROM tipos");
+$tipos->execute();
+$id_tipo = [];
+$nombre_tipo = [];
+$i = 0;
+foreach ($tipos as $tipo) {
+    $id_tipo[$i] = $tipo['id'];
+    $nombre_tipo[$i] = $tipo['nombre'];
+    $i++;
+}
+?>
+<style>
+    .tema-card {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+    background-color: #f8f9fa;
+}
+.tema-card:hover {
+    background-color: #e9ecef;
+}
+.tema-card.seleccionado {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+</style>
     <main class="app-main">
             <!--begin::App Content Header-->
             <div class="app-content-header">
@@ -39,11 +83,11 @@ include("../../layout/admin/parte1.php");?>
                                 </div>
                                 <br>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="ano" class="form-label">Año</label>
                                         <input type="number" name="ano" id="ano" class="form-control" required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="idioma" class="form-label">Idioma</label>
                                         <select name="idioma" class="form-select" id="idioma" required>
                                             <option value="">-- Idioma --</option>
@@ -53,12 +97,21 @@ include("../../layout/admin/parte1.php");?>
                                             <option value="Otro">Otro</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="disponibilidad" class="form-label">Disponibilidad</label>
                                         <select name="disponibilidad" class="form-select" id="disponibilidad" required>
                                             <option value="">-- Selecciona --</option>
                                             <option value="Disponible">Disponible</option>
                                             <option value="No disponible">No disponible</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="tipo" class="form-label">Tipo</label>
+                                        <select name="tipo" class="form-select" id="tipo" onchange="mostrarTemas(this)" required>
+                                            <option value="">-- Selecciona --</option>
+                                            <?php for ($i = 0; $i < count($id_tipo); $i++): ?>
+                                                <option value="<?php echo htmlspecialchars($nombre_tipo[$i]); ?>"><?php echo htmlspecialchars($nombre_tipo[$i]); ?></option>
+                                            <?php endfor; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -72,8 +125,21 @@ include("../../layout/admin/parte1.php");?>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="temas" class="form-label">Temas</label>
-                                        <input type="text" name="temas" id="temas" class="form-control" required>
+                                        <label class="form-label">Temas</label>
+                                        
+                                        <!-- Tarjetas de temas existentes (click para seleccionar) -->
+                                        <div id="temasDisponiblesBox" class="d-flex flex-wrap gap-2 mb-2 p-2 border rounded" style="min-height: 50px;">
+                                            <span class="text-muted small">Selecciona un tipo primero</span>
+                                        </div>
+
+                                        <!-- Input para crear un tema nuevo -->
+                                        <div class="input-group">
+                                            <input type="text" id="temaInput" class="form-control" placeholder="Nuevo tema..." disabled>
+                                            <button type="button" class="btn btn-outline-secondary" id="btnAgregarTema" onclick="crearTema()" disabled>+ Agregar</button>
+                                        </div>
+
+                                        <!-- IDs/nombres de los temas seleccionados, para el submit -->
+                                        <input type="hidden" name="temas" id="temasHidden">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="cdd" class="form-label">CDD (Clasificación Decimal Dewey)</label>
@@ -90,12 +156,9 @@ include("../../layout/admin/parte1.php");?>
                                         <label for="categoria" class="form-label">Categoría</label>
                                         <select name="categoria" class="form-select" id="categoria" onchange="mostrarSubcategoria(this)" required>
                                             <option value="">-- Categoría --</option>
-                                            <option value="Ciencias Sociales">Ciencias Sociales</option>
-                                            <option value="Literatura Retorica">Literatura RETÓRICA</option>
-                                            <option value="Tecnologia">Tecnología</option>
-                                            <option value="Religion">Religión</option>
-                                            <option value="Filosofia y Psicologia">Filosofia y Psicologia</option>
-                                            <option value="Filosofia y Psicologia">Filosofia y Psicologia</option>
+                                            <?php for ($i = 0; $i < count($id_categoria); $i++): ?>
+                                                <option value="<?php echo htmlspecialchars($categoria_nombre[$i]); ?>"><?php echo htmlspecialchars($categoria_nombre[$i]); ?></option>
+                                            <?php endfor; ?>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -188,30 +251,171 @@ function confirmarRegistro(btn) {
 function mostrarSubcategoria(select) {
     const categoria = select.value;
     const subcategoriaSelect = document.getElementById('subcategoria');
-
-    // Definimos las subcategorías posibles para cada categoría
-    const subcategorias = {
-        "Ficción": ["Novela", "Cuento", "Poesía", "Fantasía", "Ciencia Ficción"],
-        "No ficción": ["Biografía", "Historia", "Ensayo", "Autoayuda"],
-        "Técnico": ["Informática", "Matemáticas", "Ingeniería", "Ciencias"],
-        "Referencia": ["Diccionario", "Enciclopedia", "Manual"]
-    };
+    const btnNueva = document.getElementById('btnNuevaSub');
 
     // Limpiamos el select de subcategoría
     subcategoriaSelect.innerHTML = '<option value="">-- Selecciona --</option>';
 
-    if (categoria && subcategorias[categoria]) {
-        subcategorias[categoria].forEach(function(sub) {
-            const option = document.createElement('option');
-            option.value = sub;
-            option.textContent = sub;
-            subcategoriaSelect.appendChild(option);
-        });
-        subcategoriaSelect.disabled = false;
-    } else {
+    if (!categoria) {
         subcategoriaSelect.disabled = true;
+        if (btnNueva) btnNueva.disabled = true;
+        return;
     }
+
+    fetch(`get_subcategorias.php?categoria=${encodeURIComponent(categoria)}`)
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(function(sub) {
+                const option = document.createElement('option');
+                option.value = sub.nombre;
+                option.textContent = sub.nombre;
+                subcategoriaSelect.appendChild(option);
+            });
+            subcategoriaSelect.disabled = false;
+            if (btnNueva) btnNueva.disabled = false;
+        })
+        .catch(err => console.error('Error cargando subcategorías:', err));
 }
+let temasElegidos = []; // nombres de temas ya elegidos
+let temasDisponibles = []; // temas existentes del tipo actual
+let temasSeleccionados = []; // nombres de temas elegidos
+
+function mostrarTemas(select) {
+    const tipo = select.value;
+    const input = document.getElementById('temaInput');
+    const btnAgregar = document.getElementById('btnAgregarTema');
+    const box = document.getElementById('temasDisponiblesBox');
+
+    temasSeleccionados = [];
+    actualizarHidden();
+    box.innerHTML = '';
+    input.value = '';
+
+    if (!tipo) {
+        input.disabled = true;
+        btnAgregar.disabled = true;
+        box.innerHTML = '<span class="text-muted small">Selecciona un tipo primero</span>';
+        return;
+    }
+
+    box.innerHTML = '<span class="text-muted small">Cargando...</span>';
+
+    fetch(`get_temas.php?tipo=${encodeURIComponent(tipo)}`)
+        .then(res => res.json())
+        .then(data => {
+            box.innerHTML = '';
+
+            if (data.length === 0) {
+                box.innerHTML = '<span class="text-muted small">No hay temas aún, crea uno abajo</span>';
+            } else {
+                data.forEach(function(tema) {
+                    renderTarjetaTema(tema.nombre);
+                });
+            }
+
+            input.disabled = false;
+            btnAgregar.disabled = false;
+        })
+        .catch(err => {
+            console.error('Error cargando temas:', err);
+            box.innerHTML = '<span class="text-danger small">Error al cargar temas</span>';
+        });
+}
+
+function renderTarjetaTema(nombre) {
+    const box = document.getElementById('temasDisponiblesBox');
+
+    // Evitar duplicar la tarjeta si ya existe (ej. al crear una que acabamos de agregar)
+    if (document.querySelector(`.tema-card[data-nombre="${CSS.escape(nombre)}"]`)) return;
+
+    const card = document.createElement('span');
+    card.className = 'tema-card';
+    card.textContent = nombre;
+    card.dataset.nombre = nombre;
+    card.onclick = () => toggleTema(nombre, card);
+    box.appendChild(card);
+}
+
+function toggleTema(nombre, card) {
+    const index = temasSeleccionados.indexOf(nombre);
+
+    if (index === -1) {
+        temasSeleccionados.push(nombre);
+        card.classList.add('seleccionado');
+    } else {
+        temasSeleccionados.splice(index, 1);
+        card.classList.remove('seleccionado');
+    }
+
+    actualizarHidden();
+}
+
+function crearTema() {
+    const tipo = document.getElementById('tipo').value;
+    const input = document.getElementById('temaInput');
+    const nombre = input.value.trim();
+
+    if (!tipo) {
+        alert('Primero selecciona un tipo');
+        return;
+    }
+    if (!nombre) return;
+
+    // Si ya existe como tarjeta, solo la seleccionamos (no la duplicamos)
+    const existente = document.querySelector(`.tema-card[data-nombre="${CSS.escape(nombre)}"]`);
+    if (existente) {
+        if (!existente.classList.contains('seleccionado')) {
+            toggleTema(nombre, existente);
+        }
+        input.value = '';
+        return;
+    }
+
+    fetch('create_tema.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ tipo: tipo, nombre: nombre })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        // Quitamos el mensaje de "No hay temas aún" si estaba
+        const box = document.getElementById('temasDisponiblesBox');
+        const msgVacio = box.querySelector('.text-muted');
+        if (msgVacio) msgVacio.remove();
+
+        renderTarjetaTema(data.nombre);
+
+        // La seleccionamos automáticamente, ya que el admin la acaba de crear
+        const card = document.querySelector(`.tema-card[data-nombre="${CSS.escape(data.nombre)}"]`);
+        toggleTema(data.nombre, card);
+
+        input.value = '';
+        input.focus(); // para seguir escribiendo temas rápido, uno tras otro
+    })
+    .catch(err => console.error('Error creando tema:', err));
+}
+
+function actualizarHidden() {
+    document.getElementById('temasHidden').value = temasSeleccionados.join(',');
+}
+
+// Enter en el input también crea el tema (para agilidad, como pediste)
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('temaInput');
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                crearTema();
+            }
+        });
+    }
+});
 </script>
 
 <?php include("../../layout/admin/parte2.php");?>
