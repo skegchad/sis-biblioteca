@@ -1,6 +1,6 @@
 <?php
-require_once (__DIR__ . "/../../app/config/config.php");
-require_once (__DIR__ . "/../../app/config/conexion.php");
+include ("../../app/config/config.php");
+include ("../../app/config/conexion.php");
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
