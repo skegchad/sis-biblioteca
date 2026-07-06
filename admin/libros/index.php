@@ -129,17 +129,17 @@ table.dataTable {
 
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
 <div id="toast-success">
-    <i class="ti ti-circle-check"></i> ¡Usuario registrado!
+    <i class="ti ti-circle-check"></i> ¡Libro registrado!
 </div>
 <?php endif; ?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'actualizado'): ?>
 <div id="toast-success">
-    <i class="ti ti-circle-check"></i> ¡Usuario actualizado!
+    <i class="ti ti-circle-check"></i> ¡Libro actualizado!
 </div>
 <?php endif; ?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'eliminado'): ?>
 <div id="toast-success-eliminado">
-    <i class="bi bi-trash"></i> ¡Usuario eliminado!
+    <i class="bi bi-trash"></i> ¡Libro eliminado!
 </div>
 <?php endif; ?>
 
@@ -179,6 +179,7 @@ table.dataTable {
                             <tr>
                                 <th scope="col">Num</th>
                                 <th scope="col">Título</th>
+                                <th scope="col">Autor</th>
                                 <th scope="col">Descripción</th>
                                 <th scope="col">Idioma</th>
                                 <th scope="col">Disponibilidad</th>
@@ -198,17 +199,28 @@ table.dataTable {
                         </thead>
                         <tbody class="table-group-divider">
                             <?php
-                                $query = $pdo->prepare('SELECT * FROM tb_libros WHERE estado="1" ');
+                                $query = $pdo->prepare('
+                                    SELECT 
+                                        l.*,
+                                        GROUP_CONCAT(t.nombre SEPARATOR ", ") AS temas
+                                    FROM tb_libros l
+                                    LEFT JOIN libro_tema lt ON l.id_libro = lt.id_libro
+                                    LEFT JOIN temas t ON lt.tema_id = t.id
+                                    WHERE l.estado = "1"
+                                    GROUP BY l.id_libro
+                                ');
                                 $query->execute();
-                                $libros=$query->fetchAll(PDO::FETCH_ASSOC);
+                                $libros = $query->fetchAll(PDO::FETCH_ASSOC);
                                 foreach($libros as $libro){
 
                                     $id = $libro['id_libro'];
                                     $titulo = $libro['titulo'];
+                                    $autor = $libro['autor'];
                                     $descripcion = $libro['descripcion'];
                                     $idioma = $libro['idioma'];
                                     $disponibilidad = $libro['disponibilidad'];
                                     $temas = $libro['temas'];
+                                    $tipo = $libro['tipo'];
                                     $edicion = $libro['edicion'];
                                     $ano = $libro['ano'];
                                     $cdd = $libro['cdd'];
@@ -220,11 +232,12 @@ table.dataTable {
                                     $ejemplares = $libro['ejemplares'];
                                     $prestados = $libro['prestados'];
                                     
-                                    $contador = $libro +1;
+                                    $contador = $contador +1;
                                 ?>
                                     <tr>
                                         <td><?php echo $contador;?></td>
                                         <td><?php echo $titulo;?></td>
+                                        <td><?php echo $autor;?></td>
                                         <td><?php echo $descripcion;?></td>
                                         <td><?php echo $idioma;?></td>
                                         <td><?php echo $disponibilidad;?></td>

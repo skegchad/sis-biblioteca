@@ -68,15 +68,20 @@ foreach ($tipos as $tipo) {
                         <div class="card-body">
                             <form action="controller_create.php" method="post" enctype="multipart/form-data">    
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="titulo" class="form-label">Título</label>
                                         <input type="text" name="titulo" id="titulo" class="form-control" required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label for="autor" class="form-label">Autor</label>
+                                        <input type="text" name="autor" id="autor" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-3">
                                         <label for="editorial" class="form-label">Editorial</label>
                                         <input type="text" name="editorial" id="editorial" class="form-control" required>
                                     </div>
-                                    <div class="col-md-4">
+                                
+                                    <div class="col-md-3">
                                         <label for="edicion" class="form-label">Edición</label>
                                         <input type="text" name="edicion" id="edicion" class="form-control" required>
                                     </div>
@@ -185,13 +190,16 @@ foreach ($tipos as $tipo) {
                                 </div>
                                 <hr>
                                 <div class="row">
-                                    <div class="mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Portada del libro (OPCIONAL)</label>
                                         <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
-                                        
-                                        <!-- Preview opcional -->
                                         <img id="preview" src="<?php echo $URL;?>/public/uploads/img/libros/default.jpg" 
                                             class="mt-2 rounded" width="80" height="110" style="object-fit:cover;">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Archivo PDF del libro (OPCIONAL)</label>
+                                        <input type="file" name="pdf" id="pdf" class="form-control" accept="application/pdf">
+                                        <div id="pdfInfo" class="form-text"></div>
                                     </div>
                                 </div>
                                 <hr>
@@ -223,6 +231,36 @@ document.getElementById('foto').addEventListener('change', function() {
     if (file) {
         document.getElementById('preview').src = URL.createObjectURL(file);
     }
+});
+
+// Validación del PDF
+document.getElementById('pdf').addEventListener('change', function() {
+    const file = this.files[0];
+    const info = document.getElementById('pdfInfo');
+
+    if (!file) {
+        info.textContent = '';
+        return;
+    }
+
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (extension !== 'pdf') {
+        alert('Solo se permiten archivos PDF');
+        this.value = '';
+        info.textContent = '';
+        return;
+    }
+
+    const maxMB = 20;
+    if (file.size > maxMB * 1024 * 1024) {
+        alert(`El archivo supera el tamaño máximo permitido (${maxMB} MB)`);
+        this.value = '';
+        info.textContent = '';
+        return;
+    }
+
+    const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+    info.textContent = `Archivo seleccionado: ${file.name} (${tamañoMB} MB)`;
 });
 function confirmarRegistro(btn) {
   const form = btn.closest('form');

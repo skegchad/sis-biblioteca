@@ -17,11 +17,11 @@ CREATE TABLE tb_usuarios(
     estado              VARCHAR (11)  NOT NULL
 );
 
-
 CREATE TABLE tb_libros(
     id_libro            INT (11)      NOT NULL AUTO_INCREMENT PRIMARY KEY,
     titulo              VARCHAR (255) NOT NULL,
     descripcion         TEXT          NOT NULL,
+    autor               VARCHAR (150)  NOT NULL,
     idioma              VARCHAR (255) NOT NULL,
     disponibilidad      TINYINT(1)    NOT NULL DEFAULT 1,
     temas               VARCHAR (255) NOT NULL,
@@ -75,6 +75,7 @@ CREATE TABLE temas (
     UNIQUE KEY unique_tema (tipo_id, nombre),
     FOREIGN KEY (tipo_id) REFERENCES tipos(id) ON DELETE CASCADE
 );
+
 CREATE TABLE libro_tema (
     id_libro INT NOT NULL,
     tema_id INT NOT NULL,
