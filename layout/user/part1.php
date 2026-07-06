@@ -84,6 +84,7 @@
   <style>
     header{
             background-color: #0d6efd; /* Azul Bootstrap */
+            padding: 10px 0;
         }
 
         /* Barra de navegación */
@@ -161,7 +162,7 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            min-height: 90px;
+            min-height: 45px;
         }
 
         .navbar{
@@ -215,7 +216,7 @@
                     </li>
 
                     <li>
-                      <a href="<?php echo $rutaAdmin; ?>"><?php echo $msj;?></a>
+                      <div class="alert"><?php echo isset($msj) ? $msj : ''; ?></div>
                     </li>
                     
                   </ul>
