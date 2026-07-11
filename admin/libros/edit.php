@@ -6,6 +6,35 @@ include ("../../layout/admin/datos_usuario.php");
 include ("../../layout/admin/comprueba_admin.php");
 include("../../layout/admin/parte1.php");
 
+$id_get=$_GET['id'];
+
+$libro_query=$pdo->prepare("SELECT * FROM tb_libros WHERE id_libro = $id_get;");
+$libro_query->execute();
+$libros=$libro_query->fetchAll(PDO::FETCH_ASSOC);
+foreach($libros as $libro){
+    $id_libro      = $libro['id_libro'];
+    $titulo        = $libro['titulo'];
+    $autor         = $libro['autor'];
+    $descripcion   = $libro['descripcion'];
+    $idioma        = $libro['idioma'];
+    $disponibilidad= $libro['disponibilidad'];
+    $temas         = $libro['temas'];
+    $ttipo         = $libro['tipo'];
+    $edicion       = $libro['edicion'];
+    $ano           = $libro['ano'];
+    $cdd           = $libro['cdd'];
+    $bloque        = $libro['bloque'];
+    $ccategoria     = $libro['categoria'];
+    $subcategoria  = $libro['subcategoria'];
+    $seccion       = $libro['seccion'];
+    $editorial     = $libro['editorial'];
+    $ejemplares    = $libro['ejemplares'];
+    $prestados     = $libro['prestados'];
+    $ruta_pdf      = $libro['ruta_pdf'];
+    $ruta_foto      = $libro['ruta_foto'];
+}
+
+
 $categorias= $pdo->prepare("SELECT id, nombre, foto FROM categorias");
 $categorias->execute();
 $id_categoria=[];
@@ -28,6 +57,17 @@ foreach ($tipos as $tipo) {
     $nombre_tipo[$i] = $tipo['nombre'];
     $i++;
 }
+
+$sql = "SELECT t.nombre
+        FROM libro_tema lt
+        INNER JOIN temas t ON lt.tema_id = t.id
+        WHERE lt.id_libro = :id_libro";
+
+$query_temas = $pdo->prepare($sql);
+$query_temas->bindParam(':id_libro', $id_libro, PDO::PARAM_INT);
+$query_temas->execute();
+
+$temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <style>
     .tema-card {
@@ -57,7 +97,7 @@ foreach ($tipos as $tipo) {
                     <!--begin::Row-->
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="mb-0">Nuevo Libro</h3>
+                            <h3 class="mb-0">Editar Libro</h3>
                         </div>
                     </div>
                     <hr>
@@ -70,61 +110,65 @@ foreach ($tipos as $tipo) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="titulo" class="form-label">Título</label>
-                                        <input type="text" name="titulo" id="titulo" class="form-control" required>
+                                        <input type="text" value="<?php echo $titulo;?>" name="titulo" id="titulo" class="form-control" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="autor" class="form-label">Autor</label>
-                                        <input type="text" name="autor" id="autor" class="form-control" required>
+                                        <input type="text" value="<?php echo $autor;?>" name="autor" id="autor" class="form-control" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="editorial" class="form-label">Editorial</label>
-                                        <input type="text" name="editorial" id="editorial" class="form-control" required>
+                                        <input type="text" value="<?php echo $descripcion;?>" name="editorial" id="editorial" class="form-control" required>
                                     </div>
                                 
                                     <div class="col-md-3">
                                         <label for="edicion" class="form-label">Edición</label>
-                                        <input type="text" name="edicion" id="edicion" class="form-control" required>
+                                        <input type="text" value="<?php echo $edicion;?>" name="edicion" id="edicion" class="form-control" required>
                                     </div>
                                 </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="ano" class="form-label">Año</label>
-                                        <input type="number" name="ano" id="ano" class="form-control" required>
+                                        <input type="number" value="<?php echo $ano;?>" name="ano" id="ano" class="form-control" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="idioma" class="form-label">Idioma</label>
-                                        <select name="idioma" class="form-select" id="idioma" required>
+                                        <select name="idioma" value="<?php echo $idioma;?>" class="form-select" id="idioma" required>
                                             <option value="">-- Idioma --</option>
-                                            <option value="Español">Español</option>
-                                            <option value="Inglés">Inglés</option>
-                                            <option value="Francés">Francés</option>
-                                            <option value="Otro">Otro</option>
+                                            <option value="Español" <?php echo $idioma == 'Español' ? 'selected' : ''; ?>>Español</option>
+                                            <option value="Inglés" <?php echo $idioma == 'Inglés' ? 'selected' : ''; ?>>Inglés</option>
+                                            <option value="Francés" <?php echo $idioma == 'Francés' ? 'selected' : ''; ?>>Francés</option>
+                                            <option value="Otro" <?php echo $idioma == 'Otro' ? 'selected' : ''; ?>>Otro</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="disponibilidad" class="form-label">Disponibilidad</label>
                                         <select name="disponibilidad" class="form-select" id="disponibilidad" required>
                                             <option value="">-- Selecciona --</option>
-                                            <option value="1">Disponible</option>
-                                            <option value="0">No disponible</option>
+                                            <option value="1" <?php echo $disponibilidad == 1 ? 'selected' : ''; ?>>Disponible</option>
+                                            <option value="0" <?php echo $disponibilidad == 0 ? 'selected' : ''; ?>>No disponible</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="tipo" class="form-label">Tipo</label>
-                                        <select name="tipo" class="form-select" id="tipo" onchange="mostrarTemas(this)" required>
-                                            <option value="">-- Selecciona --</option>
-                                            <?php for ($i = 0; $i < count($id_tipo); $i++): ?>
-                                                <option value="<?php echo htmlspecialchars($nombre_tipo[$i]); ?>"><?php echo htmlspecialchars($nombre_tipo[$i]); ?></option>
-                                            <?php endfor; ?>
-                                        </select>
-                                    </div>
+                                    <label for="tipo" class="form-label">Tipo</label>
+                                    <select name="tipo" class="form-select" id="tipo" onchange="mostrarTemas(this)" required>
+                                        <option value="">-- Selecciona --</option>
+                                        <?php for ($i = 0; $i < count($id_tipo); $i++): ?>
+                                            <option value="<?= htmlspecialchars($nombre_tipo[$i]) ?>"
+                                                <?= $ttipo == $nombre_tipo[$i] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($nombre_tipo[$i]) ?>
+
+                                            </option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
                                 </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-12">
                                         <label for="descripcion" class="form-label">Descripción</label>
-                                        <textarea name="descripcion" id="descripcion" class="form-control" rows="3" required></textarea>
+                                        <textarea name="descripcion" id="descripcion" class="form-control" rows="3" required><?php echo htmlspecialchars($descripcion); ?></textarea>
                                     </div>
                                 </div>
                                 <br>
@@ -148,21 +192,24 @@ foreach ($tipos as $tipo) {
                                     </div>
                                     <div class="col-md-6">
                                         <label for="cdd" class="form-label">CDD (Clasificación Decimal Dewey)</label>
-                                        <input type="text" name="cdd" id="cdd" class="form-control" required>
+                                        <input type="text" value="<?php echo $cdd;?>" name="cdd" id="cdd" class="form-control" required>
                                     </div>
                                 </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="bloque" class="form-label">Bloque</label>
-                                        <input type="text" name="bloque" id="bloque" class="form-control" required>
+                                        <input type="text" value="<?php echo $bloque;?>" name="bloque" id="bloque" class="form-control" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="categoria" class="form-label">Categoría</label>
                                         <select name="categoria" class="form-select" id="categoria" onchange="mostrarSubcategoria(this)" required>
                                             <option value="">-- Categoría --</option>
                                             <?php for ($i = 0; $i < count($id_categoria); $i++): ?>
-                                                <option value="<?php echo htmlspecialchars($categoria_nombre[$i]); ?>"><?php echo htmlspecialchars($categoria_nombre[$i]); ?></option>
+                                            <option value="<?= htmlspecialchars($categoria_nombre[$i]) ?>"
+                                                <?= $ccategoria == $categoria_nombre[$i] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($categoria_nombre[$i]) ?>
+                                            </option>
                                             <?php endfor; ?>
                                         </select>
                                     </div>
@@ -174,18 +221,18 @@ foreach ($tipos as $tipo) {
                                     </div>
                                     <div class="col-md-3">
                                         <label for="seccion" class="form-label">Sección</label>
-                                        <input type="text" name="seccion" id="seccion" class="form-control" required>
+                                        <input type="text" value="<?php echo $seccion;?>" name="seccion" id="seccion" class="form-control" required>
                                     </div>
                                 </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <label for="ejemplares" class="form-label">Ejemplares</label>
-                                        <input type="number" name="ejemplares" id="ejemplares" class="form-control" min="0" required>
+                                        <input type="number" value="<?php echo $ejemplares;?>" name="ejemplares" id="ejemplares" class="form-control" min="0" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="prestados" class="form-label">Prestados</label>
-                                        <input type="number" name="prestados" id="prestados" class="form-control" min="0" value="0" required>
+                                        <input type="number" value="<?php echo $prestados;?>" name="prestados" id="prestados" class="form-control" min="0" value="0" required>
                                     </div>
                                 </div>
                                 <hr>
@@ -193,12 +240,26 @@ foreach ($tipos as $tipo) {
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Portada del libro (OPCIONAL)</label>
                                         <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
-                                        <img id="preview" src="<?php echo $URL;?>/public/uploads/img/libros/default.jpg" 
+                                        <img id="preview" src="<?php echo $URL;?>/<?php echo $ruta_foto ?>"
                                             class="mt-2 rounded" width="80" height="110" style="object-fit:cover;">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Archivo PDF del libro (OPCIONAL)</label>
                                         <input type="file" name="pdf" id="pdf" class="form-control" accept="application/pdf">
+                                        <?php if (!empty($ruta_pdf)): ?>
+
+                                            <div class="mt-2">
+                                                <small class="text-muted">PDF actual:</small><br>
+
+                                                <a href="<?php echo $URL . '/' . $ruta_pdf; ?>"
+                                                target="_blank"
+                                                class="btn btn-outline-danger btn-sm">
+                                                    📄 Ver PDF actual
+                                                </a>
+
+                                            </div>
+
+                                        <?php endif; ?>
                                         <div id="pdfInfo" class="form-text"></div>
                                     </div>
                                 </div>
@@ -224,8 +285,24 @@ foreach ($tipos as $tipo) {
             <!--end::Container-->
             </div>
     </main>
+
+<script src="https://jquery.com"></script>
 <script>
 // Preview de la foto
+window.addEventListener('DOMContentLoaded', () => {
+
+    const tipo = document.getElementById('tipo');
+    if (tipo.value !== '') {
+        mostrarTemas(tipo);
+    }
+
+    const categoria = document.getElementById('categoria');
+    if (categoria.value !== '') {
+        mostrarSubcategoria(categoria);
+    }
+
+});
+
 document.getElementById('foto').addEventListener('change', function() {
     const file = this.files[0];
     if (file) {
@@ -286,6 +363,7 @@ function confirmarRegistro(btn) {
     }
   });
 }
+const subcategoriaActual = <?= json_encode($subcategoria) ?>;
 function mostrarSubcategoria(select) {
     const categoria = select.value;
     const subcategoriaSelect = document.getElementById('subcategoria');
@@ -304,9 +382,15 @@ function mostrarSubcategoria(select) {
         .then(res => res.json())
         .then(data => {
             data.forEach(function(sub) {
+
                 const option = document.createElement('option');
                 option.value = sub.nombre;
                 option.textContent = sub.nombre;
+
+                if (sub.nombre === subcategoriaActual) {
+                    option.selected = true;
+                }
+
                 subcategoriaSelect.appendChild(option);
             });
             subcategoriaSelect.disabled = false;
@@ -316,7 +400,7 @@ function mostrarSubcategoria(select) {
 }
 let temasElegidos = []; // nombres de temas ya elegidos
 let temasDisponibles = []; // temas existentes del tipo actual
-let temasSeleccionados = []; // nombres de temas elegidos
+let temasSeleccionados = <?= json_encode($temasSeleccionados ?? []) ?>;
 
 function mostrarTemas(select) {
     const tipo = select.value;
@@ -324,8 +408,6 @@ function mostrarTemas(select) {
     const btnAgregar = document.getElementById('btnAgregarTema');
     const box = document.getElementById('temasDisponiblesBox');
 
-    temasSeleccionados = [];
-    actualizarHidden();
     box.innerHTML = '';
     input.value = '';
 
@@ -348,8 +430,16 @@ function mostrarTemas(select) {
             } else {
                 data.forEach(function(tema) {
                     renderTarjetaTema(tema.nombre);
+
+                    const card = [...document.querySelectorAll('.tema-card')]
+                    .find(c => c.dataset.nombre === tema.nombre);
+
+                    if (card && temasSeleccionados.includes(tema.nombre)) {
+                        card.classList.add('seleccionado');
+                    }
                 });
             }
+            actualizarHidden();
 
             input.disabled = false;
             btnAgregar.disabled = false;

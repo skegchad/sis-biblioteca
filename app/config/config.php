@@ -15,7 +15,7 @@ define("BD_PASSWORD"," ");
 define("BD_SISTEMA","bd_sis_biblioteca");
 */
 
-$URL='http://localhost/www.sis_biblioteca.com';
+$URL='http://' . $_SERVER['HTTP_HOST'] . '/www.sis_biblioteca.com';
 $ROOT    = $_SERVER['DOCUMENT_ROOT'] . "/www.sis_biblioteca.com/";
 
 date_default_timezone_set("America/Guayaquil");
