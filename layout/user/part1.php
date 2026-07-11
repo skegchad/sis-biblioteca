@@ -82,7 +82,7 @@
     Author URL: https://bootstrapmade.com
   ======================================================= -->
   <style>
-    header{
+    .header-principal{
             background-color: #0d6efd; /* Azul Bootstrap */
         }
 
@@ -175,17 +175,17 @@
   <div id="wrapper">
 
     <!-- start header -->
-    <header>
+    <header class="header-principal">
       <div class="container">
 
 
         <div class="row nomargin">
           <div class="span4">
               <div class="logo-contenedor">
-                  <a href="#">
+                  <a href="<?php echo $URL; ?>/user">
                       <img src="<?php echo $URL; ?>/public/assets/img/grupoProyecto/cenaculo.png" alt="Logo">
                   </a>
-                  <a href="#">
+                  <a href="<?php echo $URL; ?>/user">
                   <h1 class="titulo-biblioteca">BIBLIOTECA</h1>
                   </a>
               </div>
@@ -196,7 +196,7 @@
                 <nav>
                   <ul class="nav topnav">
                     <li class="active">
-                      <a href="#"><i class="icon-home"></i> Inicio </a>
+                      <a href="<?php echo $URL; ?>/user"><i class="icon-home"></i> Inicio </a>
                     </li>
                     <li>
                       <a href="<?php echo $URL; ?>/layout/user/catalogo.php">Catalogación</a>
@@ -211,7 +211,7 @@
                     </li>
 
                     <li>
-                      <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.html">Conoce a BMO</a>
+                      <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.php">Conoce a BMO</a>
                     </li>
 
                     <li>
