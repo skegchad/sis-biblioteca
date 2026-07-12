@@ -1,13 +1,17 @@
 <?php
 // ollama.php - Función para consultar Ollama
-
 function preguntarOllama(
     string $prompt,
     float $temperature = 0.2,
-    string $modelo = 'qwen3:1.7b'
+    ?string $modelo = null
 ): string
 {
-    $url = 'http://localhost:11434/api/generate';
+    global $modelo_ia;
+
+    if ($modelo === null) {
+        $modelo = $modelo_ia;
+    }
+    $url = 'http://127.0.0.1:11434/api/generate';
 
     $data = [
         'model' => $modelo,
@@ -38,5 +42,14 @@ function preguntarOllama(
 
     $result = json_decode($response, true);
 
-    return trim($result['response'] ?? '');
+    if ($result === null) {
+        return "Error JSON: " . json_last_error_msg() . "\nRespuesta recibida: " . $response;
+    }
+
+    if (isset($result['error'])) {
+        return "Error Ollama: " . $result['error'];
+    }
+
+    return trim($result['response'] ?? 'Sin respuesta');
+    
 }

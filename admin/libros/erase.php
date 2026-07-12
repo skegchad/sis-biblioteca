@@ -97,16 +97,18 @@ $temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
                     <!--begin::Row-->
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="mb-0">Editar Libro</h3>
+                            <h3 class="mb-0">Borrar Libro</h3>
                         </div>
                     </div>
                     <hr>
                     <!--end::Row-->
                     <div class="card">
-                        <h5 class="card-header">Llene la información con mucho cuidado</h5>
+                        <h5 class="card-header">¿Desea eliminar este libro?</h5>
                         
                         <div class="card-body">
-                            <form action="controller_edit.php?id=<?php echo $id_get;?>" method="post" enctype="multipart/form-data">    
+                            <form action="controller_erase.php?id=<?php echo $id_get;?>" method="post" enctype="multipart/form-data">
+
+                            <fieldset disabled>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="titulo" class="form-label">Título</label>
@@ -236,33 +238,37 @@ $temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
                                     </div>
                                 </div>
                                 <hr>
+                                
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Portada del libro (OPCIONAL)</label>
-                                        <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
+                                        <input type="file" name="foto" id="foto" class="form-control" accept="image/*" >
                                         <img id="preview" src="<?php echo $URL;?>/<?php echo $ruta_foto ?>"
                                             class="mt-2 rounded" width="80" height="110" style="object-fit:cover;">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Archivo PDF del libro (OPCIONAL)</label>
                                         <input type="file" name="pdf" id="pdf" class="form-control" accept="application/pdf">
-                                        <?php if (!empty($ruta_pdf)): ?>
+                                        
+                                        <div class="mt-2">
+                                            <?php if (!empty($ruta_pdf)): ?>
 
-                                            <div class="mt-2">
                                                 <small class="text-muted">PDF actual:</small><br>
 
                                                 <a href="<?php echo $URL . '/' . $ruta_pdf; ?>"
                                                 target="_blank"
-                                                class="btn btn-outline-danger btn-sm">
-                                                    📄 Ver PDF actual
+                                                class="btn btn-outline-danger btn-sm"
+                                                style="pointer-events: auto;">
+                                                    Ver PDF actual
                                                 </a>
 
-                                            </div>
-
-                                        <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
                                         <div id="pdfInfo" class="form-text"></div>
                                     </div>
+                                
                                 </div>
+                                </fieldset>
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-2"></div>
@@ -273,11 +279,12 @@ $temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <button class="btn btn-success" type="button" onclick="confirmarRegistro(this)">Editar Libro</button>
+                                            <button class="btn btn-danger" type="button" onclick="confirmarRegistro(this)">Borrar Libro</button>
                                         </div>
                                     </div>
                                     <div class="col-md-2"></div>
                                 </div>
+                            
                             </form>
                         </div>
                     </div>
@@ -350,12 +357,12 @@ function confirmarRegistro(btn) {
 
   Swal.fire({
     title: '¿Estás seguro?',
-    text: '¿Deseas editar este libro?',
+    text: '¿Deseas eliminar este libro?',
     icon: 'question',
     showCancelButton: true,
-    confirmButtonText: 'Sí, editar',
+    confirmButtonText: 'Sí, borrar',
     cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#0dfd69',
+    confirmButtonColor: '#fd0d0d',
     cancelButtonColor: '#6c757d',
   }).then((result) => {
     if (result.isConfirmed) {
@@ -462,20 +469,6 @@ function renderTarjetaTema(nombre) {
     card.dataset.nombre = nombre;
     card.onclick = () => toggleTema(nombre, card);
     box.appendChild(card);
-}
-
-function toggleTema(nombre, card) {
-    const index = temasSeleccionados.indexOf(nombre);
-
-    if (index === -1) {
-        temasSeleccionados.push(nombre);
-        card.classList.add('seleccionado');
-    } else {
-        temasSeleccionados.splice(index, 1);
-        card.classList.remove('seleccionado');
-    }
-
-    actualizarHidden();
 }
 
 function crearTema() {
