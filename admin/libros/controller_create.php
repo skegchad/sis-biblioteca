@@ -33,7 +33,7 @@ if (!$autor|| !$titulo || !$categoria || !$subcategoria || !$tipo) {
 }
 
 // ---------- 2. Subir la foto (portada) ----------
-$rutaFoto = null;
+$rutaFoto = "public/uploads/img/libros/default.jpg";
 
 if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
     $carpetaFoto = __DIR__ . "/../../public/uploads/img/libros/";
@@ -75,17 +75,20 @@ if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
 try {
     $pdo->beginTransaction();
 
+    // ✅ Se agregó la columna "temas" al INSERT (antes faltaba, por eso
+    // tb_libros.temas quedaba siempre vacío aunque el usuario sí lo escribiera
+    // en el formulario y sí se guardara en la tabla intermedia libro_tema).
     $stmt = $pdo->prepare("
         INSERT INTO tb_libros 
-        (titulo, autor, descripcion, idioma, disponibilidad, tipo, edicion, ano, cdd, bloque, categoria, subcategoria, seccion, editorial, ejemplares, prestados, ruta_pdf, ruta_foto, fyh_creacion, estado)
+        (titulo, autor, descripcion, idioma, disponibilidad, tipo, edicion, ano, cdd, bloque, categoria, subcategoria, seccion, editorial, ejemplares, prestados, ruta_pdf, ruta_foto, temas, fyh_creacion, estado)
         VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
     ");
 
     $stmt->execute([
         $titulo, $autor, $descripcion, $idioma, $disponibilidad, $tipo, $edicion, $ano, $cdd, $bloque,
         $categoria, $subcategoria, $seccion, $editorial, $ejemplares, $prestados,
-        $rutaPdf, $rutaFoto
+        $rutaPdf, $rutaFoto, $temasTexto
     ]);
 
 

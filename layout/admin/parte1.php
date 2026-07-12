@@ -303,7 +303,7 @@
                 <!--end::Menu Body-->
                 <!--begin::Menu Footer-->
                 <li class="user-footer">
-                  <a href="#" class="btn btn-outline-secondary">Profile</a>
+                  <a href="<?php echo $URL; ?>/user/profile" class="btn btn-outline-secondary">Mi Perfil</a>
                   <a href="<?php echo $URL;?>/login/controller_logout.php" class="btn btn-outline-danger float-end">Cerrar Sesión</a>
                 </li>
                 <!--end::Menu Footer-->

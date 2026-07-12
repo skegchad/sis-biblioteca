@@ -1,10 +1,15 @@
+
 <?php
 // chat.php - Endpoint del chat con integración a la BD de libros + roles de usuario
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_errors.log');
 
 header('Content-Type: application/json');
 
-require '../app/config/config.php';    // define las constantes BD_SISTEMA, BD_SERVIDOR, etc.
-require '../app/config/conexion.php';  // usa esas constantes y crea $pdo
+require_once '../app/config/config.php';
+require_once '../app/config/conexion.php';
 
 // --- Sesión ---
 // No incluimos login.php tal cual porque hace header("Location: ...") y esto es un endpoint JSON.
@@ -36,7 +41,12 @@ $esAdmin = ($cargo === 'Administrador');
 require 'ollama.php';
 
 // --- Entrada del usuario ---
-$input = json_decode(file_get_contents('php://input'), true);
+$raw = file_get_contents('php://input');
+
+file_put_contents(__DIR__ . '/debug_input.txt', $raw);
+
+$input = json_decode($raw, true);
+
 $pregunta = trim($input['mensaje'] ?? '');
 
 if ($pregunta === '') {
@@ -45,22 +55,44 @@ if ($pregunta === '') {
 }
 
 // Palabras limpias de puntuación, usadas para buscar en libros y (si aplica) en usuarios
-$textoLimpio = preg_replace('/[¿?¡!.,;:"\'()]/u', ' ', $pregunta);
-$palabras = array_values(array_filter(
-    preg_split('/\s+/', trim($textoLimpio)),
-    fn($p) => mb_strlen($p) >=2
-));
 $intencion = detectarIntencionIA($pregunta);
+
+file_put_contents(
+    'intencion.txt',
+    $intencion
+);
+
+if ($intencion === 'libros') {
+    $filtrosBusqueda = extraerFiltrosIA($pregunta);
+} else {
+    $palabras = [];
+}
 
 // 1. Contexto de libros (todos los roles)
 $contexto = '';
+
+// Bandera: se activa cuando el usuario preguntó específicamente por libros/autor
+// y la búsqueda en la BD no encontró NADA. En ese caso respondemos directo,
+// sin pasar por el modelo, para eliminar el riesgo de que invente un libro.
+$sinResultadosLibros = false;
+$sinRecomendaciones = false;
+
+// Cuando SÍ hay resultados de libros, armamos la respuesta con PHP puro
+// (sin pasar por el modelo) para que sea imposible que se invente libros extra.
+$respuestaDirectaLibros = null;
 
 switch ($intencion) {
 
     case 'libros':
 
-        $libros = buscarLibrosRelevantes($pdo, $palabras);
+        $libros = buscarLibrosRelevantes($pdo, $filtrosBusqueda);
         $contexto = construirContextoLibros($libros);
+
+        if (empty($libros)) {
+            $sinResultadosLibros = true;
+        } else {
+            $respuestaDirectaLibros = formatearRespuestaLibros($libros);
+        }
 
         break;
 
@@ -106,6 +138,35 @@ switch ($intencion) {
 
         break;
 
+    case 'similares':
+
+    $libroBase = buscarLibroBaseSimilitud($pdo, $pregunta);
+
+    if (!empty($libroBase)) {
+
+        $recomendados = buscarLibrosSimilares(
+            $pdo,
+            $libroBase[0]
+        );
+
+        if (!empty($recomendados)) {
+
+            $respuestaDirectaLibros =
+                formatearRespuestaLibros($recomendados);
+
+        } else {
+
+            $sinRecomendaciones = true;
+
+        }
+
+    } else {
+
+        $sinResultadosLibros = true;
+
+    }
+
+    break;
     default:
 
         // Para preguntas generales también buscamos libros por si acaso.
@@ -113,7 +174,10 @@ switch ($intencion) {
 
         if (!empty($libros)) {
             $contexto = construirContextoLibros($libros);
+            $respuestaDirectaLibros = formatearRespuestaLibros($libros);
         }
+        // Nota: en 'default' NO activamos $sinResultadosLibros, porque aquí
+        // caen también saludos/charla casual que no debe forzar ese aviso.
 
         break;
 }
@@ -123,9 +187,37 @@ if (!isset($_SESSION['historial_chat'])) {
     $_SESSION['historial_chat'] = [];
 }
 
-$promptFinal = construirPrompt($contexto, $pregunta, $usuarioActual, $esAdmin, $_SESSION['historial_chat']);
-$respuesta = preguntarOllama($promptFinal);
+if ($sinRecomendaciones) {
 
+    $respuesta =
+        "No encontré otros libros similares a ese dentro de nuestra biblioteca. "
+        . "Puedes intentar con otro libro o pedirme recomendaciones sobre otro tema.";
+
+} elseif ($sinResultadosLibros) {
+
+    $respuesta =
+        "No encontré ningún libro que coincida con esa búsqueda en nuestra base de datos. "
+        . "¿Quieres intentar con otro título, autor o tema?";
+
+} elseif ($respuestaDirectaLibros !== null) {
+
+    // Respuesta generada directamente desde la BD
+    $respuesta = $respuestaDirectaLibros;
+
+} else {
+
+    // Para saludos, conversación general, estadísticas, usuarios, etc.
+    $promptFinal = construirPrompt(
+        $contexto,
+        $pregunta,
+        $usuarioActual,
+        $esAdmin,
+        $_SESSION['historial_chat']
+    );
+
+    $respuesta = preguntarOllama($promptFinal);
+
+}
 // Guardamos el intercambio en el historial (limitado a los últimos 6 mensajes = 3 turnos)
 $_SESSION['historial_chat'][] = ['rol' => 'usuario', 'texto' => $pregunta];
 $_SESSION['historial_chat'][] = ['rol' => 'asistente', 'texto' => $respuesta];
@@ -133,7 +225,13 @@ $_SESSION['historial_chat'] = array_slice($_SESSION['historial_chat'], -4);
 
 echo json_encode(['respuesta' => $respuesta]);
 
+$temas = $pdo->query("
+    SELECT nombre
+    FROM tb_tema
+    ORDER BY nombre
+")->fetchAll(PDO::FETCH_COLUMN);
 
+$listaTemas = implode(", ", $temas);
 // ============================================================
 // FUNCIONES
 // ============================================================
@@ -142,73 +240,91 @@ echo json_encode(['respuesta' => $respuesta]);
  * Busca libros relacionados a la pregunta (por título, autor, tema, categoría, editorial, descripción).
  * Solo libros activos y no eliminados.
  */
-function buscarLibrosRelevantes(PDO $pdo, array $palabras): array
+function buscarLibrosRelevantes(PDO $pdo, array $filtros): array
 {
-    if (empty($palabras)) {
-        return [];
-    }
+    // Palabras genéricas que no aportan a la búsqueda y romperían el AND estricto
+    // (ej: "libros de Kafka" -> "libros" y "de" no deben exigirse como coincidencia).
+    
 
-    // Prioridad de búsqueda
-    $prioridades = [
-        ['titulo', 'temas', 'categoria'],
-        ['autor', 'editorial'],
-        ['descripcion']
-    ];
+    // Eliminar palabras repetidas
+        if (empty($filtros)) {
+            return [];
+        }
 
-    foreach ($prioridades as $camposBusqueda) {
+        file_put_contents(
+            'debug.txt',
+            print_r($filtros, true)
+        );
+         
+    // Todos los campos de texto de tb_libros donde tiene sentido buscar coincidencias
+    $camposPermitidos = [
+            'titulo',
+            'autor',
+            'temas',
+            'tipo',
+            'categoria',
+            'subcategoria',
+            'idioma',
+            'editorial',
+            'edicion',
+            'ano',
+            'cdd',
+            'bloque',
+            'seccion'
+        ];
 
-        $condiciones = [];
-        $params = [];
 
-        foreach ($palabras as $i => $palabra) {
+    $condiciones = [];
+    $params = [];
 
-            $condCampos = [];
+    foreach ($filtros as $i => $filtro) {
 
-            foreach ($camposBusqueda as $campo) {
+            $campo = $filtro['campo'] ?? '';
+            $valor = $filtro['valor'] ?? '';
 
-                $key = ":p{$i}_{$campo}";
 
-                $condCampos[] = "$campo LIKE $key";
-
-                $params[$key] = "%{$palabra}%";
+            if (
+                !in_array($campo, $camposPermitidos)
+                || empty($valor)
+            ) {
+                continue;
             }
 
-            $condiciones[] = "(" . implode(" OR ", $condCampos) . ")";
+
+            $key = ":f$i";
+
+            $condiciones[] = "l.$campo LIKE $key";
+
+            $params[$key] = "%$valor%";
         }
 
-        $sql = "
-            SELECT
-                titulo,
-                autor,
-                idioma,
-                disponibilidad,
-                ejemplares,
-                prestados,
-                temas,
-                categoria,
-                tipo,
-                editorial,
-                ano
-            FROM tb_libros
-            WHERE estado='1'
-              AND fyh_eliminacion IS NULL
-              AND (" . implode(" OR ", $condiciones) . ")
-            LIMIT 10
-        ";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-
-        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Si encontró resultados en esta prioridad, ya no sigue buscando.
-        if (!empty($resultados)) {
-            return $resultados;
-        }
+    // AND entre palabras: todas las palabras significativas deben coincidir
+    // (aunque sea en campos distintos), para evitar falsos positivos.
+    if (empty($condiciones)) {
+        return [];
     }
+    $sql = "
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado='1'
+          AND l.fyh_eliminacion IS NULL
+          AND (" . implode(" AND ", $condiciones) . ")
+        LIMIT 10
+    ";
+    
+    file_put_contents(
+        'debug_sql.txt',
+        $sql . "\n\n" . print_r($params, true)
+    );
 
-    // No encontró nada
-    return [];
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function construirContextoLibros(array $libros): string
@@ -239,6 +355,70 @@ function construirContextoLibros(array $libros): string
     }
 
     return implode("\n-----------------\n", $lineas);
+}
+
+/**
+ * Arma la respuesta del listado de libros usando PHP puro (sin IA).
+ * Esto garantiza al 100% que nunca se mencione un libro que no exista
+ * realmente en la base de datos, sin depender de que el modelo "obedezca"
+ * instrucciones de no inventar.
+ */
+function formatearRespuestaLibros(array $libros): string
+{
+    $cantidad = count($libros);
+
+    if ($cantidad === 1) {
+        $lineas = ["¡Encontré un libro que coincide con tu búsqueda! 😊"];
+    } else {
+        $lineas = ["¡Encontré {$cantidad} libros que coinciden con tu búsqueda! 😊"];
+    }
+    $lineas[] = '';
+
+    foreach ($libros as $libro) {
+        $disponibles = max(0, (int)$libro['ejemplares'] - (int)$libro['prestados']);
+
+        $disponibilidadTexto = $disponibles > 0
+            ? "Ahora mismo está disponible para préstamo, con {$disponibles} ejemplar" . ($disponibles === 1 ? '' : 'es') . " libre" . ($disponibles === 1 ? '' : 's') . "."
+            : "En este momento no está disponible, todos sus ejemplares están prestados.";
+
+        $categoriaTexto = $libro['categoria'];
+        if (!empty($libro['subcategoria'])) {
+            $categoriaTexto .= " ({$libro['subcategoria']})";
+        }
+
+        $parrafo = "📖 \"{$libro['titulo']}\", de {$libro['autor']}, pertenece a la categoría {$categoriaTexto}";
+        if (!empty($libro['temas'])) {
+            $parrafo .= " y trata sobre {$libro['temas']}";
+        }
+        $parrafo .= ". ";
+
+        $parrafo .= "Fue publicado por {$libro['editorial']}";
+        if (!empty($libro['edicion'])) {
+            $parrafo .= " (edición {$libro['edicion']})";
+        }
+        $parrafo .= " en {$libro['ano']}, está en {$libro['idioma']} y es de tipo {$libro['tipo']}. ";
+
+        if (!empty($libro['seccion']) || !empty($libro['bloque']) || !empty($libro['cdd'])) {
+            $parrafo .= "Lo puedes encontrar en la sección {$libro['seccion']}, bloque {$libro['bloque']}, con código CDD {$libro['cdd']}. ";
+        }
+
+        $parrafo .= $disponibilidadTexto;
+
+        if (!empty($libro['descripcion'])) {
+            $parrafo .= "\n\n{$libro['descripcion']}";
+        }
+
+        $lineas[] = $parrafo;
+        $lineas[] = '';
+    }
+
+    if ($cantidad === 1) {
+        $lineas[] = "¿Quieres saber más detalles sobre este libro?";
+    } else {
+        $lineas[] = "¿Quieres que te cuente más sobre alguno de estos libros?";
+    }
+
+    return implode("\n", $lineas);
 }
 
 /**
@@ -339,11 +519,29 @@ Solo puedes responder UNA palabra.
 Opciones:
 
 libros
+similares
 estadisticas
 usuarios
 saludo
 social
 general
+
+EJEMPLOS:
+
+Pregunta:
+"¿Qué libros son parecidos a La metamorfosis?"
+Respuesta:
+similares
+
+Pregunta:
+"Recomiéndame libros similares a Nietzsche"
+Respuesta:
+similares
+
+Pregunta:
+"¿Qué libros se parecen a Cien años de soledad?"
+Respuesta:
+similares
 
 Pregunta:
 
@@ -368,6 +566,9 @@ PROMPT;
 
     if (str_contains($respuesta,'social'))
         return 'social';
+
+    if (str_contains($respuesta,'similar'))
+        return 'similares';
 
     return 'general';
 }
@@ -435,6 +636,8 @@ Si el usuario responde afirmativamente, continúa con el siguiente paso de la co
 
 No reformules la misma pregunta dos veces.
 
+No inventes libros que no existan en la base de datos, y usa unicamente la información proporcionada para preguntas relacionadas con consultas de libros.
+
 No ofrezcas funciones que no existen.
 
 No digas que puedes leer libros.
@@ -456,4 +659,207 @@ $pregunta
 
 Respuesta:
 PROMPT;
+}
+function extraerFiltrosIA(string $pregunta): array
+{
+    $prompt = <<<PROMPT
+Eres un sistema de búsqueda de biblioteca.
+
+Tu tarea es convertir la pregunta del usuario en filtros para una base de datos.
+
+Campos disponibles:
+
+- titulo
+- autor
+- temas
+- tipo
+- categoria
+- subcategoria
+- idioma
+- editorial
+- edicion
+- ano
+- cdd
+- bloque
+- seccion
+
+
+Reglas:
+
+- Si pregunta por "CDD", usa campo cdd.
+- Si pregunta por "bloque", usa campo bloque.
+- Si pregunta por "sección", usa campo seccion.
+- Si pregunta por "tipo de libro", usa campo tipo.
+- Si pregunta por género, usa tipo.
+- Si pregunta por temas, usa temas.
+- Si menciona autor, usa autor.
+- Si menciona un título, usa titulo.
+
+Puedes devolver varios filtros si la pregunta contiene varias condiciones.
+
+Ejemplo:
+
+Pregunta:
+"Libros de Friedrich Nietzsche con CDD 193"
+
+Respuesta:
+{
+ "filtros":[
+   {
+    "campo":"autor",
+    "valor":"Friedrich Nietzsche"
+   },
+   {
+    "campo":"cdd",
+    "valor":"193"
+   }
+ ]
+}
+
+Responde SOLO JSON válido.
+
+Ejemplos:
+
+Pregunta:
+"Que libros tienen CDD 193"
+
+Respuesta:
+{
+ "filtros":[
+   {
+    "campo":"cdd",
+    "valor":"193"
+   }
+ ]
+}
+
+
+Pregunta:
+"Que libros están en el bloque 100"
+
+Respuesta:
+{
+ "filtros":[
+   {
+    "campo":"bloque",
+    "valor":"100"
+   }
+ ]
+}
+
+
+Pregunta:
+"Que libros tratan sobre soledad"
+
+Respuesta:
+{
+ "filtros":[
+   {
+    "campo":"temas",
+    "valor":"soledad"
+   }
+ ]
+}
+
+
+Pregunta:
+"Que novelas tienes"
+
+Respuesta:
+{
+ "filtros":[
+   {
+    "campo":"tipo",
+    "valor":"novela"
+   }
+ ]
+}
+
+
+Pregunta:
+{$pregunta}
+
+Respuesta:
+PROMPT;
+
+
+    $respuesta = preguntarOllama($prompt);
+
+
+    $respuesta = str_replace(
+        ['```json','```'],
+        '',
+        $respuesta
+    );
+
+
+    $json = json_decode(trim($respuesta), true);
+
+
+    if (!isset($json['filtros'])) {
+        return [];
+    }
+
+
+    return $json['filtros'];
+}
+
+function buscarLibroBaseSimilitud(PDO $pdo, string $pregunta): array
+{
+
+    $filtros = extraerFiltrosIA($pregunta);
+
+
+    if(empty($filtros)){
+        return [];
+    }
+
+
+    return buscarLibrosRelevantes($pdo,$filtros);
+
+}
+
+function buscarLibrosSimilares(PDO $pdo,array $libro): array
+{
+
+    $temas = explode(',', $libro['temas']);
+
+
+    $condiciones = [];
+    $params = [];
+
+
+    foreach($temas as $i=>$tema){
+
+        $key=":tema$i";
+
+        $condiciones[] =
+        "temas LIKE $key";
+
+        $params[$key]="%".trim($tema)."%";
+    }
+
+
+    $sql="
+    SELECT *
+    FROM tb_libros
+    WHERE estado='1'
+    AND fyh_eliminacion IS NULL
+    AND id_libro <> :id
+    AND (
+        ".implode(" OR ",$condiciones)."
+    )
+    LIMIT 5
+    ";
+
+
+    $params[':id']=$libro['id_libro'];
+
+
+    $stmt=$pdo->prepare($sql);
+    $stmt->execute($params);
+
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 }
