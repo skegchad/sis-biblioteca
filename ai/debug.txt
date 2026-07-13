@@ -2,8 +2,8 @@ Array
 (
     [0] => Array
         (
-            [campo] => idioma
-            [valor] => C
+            [campo] => temas
+            [valor] => soledad
         )
 
 )

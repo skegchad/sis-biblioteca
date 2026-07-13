@@ -1,12 +1,12 @@
 <?php
-include ("../../app/config/config.php");
-include ("../../app/config/conexion.php");
-include ("../../layout/admin/login.php");
-include ("../../layout/admin/datos_usuario.php");
-include ("../../layout/admin/comprueba_admin.php");
-include("../../layout/admin/parte1.php");
+include ("../../../app/config/config.php");
+include ("../../../app/config/conexion.php");
+include ("../../../layout/admin/login.php");
+include ("../../../layout/admin/datos_usuario.php");
+include ("../../../layout/admin/comprueba_admin.php");
+include("../../../layout/admin/parte1.php");
 $contador = 0;?>
- 
+
 <style>
 #toast-success {
     position: fixed;
@@ -125,21 +125,29 @@ table.dataTable {
   width: 100% !important;
   flex-basis: 100%;
 }
+
+.celda-subcategorias {
+    max-width: 160px;
+    max-height: 120px;
+    overflow-y: auto;
+    display: block;
+    white-space: normal;
+}
 </style>
 
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
 <div id="toast-success">
-    <i class="ti ti-circle-check"></i> ¡Usuario registrado!
+    <i class="ti ti-circle-check"></i> ¡Categoria registrada!
 </div>
 <?php endif; ?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'actualizado'): ?>
 <div id="toast-success">
-    <i class="ti ti-circle-check"></i> ¡Usuario actualizado!
+    <i class="ti ti-circle-check"></i> ¡Categoria actualizada!
 </div>
 <?php endif; ?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'eliminado'): ?>
 <div id="toast-success-eliminado">
-    <i class="bi bi-trash"></i> ¡Usuario eliminado!
+    <i class="bi bi-trash"></i> ¡Categoria eliminada!
 </div>
 <?php endif; ?>
 
@@ -151,14 +159,14 @@ table.dataTable {
                     <!--begin::Row-->
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="mb-0">Listado de usuarios</h3>
+                            <h3 class="mb-0">Listado de Categorias</h3>
                         </div>
                     </div>
                     <hr>
                     <!--end::Row-->
                     <script>
                         $(document).ready(function() {
-                            $('#tablaUsuarios').DataTable({
+                            $('#tablaLibros').DataTable({
                                 pageLength: 5,        // filas por página
                                 ordering: true,        // ordenar columnas al hacer clic
                                 searching: true,       // buscador (true por defecto)
@@ -176,40 +184,79 @@ table.dataTable {
                                 });
                         });
                     </script>
-                    <table id="tablaUsuarios" class="table table-hover">
+                    <table id="tablaLibros" class="table table-hover">
                         <thead>
                             <tr>
                                 <th scope="col">Num</th>
-                                <th scope="col">Nombres</th>
-                                <th scope="col">Apellidos</th>
-                                <th scope="col">Cedula</th>
-                                <th scope="col">Nombre de Usuario</th>
-                                <th scope="col">Cargo</th>
-                                <th scope="col"><center>Acciones</center></th>
+                                <th scope="col">ID</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Foto</th>
+                                <th scope="col">Subcategorías</th>
+                                <th scope="col">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="table-group-divider">
                             <?php
-                                $query = $pdo->prepare('SELECT * FROM tb_usuarios WHERE estado="1" ');
+                                $query = $pdo->prepare('SELECT * FROM categorias');
                                 $query->execute();
-                                $usuarios=$query->fetchAll(PDO::FETCH_ASSOC);
-                                foreach($usuarios as $usuario){
+                                $categorias = $query->fetchAll(PDO::FETCH_ASSOC);
 
-                                    $id = $usuario['id_usuario'];
-                                    $nombre = $usuario['nombre_completo'];
-                                    $apellidos = $usuario['apellidos'];
-                                    $nombreusuario = $usuario['nombre_usuario'];
-                                    $cedula = $usuario['cedula'];
-                                    $cargo = $usuario['cargo'];
-                                    $contador = $contador +1;
+                                $query_subcategorias = $pdo->prepare('SELECT id, categoria_id, nombre FROM subcategorias');
+                                $query_subcategorias->execute();
+                                $subcategorias = $query_subcategorias->fetchAll(PDO::FETCH_ASSOC);
+
+                                // Agrupamos las subcategorías por categoria_id para no filtrar el array en cada vuelta
+                                $subcategoriasPorCategoria = [];
+                                foreach ($subcategorias as $sub) {
+                                    $subcategoriasPorCategoria[$sub['categoria_id']][] = $sub;
+                                }
+
+                                foreach($categorias as $categoria){
+
+                                    $id = $categoria['id'];
+                                    $nombre = $categoria['nombre'];
+                                    $foto = $categoria['foto'];
+
+                                    $contador = $contador + 1;
                                 ?>
                                     <tr>
                                         <td><?php echo $contador;?></td>
+                                        <td><?php echo $id;?></td>
                                         <td><?php echo $nombre;?></td>
-                                        <td><?php echo $apellidos;?></td>
-                                        <td><?php echo $cedula;?></td>
-                                        <td><?php echo $nombreusuario;?></td>
-                                        <td><?php echo $cargo;?></td>
+                                        <td>
+                                            <?php if (trim($foto) == 'public/uploads/img/libros/categorias/default.jpg'): ?>
+                                                <span>Sin foto.</span> <br>
+                                            <?php else: ?>
+                                                <span><?php echo $foto ?></span><br>
+                                            <?php endif; ?>
+                                            <a href="<?php echo $URL;?>/<?php echo $foto ?>">
+                                                <img src="<?php echo $URL;?>/<?php echo $foto ?>"
+                                                    alt="Foto de <?php echo $nombre;?>"
+                                                    class="mt-2 rounded" width="110" height="110" style="object-fit:cover;">
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($subcategoriasPorCategoria[$id])): ?>
+                                                <table class="table table-sm table-bordered mb-0 celda-subcategorias">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Nombre</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($subcategoriasPorCategoria[$id] as $sub): ?>
+                                                            <tr>
+                                                                <td><?php echo $sub['id'];?></td>
+                                                                <td><?php echo $sub['nombre'];?></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            <?php else: ?>
+                                                <span class="text-muted">Sin subcategorías</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <center>
                                                 <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">
@@ -224,14 +271,13 @@ table.dataTable {
                                 <?php
                                 }
                             ?>
-                            
                         </tbody>
                     </table>
                 </div>
             <!--end::Container-->
             </div>
     </main>
-<?php include("../../layout/admin/parte2.php");?>
+<?php include("../../../layout/admin/parte2.php");?>
 
 <script>
     // Lo elimina del DOM después de que termina la animación

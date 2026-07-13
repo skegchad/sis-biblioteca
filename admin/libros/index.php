@@ -125,6 +125,23 @@ table.dataTable {
   width: 100% !important;
   flex-basis: 100%;
 }
+
+/* Limita el tamaño de la celda de descripción */
+.celda-descripcion {
+    max-width: 220px;
+    max-height: 80px;
+    overflow-y: auto;
+    display: block;
+    white-space: normal;
+}
+
+.celda-ruta {
+    max-width: 120px;
+    max-height: 100x;
+    overflow-y: auto;
+    display: block;
+    white-space: normal;
+}
 </style>
 
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
@@ -158,21 +175,23 @@ table.dataTable {
                     <!--end::Row-->
                     <script>
                         $(document).ready(function() {
-                            $('#tablaLibros').DataTable({
-                                pageLength: 5,        // filas por página
-                                ordering: true,        // ordenar columnas al hacer clic
-                                searching: true,       // buscador (true por defecto)
-                                language: {
-                                    search: "Buscar:",
-                                    lengthMenu: "Mostrar _MENU_ registros",
-                                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                                    paginate: {
+                        $('#tablaLibros').DataTable({
+                            pageLength: 5,
+                            ordering: true,
+                            searching: true,
+                            scrollX: true,        // <-- activa el scroll horizontal SOLO de la tabla
+                            scrollCollapse: true,
+                            language: {
+                                search: "Buscar:",
+                                lengthMenu: "Mostrar _MENU_ registros",
+                                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                                paginate: {
                                     previous: "Anterior",
                                     next: "Siguiente"
-                                    }
                                 }
-                                });
+                            }
                         });
+                    });
                     </script>
                     <table id="tablaLibros" class="table table-hover">
                         <thead>
@@ -195,6 +214,9 @@ table.dataTable {
                                 <th scope="col">Editorial</th>
                                 <th scope="col">Ejemplares</th>
                                 <th scope="col">Prestados</th>
+                                <th scope="col">Foto</th>
+                                <th scope="col">Pdf</th>
+                                <th scope="col">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="table-group-divider">
@@ -231,14 +253,18 @@ table.dataTable {
                                     $editorial = $libro['editorial'];
                                     $ejemplares = $libro['ejemplares'];
                                     $prestados = $libro['prestados'];
-                                    
+                                    $ruta_pdf = $libro['ruta_pdf'];
+                                    $ruta_foto = $libro['ruta_foto'];
+
                                     $contador = $contador +1;
                                 ?>
                                     <tr>
                                         <td><?php echo $contador;?></td>
                                         <td><?php echo $titulo;?></td>
                                         <td><?php echo $autor;?></td>
-                                        <td><?php echo $descripcion;?></td>
+                                        <td>
+                                            <span class="celda-descripcion"><?php echo $descripcion;?></span>
+                                        </td>
                                         <td><?php echo $idioma;?></td>
                                         <td><?php echo $disponibilidad;?></td>
                                         <td><?php echo $temas;?></td>
@@ -253,6 +279,26 @@ table.dataTable {
                                         <td><?php echo $editorial;?></td>
                                         <td><?php echo $ejemplares;?></td>
                                         <td><?php echo $prestados;?></td>
+                                        <td>
+                                            <span class="celda-ruta"><?php echo $ruta_foto;?></span>
+                                            <div class="mt-2">
+                                                <a href="<?php echo $URL;?>/<?php echo $ruta_foto ?>">
+                                                    <img id="preview" src="<?php echo $URL;?>/<?php echo $ruta_foto ?>"
+                                                        class="mt-2 rounded" width="80" height="110" style="object-fit:cover;">
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="celda-ruta"><?php echo $ruta_pdf;?></span>
+                                            <div class="mt-2">
+                                                <a href="<?php echo $URL . '/' . $ruta_pdf; ?>"
+                                                target="_blank"
+                                                class="btn btn-outline-danger btn-sm">
+                                                    📄 Ver PDF actual
+                                                </a>
+                                            </div>
+                                        </td>
+
                                         <td>
                                             <center>
                                                 <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">

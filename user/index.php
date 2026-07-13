@@ -26,25 +26,25 @@ include ("../layout/user/part1.php");
 
         <div class="catalogo-contenedor">
 
-            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS SOCIALES.png');"></div></a>
+            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/CIENCIAS SOCIALES.png');"></div></a>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/LITERATURA RETÓRICA.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/LITERATURA RETÓRICA.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/TECNOLOGÍA.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/TECNOLOGÍA.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/RELIGIÓN.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/RELIGIÓN.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/FILOSOFÍA Y PSICOLOGÍA.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/FILOSOFÍA Y PSICOLOGÍA.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS NATURALES Y MATEMÁTICAS.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/CIENCIAS NATURALES Y MATEMÁTICAS.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/GEOGRAFÍA E HISTORIA.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/GEOGRAFÍA E HISTORIA.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/LENGUAS.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/LENGUAS.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/ARTES.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/ARTES.png');"></div>
 
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/GENERALIDADES.png');"></div>
+            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/uploads/img/libros/categorias/GENERALIDADES.png');"></div>
 
         </div>
 

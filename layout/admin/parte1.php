@@ -94,8 +94,15 @@
       <!--begin::Header-->
       <nav class="app-header navbar navbar-expand bg-body">
         <!--begin::Container-->
+        <div>
+          <li class="nav-item">
+              <a class="nav-link btn btn-default" style="height: 4%;"data-lte-toggle="sidebar" href="#" role="button">
+                  <i class="bi bi-list"></i>
+              </a>
+          </li>
+        </div>
         <div class="container-fluid">
-        <a href="<?php echo $URL; ?>/user" class="btn btn-default">Ir a página del usuario</a>
+        <a href="<?php echo $URL; ?>/user" style="height: 4%;" class="btn btn-default">Ir a página del usuario</a>
           <!--begin::End Navbar Links-->
           <ul class="navbar-nav ms-auto">
             
@@ -316,6 +323,7 @@
         <!--end::Container-->
       </nav>
       <!--end::Header-->
+      
       <!--begin::Sidebar-->
       <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
         <!--begin::Sidebar Brand-->
@@ -349,7 +357,7 @@
               data-accordion="false"
               id="navigation"
             >
-              <li class="nav-item menu-open">
+              <li class="nav-item" data-menu-id="usuarios">
                 <a href="#" class="nav-link active">
                   <i class="nav-icon bi bi-people-fill"></i>
                   <p>
@@ -371,9 +379,9 @@
                     </a>
                   </li>
                 </ul>
-                                
               </li>
             </ul>
+
             <ul
               class="nav sidebar-menu flex-column"
               data-lte-toggle="treeview"
@@ -382,7 +390,9 @@
               data-accordion="false"
               id="navigation"
             >
-              <li class="nav-item menu-open">
+
+              <!-- ===== SECCIÓN LIBROS (contenedor principal) ===== -->
+              <li class="nav-item" data-menu-id="libros">
                 <a href="#" class="nav-link active">
                   <i class="nav-icon bi bi-book-fill"></i>
                   <p>
@@ -390,7 +400,10 @@
                     <i class="nav-arrow bi bi-chevron-right"></i>
                   </p>
                 </a>
+
+                <!-- Submenú de Libros: aquí va TODO lo relacionado a libros -->
                 <ul class="nav nav-treeview">
+
                   <li class="nav-item">
                     <a href="<?php echo $URL; ?>/admin/libros" class="nav-link active">
                       <i class="nav-icon bi bi-circle"></i>
@@ -403,9 +416,60 @@
                       <p>Crear libros</p>
                     </a>
                   </li>
+
+                  <!-- ---- Subsección Categorías (anidada dentro de Libros) ---- -->
+                  <li class="nav-item" data-menu-id="categorias">
+                    <a href="#" class="nav-link active">
+                      <i class="nav-icon bi bi-tags-fill"></i>
+                      <p>
+                        Categorías
+                        <i class="nav-arrow bi bi-chevron-right"></i>
+                      </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                      <li class="nav-item">
+                        <a href="<?php echo $URL; ?>/admin/libros/categorias" class="nav-link active">
+                          <i class="nav-icon bi bi-circle"></i>
+                          <p>Lista de categorías</p>
+                        </a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="<?php echo $URL; ?>/admin/libros/categorias/create.php" class="nav-link active">
+                          <i class="nav-icon bi bi-circle"></i>
+                          <p>Crear categoría</p>
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <!-- ---- Subsección Tipos (anidada dentro de Libros) ---- -->
+                  <li class="nav-item" data-menu-id="tipos">
+                    <a href="#" class="nav-link active">
+                      <i class="nav-icon bi bi-bookmark-fill"></i>
+                      <p>
+                        Tipos
+                        <i class="nav-arrow bi bi-chevron-right"></i>
+                      </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                      <li class="nav-item">
+                        <a href="<?php echo $URL; ?>/admin/libros/tipos" class="nav-link active">
+                          <i class="nav-icon bi bi-circle"></i>
+                          <p>Lista de tipos</p>
+                        </a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="<?php echo $URL; ?>/admin/libros/tipos/create.php" class="nav-link active">
+                          <i class="nav-icon bi bi-circle"></i>
+                          <p>Crear tipo</p>
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+
                 </ul>
-                                
               </li>
+              <!-- ===== FIN SECCIÓN LIBROS ===== -->
             </ul>
             <!--end::Sidebar Menu-->
           </nav>
@@ -414,3 +478,58 @@
       </aside>
       <!--end::Sidebar-->
       <!--begin::App Main-->
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const STORAGE_KEY = 'sidebarMenusAbiertos';
+
+    // Todos los <li> que son secciones colapsables (tienen data-menu-id)
+    const secciones = document.querySelectorAll('li.nav-item[data-menu-id]');
+
+    // ===== 1. Restaurar el estado guardado al cargar la página =====
+    function restaurarEstado() {
+        let abiertos = [];
+        try {
+            abiertos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch (e) {
+            abiertos = [];
+        }
+
+        secciones.forEach(function(li) {
+            const menuId = li.getAttribute('data-menu-id');
+            if (abiertos.includes(menuId)) {
+                li.classList.add('menu-open');
+            } else {
+                li.classList.remove('menu-open');
+            }
+        });
+    }
+
+    // ===== 2. Guardar el estado actual cada vez que cambia =====
+    function guardarEstado() {
+        const abiertos = [];
+        secciones.forEach(function(li) {
+            if (li.classList.contains('menu-open')) {
+                abiertos.push(li.getAttribute('data-menu-id'));
+            }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(abiertos));
+    }
+
+    // Restauramos apenas carga el DOM (antes de que el usuario vea el sidebar cerrado)
+    restaurarEstado();
+
+    // ===== 3. Escuchar clics en los links que abren/cierran secciones =====
+    secciones.forEach(function(li) {
+        const link = li.querySelector(':scope > a.nav-link');
+        if (!link) return;
+
+        link.addEventListener('click', function() {
+            // AdminLTE aplica la clase "menu-open" de forma asíncrona vía su propio JS,
+            // así que esperamos un instante antes de leer el estado resultante.
+            setTimeout(guardarEstado, 50);
+        });
+    });
+});
+</script>

@@ -109,8 +109,8 @@
     Author URL: https://bootstrapmade.com
   ======================================================= -->
   <style>
-    /* ===========================
-   HEADER
+/* ===========================
+   HEADER - RESPONSIVE
 =========================== */
 
 .header-principal{
@@ -131,13 +131,15 @@
 =========================== */
 
 .logo-contenedor{
-    gap:2px;
+    gap:8px;
     display:flex;
     align-items: center;
+    min-width: 0; /* permite que el flex-item se achique sin romper el layout */
 }
 
 .logo-contenedor img{
     height:70px;
+    flex-shrink: 0;
 }
 
 .titulo-biblioteca{
@@ -146,6 +148,21 @@
     font-size:30px;
     font-weight:bold;
     font-family:'Open Sans', sans-serif;
+    white-space: nowrap;
+}
+
+/* ===========================
+   BOTÓN HAMBURGUESA (oculto en desktop)
+=========================== */
+
+.btn-menu-movil{
+    display:none;
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:28px;
+    cursor:pointer;
+    padding: 5px 10px;
 }
 
 /* ===========================
@@ -169,6 +186,7 @@
     align-items:center;
     gap:10px;
     margin:0;
+    flex-wrap: wrap;
 }
 
 .nav.topnav li{
@@ -181,6 +199,7 @@
     padding:10px 15px;
     border-radius:6px;
     transition:.25s;
+    white-space: nowrap;
 }
 
 .nav.topnav li a:hover{
@@ -224,7 +243,7 @@
     height:50px;
     border-radius:50%;
     object-fit:cover;
-
+    flex-shrink: 0;
 }
 
 .usuario-menu summary::after{
@@ -237,17 +256,11 @@
     position:absolute;
     top:60px;
     right:0;
-
     width:220px;
-
     background:white;
-
     border-radius:10px;
-
     box-shadow:0 8px 25px rgba(0,0,0,.18);
-
     overflow:hidden;
-
     z-index:999;
 }
 
@@ -272,6 +285,7 @@
 .cerrar{
     color:#d32f2f !important;
 }
+
 /* ===========================
    BANNER
 =========================== */
@@ -279,20 +293,14 @@
     width:100%;
     max-width:1200px;
     height:280px;
-
     margin:35px auto;
-
     border-radius:12px;
-
     background-image:
     linear-gradient(rgba(42,0,192,.25),rgba(255,0,0,.25)),
     url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg');
-
     background-size:cover;
     background-position:center;
-
     overflow:hidden;
-
     box-shadow:0 8px 25px rgba(0,0,0,.18);
 }
 
@@ -330,8 +338,148 @@
 .catalogo-tarjeta:hover{
     transform:translateY(-5px);
 }
-  </style>
-</head>
+
+/* ===========================
+   RESPONSIVE - TABLET
+=========================== */
+@media (max-width: 992px){
+    .titulo-biblioteca{
+        font-size: 22px;
+    }
+    .nav.topnav li a{
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+/* ===========================
+   RESPONSIVE - MOBILE
+=========================== */
+@media (max-width: 768px){
+
+    .header-contenido{
+        height: auto;
+        flex-wrap: wrap;
+        padding: 15px 0;
+        gap: 10px;
+    }
+
+    /* Logo ocupa su espacio, el usuario queda a la derecha, y el botón hamburguesa aparece */
+    .logo-contenedor img{
+        height: 45px;
+    }
+
+    .titulo-biblioteca{
+        font-size: 18px;
+    }
+
+    .btn-menu-movil{
+        display: block;
+        order: 2;
+    }
+
+    .btn-menu-movil{
+        z-index:10000;
+    }
+
+    .usuario-header{
+        order: 3;
+        margin-right: 0;
+    }
+
+    .usuario-menu img{
+        width: 38px;
+        height: 38px;
+    }
+
+    .usuario-menu summary span{
+        display: none; /* oculta el nombre en mobile, deja solo la foto, para ahorrar espacio */
+    }
+
+    /* El menú se oculta por defecto y se muestra abajo, en toda la fila, al abrir */
+    .menu-principal{
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 260px;
+        height: 100vh;
+        background: #0d6efd;
+        transition: .3s;
+        z-index: 9999;
+        padding-top: 90px;
+        box-shadow: 5px 0 15px rgba(0,0,0,.3);
+        overflow-y:auto;
+    }
+
+    .menu-principal.menu-abierto{
+        left: 0;
+    }
+
+    .nav.topnav{
+        display:flex !important;
+        flex-direction:column;
+        align-items:stretch;
+        width:100%;
+        margin:0;
+        padding:0;
+    }
+
+    .nav.topnav li{
+        display:block;
+        width:100%;
+        list-style:none;
+    }
+
+    .nav.topnav li a{
+        display:block;
+        width:100%;
+        color:white !important;
+        padding:18px 25px;
+        text-decoration:none;
+        border-bottom:1px solid rgba(255,255,255,.15);
+    }
+
+    .banner-biblioteca{
+        height: 160px;
+        margin: 20px auto;
+    }
+
+    .catalogo-contenedor{
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px){
+    .titulo-biblioteca{
+        display: none; /* en pantallas muy chicas, deja solo el ícono del logo */
+    }
+
+    .catalogo-contenedor{
+        grid-template-columns: 1fr;
+    }
+}
+
+#overlayMenu{
+    position: fixed;
+    top: 0;
+    left: 260px; /* mismo ancho del sidebar */
+    width: calc(100% - 260px);
+    height: 100%;
+    background: rgba(0,0,0,.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: .3s;
+    z-index: 9998;
+}
+
+#overlayMenu.activo{
+    opacity:1;
+    visibility:visible;
+}
+
+
+</style>
 
 <body>
 
@@ -354,8 +502,13 @@
                     </a>
                 </div>
 
+                <!-- Botón hamburguesa (solo visible en mobile) -->
+                <button type="button" class="btn-menu-movil" id="btnMenuMovil">
+                    ☰
+                </button>
+
                 <!-- Menú -->
-                <nav class="menu-principal">
+                <nav class="menu-principal" id="menuPrincipal">
                     <ul class="nav topnav">
 
                         <li class="active">
@@ -425,3 +578,21 @@
 
         </div>
     </header>
+    <div id="overlayMenu"></div>
+
+<script>
+const btnMenu = document.getElementById("btnMenuMovil");
+const menuPrincipal = document.getElementById("menuPrincipal");
+const overlayMenu = document.getElementById("overlayMenu");
+
+btnMenu.addEventListener("click", () => {
+    menuPrincipal.classList.toggle("menu-abierto");
+    overlayMenu.classList.toggle("activo");
+});
+
+overlayMenu.addEventListener("click", () => {
+    menuPrincipal.classList.remove("menu-abierto");
+    overlayMenu.classList.remove("activo");
+});
+
+</script>
