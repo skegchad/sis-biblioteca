@@ -1,6 +1,8 @@
 
 <?php
 // chat.php - Endpoint del chat con integración a la BD de libros + roles de usuario
+// SOLO PARA PRUEBAS
+unset($_SESSION["contexto_libros"]);
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -55,18 +57,45 @@ if ($pregunta === '') {
 }
 
 // Palabras limpias de puntuación, usadas para buscar en libros y (si aplica) en usuarios
-$intencion = detectarIntencionIA($pregunta);
+$analisis = analizarConsultaIA(
+    $pregunta,
+    $_SESSION['historial_chat'] ?? []
+);
+
+$intencion = $analisis["intencion"];
+$accion = $analisis["accion"];
+$seguimiento = $analisis["seguimiento"];
+$filtrosBusqueda = $analisis["filtros"];
+$indice = $analisis["indice"] ?? null;
+
+// Detectar si el usuario menciona directamente uno de los libros encontrados
+
+if(
+    $seguimiento &&
+    isset($_SESSION["contexto_libros"]["libros"])
+){
+
+    foreach($_SESSION["contexto_libros"]["libros"] as $libro){
+
+        if(
+            stripos(
+                $pregunta,
+                $libro["titulo"]
+            ) !== false
+        ){
+
+            $_SESSION["contexto_libros"]["ultimo"] = $libro;
+
+            break;
+        }
+    }
+}
+$ultimoLibro = $_SESSION["contexto_libros"]["ultimo"] ?? null;
 
 file_put_contents(
     'intencion.txt',
-    $intencion
+    print_r($analisis,true)
 );
-
-if ($intencion === 'libros') {
-    $filtrosBusqueda = extraerFiltrosIA($pregunta);
-} else {
-    $palabras = [];
-}
 
 // 1. Contexto de libros (todos los roles)
 $contexto = '';
@@ -81,20 +110,212 @@ $sinRecomendaciones = false;
 // (sin pasar por el modelo) para que sea imposible que se invente libros extra.
 $respuestaDirectaLibros = null;
 
-switch ($intencion) {
+$ultimoLibro = $_SESSION["contexto_libros"]["ultimo"] ?? null;
 
-    case 'libros':
+switch($accion) {
 
-        $libros = buscarLibrosRelevantes($pdo, $filtrosBusqueda);
-        $contexto = construirContextoLibros($libros);
+    
+    
+    case "mostrar":
 
-        if (empty($libros)) {
-            $sinResultadosLibros = true;
-        } else {
-            $respuestaDirectaLibros = formatearRespuestaLibros($libros);
+        if(isset($_SESSION["contexto_libros"])){
+
+            $respuestaDirectaLibros =
+            formatearRespuestaLibros(
+                $_SESSION["contexto_libros"]["libros"]
+            );
+
+        }else{
+
+            $contexto="No hay libros anteriores seleccionados.";
+
         }
 
-        break;
+    break;
+    
+    case "descripcion":
+
+        if($ultimoLibro){
+
+            $respuestaDirectaLibros =
+            "📖 \"{$ultimoLibro['titulo']}\"\n\n".
+            $ultimoLibro['descripcion'];
+
+        }
+
+    break;
+
+    case "tipo":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            $respuestaDirectaLibros =
+            "\"{$libro['titulo']}\" es de tipo {$libro['tipo']}.";
+
+        }
+
+    break;
+
+    case "idioma":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            $respuestaDirectaLibros =
+            "El libro \"{$libro['titulo']}\" está escrito en {$libro['idioma']}.";
+
+        }
+
+    break;
+
+    case "ano":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            $respuestaDirectaLibros =
+            "El libro \"{$libro['titulo']}\" fue publicado en {$libro['ano']}.";
+
+        }
+
+    break;
+
+    case "editorial":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            $respuestaDirectaLibros =
+            "Fue publicado por {$libro['editorial']}.";
+
+        }
+
+    break;
+
+    case "categoria":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            $respuestaDirectaLibros =
+            "\"{$libro['titulo']}\" pertenece a la categoría {$libro['categoria']}.";
+
+        }
+
+    break;
+
+    case "temas":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            if(!empty($libro['temas'])){
+
+                $respuestaDirectaLibros =
+                "\"{$libro['titulo']}\" trata sobre: {$libro['temas']}.";
+
+            }else{
+
+                $respuestaDirectaLibros =
+                "No hay temas registrados para este libro.";
+
+            }
+
+        }
+
+    break;
+
+    case "subcategoria":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+
+            if(!empty($libro['subcategoria'])){
+
+                $respuestaDirectaLibros =
+                "\"{$libro['titulo']}\" pertenece a la subcategoría {$libro['subcategoria']}.";
+
+            }else{
+
+                $respuestaDirectaLibros =
+                "No hay una subcategoría registrada para este libro.";
+
+            }
+
+        }
+
+    break;
+
+    case "autor":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro =
+            $_SESSION["contexto_libros"]["ultimo"];
+
+
+            $respuestaDirectaLibros =
+            "El autor de \"{$libro['titulo']}\" es {$libro['autor']}.";
+
+        }
+
+    break;
+
+    case "disponibilidad":
+
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro =
+            $_SESSION["contexto_libros"]["ultimo"];
+
+
+            $disponibles =
+            $libro['ejemplares'] -
+            $libro['prestados'];
+
+
+            if($disponibles > 0){
+
+                $respuestaDirectaLibros =
+                "Sí, está disponible. Hay {$disponibles} ejemplares libres.";
+
+            }else{
+
+                $respuestaDirectaLibros =
+                "Actualmente todos los ejemplares están prestados.";
+
+            }
+
+        }
+
+
+    break;
+    
+    case "ubicacion":
+
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro =
+            $_SESSION["contexto_libros"]["ultimo"];
+
+
+            $respuestaDirectaLibros =
+            "Puedes encontrarlo en la sección {$libro['seccion']}, bloque {$libro['bloque']} y código CDD {$libro['cdd']}.";
+
+        }
+
+
+    break;
 
     case 'estadisticas':
 
@@ -110,7 +331,7 @@ switch ($intencion) {
 
         if ($esAdmin) {
 
-            $usuarios = buscarUsuariosRelevantes($pdo, $palabras);
+            $usuarios = buscarUsuariosRelevantes($pdo, []);
 
             if (!empty($usuarios)) {
                 $contexto = construirContextoUsuarios($usuarios);
@@ -124,62 +345,116 @@ switch ($intencion) {
 
         }
 
-        break;
+    break;
 
-    case 'saludo':
+        case 'saludo':
 
-        $contexto = '';
+        $contexto = 
+        "El usuario está saludando. Responde de forma amigable.";
 
-        break;
+    break;
+
 
     case 'social':
 
-        $contexto = '';
-
-        break;
-
-    case 'similares':
-
-    $libroBase = buscarLibroBaseSimilitud($pdo, $pregunta);
-
-    if (!empty($libroBase)) {
-
-        $recomendados = buscarLibrosSimilares(
-            $pdo,
-            $libroBase[0]
-        );
-
-        if (!empty($recomendados)) {
-
-            $respuestaDirectaLibros =
-                formatearRespuestaLibros($recomendados);
-
-        } else {
-
-            $sinRecomendaciones = true;
-
-        }
-
-    } else {
-
-        $sinResultadosLibros = true;
-
-    }
+        $contexto =
+        "El usuario está conversando de forma casual. Responde naturalmente.";
 
     break;
+
+    case "similares":
+
+        if(isset($_SESSION["contexto_libros"]["ultimo"])){
+
+            $libro =
+            $_SESSION["contexto_libros"]["ultimo"];
+
+
+            $recomendados =
+            buscarLibrosSimilares($pdo,$libro);
+
+
+            if(!empty($recomendados)){
+
+
+                $_SESSION["contexto_libros"]=[
+
+                    "libros"=>$recomendados,
+
+                    "ultimo"=>$recomendados[0]
+
+                ];
+
+
+                $respuestaDirectaLibros =
+                formatearRespuestaLibros($recomendados);
+
+
+            }else{
+
+                $sinRecomendaciones=true;
+
+            }
+
+        }
+
+    break;
+
+    case "buscar":
+
+        $libros = buscarLibrosRelevantes(
+            $pdo,
+            $filtrosBusqueda
+        );
+
+        if(!empty($libros)){
+
+            $_SESSION["contexto_libros"]=[
+
+                "consulta"=>$pregunta,
+                "libros"=>$libros,
+                "ultimo"=>$libros[0]
+
+            ];
+
+            $respuestaDirectaLibros =
+                formatearRespuestaLibros($libros);
+
+        }else{
+
+            $sinResultadosLibros=true;
+
+        }
+
+    break;
+
     default:
 
-        // Para preguntas generales también buscamos libros por si acaso.
-        $libros = buscarLibrosRelevantes($pdo, $palabras);
+        if(!empty($filtrosBusqueda)){
 
-        if (!empty($libros)) {
-            $contexto = construirContextoLibros($libros);
-            $respuestaDirectaLibros = formatearRespuestaLibros($libros);
+            $libros = buscarLibrosRelevantes(
+                $pdo,
+                $filtrosBusqueda
+            );
+
+            if (!empty($libros)) {
+
+                $_SESSION["contexto_libros"] = [
+
+                    "consulta"=>$pregunta,
+                    "libros"=>$libros,
+                    "ultimo"=>$libros[0]
+
+                ];
+
+                $respuestaDirectaLibros =
+                formatearRespuestaLibros($libros);
+
+            }
+
         }
-        // Nota: en 'default' NO activamos $sinResultadosLibros, porque aquí
-        // caen también saludos/charla casual que no debe forzar ese aviso.
 
-        break;
+    break;
 }
 
 // 3. Armar el prompt final (con historial reciente) y llamar a Ollama
@@ -227,7 +502,7 @@ echo json_encode(['respuesta' => $respuesta]);
 
 $temas = $pdo->query("
     SELECT nombre
-    FROM tb_tema
+    FROM temas
     ORDER BY nombre
 ")->fetchAll(PDO::FETCH_COLUMN);
 
@@ -508,74 +783,6 @@ function construirContextoUsuarios(array $usuarios): string
 
     return "USUARIOS ENCONTRADOS (solo visible para Administrador):\n" . implode("\n", $lineas);
 }
-
-function detectarIntencionIA(string $pregunta): string
-{
-    $prompt = <<<PROMPT
-Clasifica la siguiente pregunta.
-
-Solo puedes responder UNA palabra.
-
-Opciones:
-
-libros
-similares
-estadisticas
-usuarios
-saludo
-social
-general
-
-EJEMPLOS:
-
-Pregunta:
-"¿Qué libros son parecidos a La metamorfosis?"
-Respuesta:
-similares
-
-Pregunta:
-"Recomiéndame libros similares a Nietzsche"
-Respuesta:
-similares
-
-Pregunta:
-"¿Qué libros se parecen a Cien años de soledad?"
-Respuesta:
-similares
-
-Pregunta:
-
-{$pregunta}
-
-Respuesta:
-PROMPT;
-
-    $respuesta = strtolower(preguntarOllama($prompt));
-
-    if (str_contains($respuesta,'libro'))
-        return 'libros';
-
-    if (str_contains($respuesta,'estad'))
-        return 'estadisticas';
-
-    if (str_contains($respuesta,'usuario'))
-        return 'usuarios';
-
-    if (str_contains($respuesta,'saludo'))
-        return 'saludo';
-
-    if (str_contains($respuesta,'social'))
-        return 'social';
-
-    if (str_contains($respuesta,'similar'))
-        return 'similares';
-
-    return 'general';
-}
-
-/**
- * Construye el prompt final adaptado al rol del usuario.
- */
 function construirPrompt(string $contexto, string $pregunta, array $usuarioActual, bool $esAdmin, array $historial = []): string
 {
     $nombreUsuario = $usuarioActual['nombre_completo'];
@@ -653,170 +860,37 @@ CONTEXTO:
 
 $contexto
 
-Pregunta:
+
+INFORMACIÓN SOBRE BMO:
+
+Eres BMO, el asistente virtual de una biblioteca.
+
+Puedes ayudar con:
+- Buscar libros registrados en la biblioteca.
+- Dar información de libros encontrados.
+- Explicar datos de libros.
+- Orientar al usuario sobre las funciones disponibles.
+
+No inventes datos específicos de libros.
+Si el usuario pregunta por cantidades, estadísticas o información exacta de la biblioteca, solo usa los datos que aparezcan en el contexto.
+
+
+Pregunta del usuario:
 
 $pregunta
 
-Respuesta:
-PROMPT;
-}
-function extraerFiltrosIA(string $pregunta): array
-{
-    $prompt = <<<PROMPT
-Eres un sistema de búsqueda de biblioteca.
-
-Tu tarea es convertir la pregunta del usuario en filtros para una base de datos.
-
-Campos disponibles:
-
-- titulo
-- autor
-- temas
-- tipo
-- categoria
-- subcategoria
-- idioma
-- editorial
-- edicion
-- ano
-- cdd
-- bloque
-- seccion
-
-
-Reglas:
-
-- Si pregunta por "CDD", usa campo cdd.
-- Si pregunta por "bloque", usa campo bloque.
-- Si pregunta por "sección", usa campo seccion.
-- Si pregunta por "tipo de libro", usa campo tipo.
-- Si pregunta por género, usa tipo.
-- Si pregunta por temas, usa temas.
-- Si menciona autor, usa autor.
-- Si menciona un título, usa titulo.
-
-Puedes devolver varios filtros si la pregunta contiene varias condiciones.
-
-Ejemplo:
-
-Pregunta:
-"Libros de Friedrich Nietzsche con CDD 193"
-
-Respuesta:
-{
- "filtros":[
-   {
-    "campo":"autor",
-    "valor":"Friedrich Nietzsche"
-   },
-   {
-    "campo":"cdd",
-    "valor":"193"
-   }
- ]
-}
-
-Responde SOLO JSON válido.
-
-Ejemplos:
-
-Pregunta:
-"Que libros tienen CDD 193"
-
-Respuesta:
-{
- "filtros":[
-   {
-    "campo":"cdd",
-    "valor":"193"
-   }
- ]
-}
-
-
-Pregunta:
-"Que libros están en el bloque 100"
-
-Respuesta:
-{
- "filtros":[
-   {
-    "campo":"bloque",
-    "valor":"100"
-   }
- ]
-}
-
-
-Pregunta:
-"Que libros tratan sobre soledad"
-
-Respuesta:
-{
- "filtros":[
-   {
-    "campo":"temas",
-    "valor":"soledad"
-   }
- ]
-}
-
-
-Pregunta:
-"Que novelas tienes"
-
-Respuesta:
-{
- "filtros":[
-   {
-    "campo":"tipo",
-    "valor":"novela"
-   }
- ]
-}
-
-
-Pregunta:
-{$pregunta}
 
 Respuesta:
 PROMPT;
-
-
-    $respuesta = preguntarOllama($prompt);
-
-
-    $respuesta = str_replace(
-        ['```json','```'],
-        '',
-        $respuesta
-    );
-
-
-    $json = json_decode(trim($respuesta), true);
-
-
-    if (!isset($json['filtros'])) {
-        return [];
-    }
-
-
-    return $json['filtros'];
 }
 
-function buscarLibroBaseSimilitud(PDO $pdo, string $pregunta): array
+function buscarLibroBaseSimilitud(PDO $pdo, array $filtros): array
 {
-
-    $filtros = extraerFiltrosIA($pregunta);
-
-
     if(empty($filtros)){
         return [];
     }
 
-
-    return buscarLibrosRelevantes($pdo,$filtros);
-
+    return buscarLibrosRelevantes($pdo, $filtros);
 }
 
 function buscarLibrosSimilares(PDO $pdo,array $libro): array
@@ -862,4 +936,629 @@ function buscarLibrosSimilares(PDO $pdo,array $libro): array
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+}
+function analizarConsultaIA(string $pregunta, array $historial = []): array
+{
+    $prompt = <<<PROMPT
+Eres el cerebro de un asistente de biblioteca.
+
+Tu única función es analizar la intención del usuario y devolver una estructura JSON.
+
+NO respondas al usuario.
+NO expliques nada.
+NO agregues texto.
+Devuelve EXCLUSIVAMENTE JSON válido.
+
+Formato obligatorio:
+
+{
+  "intencion":"",
+  "seguimiento":false,
+  "accion":"",
+  "indice":null,
+  "filtros":[]
+}
+
+
+=========================
+INTENCIONES DISPONIBLES
+=========================
+
+Las intenciones posibles son:
+
+- libros
+  Consultas relacionadas con libros, autores, títulos, categorías, características o disponibilidad.
+
+- similares
+  Solicitud de libros parecidos o recomendaciones.
+
+- usuarios
+  Consultas sobre usuarios (solo administradores).
+
+- estadisticas
+  Consultas estadísticas de la biblioteca.
+
+- saludo
+  Saludos como hola, buenos días, etc.
+
+- social
+  Conversación casual.
+
+- general
+  Preguntas que no pertenecen a ninguna categoría anterior.
+
+
+=========================
+ACCIONES DISPONIBLES
+=========================
+
+buscar
+Buscar libros nuevos en la base de datos.
+
+mostrar
+Mostrar los libros encontrados anteriormente.
+
+descripcion
+Obtener la descripción del libro actual.
+
+autor
+Obtener el autor del libro actual.
+
+disponibilidad
+Consultar si el libro está disponible.
+
+ubicacion
+Consultar dónde está ubicado el libro.
+
+idioma
+Consultar el idioma del libro.
+
+ano
+Consultar el año de publicación.
+
+editorial
+Consultar la editorial.
+
+categoria
+Consultar la categoría Dewey o clasificación general.
+
+subcategoria
+Consultar la subcategoría.
+
+tipo
+Consultar el tipo de libro.
+(Ejemplo: Novela, Obra Filosófica, Manual, Enciclopedia)
+
+temas
+Consultar los temas relacionados del libro.
+
+edicion
+Consultar la edición.
+
+similares
+Buscar libros similares.
+
+estadisticas
+Consultar estadísticas.
+
+usuarios
+Consultar usuarios.
+
+ninguna
+Cuando no corresponda ninguna acción.
+
+
+=========================
+FILTROS DE BÚSQUEDA
+=========================
+
+Los filtros sirven SOLO cuando la acción sea "buscar".
+
+Formato:
+
+{
+ "campo":"autor",
+ "valor":"Kafka"
+}
+
+
+Campos permitidos:
+
+titulo
+autor
+temas
+tipo
+categoria
+subcategoria
+idioma
+editorial
+edicion
+ano
+cdd
+bloque
+seccion
+
+Ejemplo de estadísticas:
+Usuario:
+¿Cuántos libros tienes en la biblioteca?
+
+Respuesta:
+
+{
+ "intencion":"estadisticas",
+ "seguimiento":false,
+ "accion":"estadisticas",
+ "filtros":[]
+}
+
+REGLAS IMPORTANTES:
+
+PRIORIDAD DE INTENCIONES:
+
+1. Primero determina si el usuario está buscando libros nuevos.
+2. Después revisa si está hablando del libro anterior.
+
+Si la pregunta contiene palabras como:
+- qué libros
+- que libros
+- tienes libros
+- libros de
+- libros sobre
+- libros que traten
+- recomiéndame libros
+- busca libros
+- dame libros
+
+SIEMPRE es una nueva búsqueda.
+
+En esos casos:
+seguimiento=false
+accion="buscar"
+
+Aunque exista un libro anterior en el historial.
+
+
+Ejemplos:
+
+Usuario:
+¿Qué libros que traten de soledad tienes?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+     "campo":"temas",
+     "valor":"soledad"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué libros sobre filosofía tienes?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+     "campo":"temas",
+     "valor":"filosofia"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué libros de Kafka tienes?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+     "campo":"autor",
+     "valor":"Kafka"
+   }
+ ]
+}
+
+
+Solo usa seguimiento=true cuando el usuario NO está buscando libros nuevos.
+
+Ejemplos:
+
+Usuario:
+¿Cuál es su editorial?
+
+Respuesta:
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"editorial",
+ "filtros":[]
+}
+
+
+Usuario:
+Su descripción
+
+Respuesta:
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"descripcion",
+ "filtros":[]
+}
+
+
+Ejemplos:
+
+
+Usuario:
+¿Qué libros tienes de Kafka?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+    "campo":"autor",
+    "valor":"Kafka"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué libros hay de Nietzsche?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+    "campo":"autor",
+    "valor":"Nietzsche"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué libros hablan de soledad?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+    "campo":"temas",
+    "valor":"soledad"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué novelas tienes?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+    "campo":"tipo",
+    "valor":"Novela"
+   }
+ ]
+}
+
+
+Usuario:
+¿Qué libros de filosofía tienes?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":false,
+ "accion":"buscar",
+ "filtros":[
+   {
+    "campo":"categoria",
+    "valor":"Filosofía"
+   }
+ ]
+}
+
+
+=========================
+CONSULTAS SOBRE EL LIBRO ACTUAL
+=========================
+
+Cuando el usuario habla de "el libro", "su", "ese", "él", "este libro", significa que continúa hablando del último libro mostrado.
+
+En estos casos:
+
+seguimiento=true
+
+
+Ejemplos:
+
+
+
+Usuario:
+Su descripción
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"descripcion",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Quién lo escribió?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"autor",
+ "filtros":[]
+}
+
+
+Usuario:
+¿En qué año fue publicado?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"ano",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Qué idioma tiene?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"idioma",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Qué editorial es?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"editorial",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Cuál es su categoría?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"categoria",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Y su subcategoría?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"subcategoria",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Qué tipo de libro es?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"tipo",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Está disponible?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"disponibilidad",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Dónde está ubicado?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"ubicacion",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Cuáles son sus temas?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"temas",
+ "filtros":[]
+}
+
+
+Usuario:
+¿Cuál es la edición?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"edicion",
+ "filtros":[]
+}
+
+
+=========================
+SEGUIMIENTO
+=========================
+
+
+Usuario:
+¿Cuál?
+
+Respuesta:
+
+{
+ "intencion":"libros",
+ "seguimiento":true,
+ "accion":"mostrar",
+ "filtros":[]
+}
+
+
+Usuario:
+Recomiéndame libros parecidos
+
+Respuesta:
+
+{
+ "intencion":"similares",
+ "seguimiento":true,
+ "accion":"similares",
+ "filtros":[]
+}
+
+
+=========================
+SALUDOS
+=========================
+
+
+Usuario:
+Hola
+
+Respuesta:
+
+{
+ "intencion":"saludo",
+ "seguimiento":false,
+ "accion":"ninguna",
+ "filtros":[]
+}
+
+
+=========================
+
+Ahora analiza esta consulta:
+
+{$pregunta}
+
+Historial reciente:
+
+PROMPT;
+foreach($historial as $mensaje){
+
+    $prompt .=
+    "\n".$mensaje["rol"].": ".$mensaje["texto"];
+
+}
+
+$prompt .= <<<PROMPT
+
+
+Responde solamente JSON.
+
+Respuesta:
+PROMPT;
+
+    $respuesta = preguntarOllama($prompt);
+
+    $respuesta = str_replace(
+        ['```json','```'],
+        '',
+        $respuesta
+    );
+
+    $json = json_decode(trim($respuesta), true);
+
+    if (!is_array($json)) {
+
+        return [
+            "intencion"=>"general",
+            "seguimiento"=>false,
+            "accion"=>"ninguna",
+            "filtros"=>[]
+        ];
+
+    }
+
+    return $json;
 }
