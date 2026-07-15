@@ -15,7 +15,6 @@ if (empty($nombre)) {
 // ✅ Valor por defecto
 $rutaFoto = "public/uploads/img/libros/categorias/default.jpg";
 
-// ===== 2. Manejar la foto (opcional) =====
 if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
     $archivo    = $_FILES['foto'];
     $extension  = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));

@@ -7,11 +7,11 @@
         FROM tb_libros l
         WHERE l.estado='1'
           AND l.fyh_eliminacion IS NULL
-          AND (l.temas LIKE :f0)
+          AND (l.autor LIKE :f0)
         LIMIT 10
     
 
 Array
 (
-    [:f0] => %soledad%
+    [:f0] => %Nietzsche%
 )

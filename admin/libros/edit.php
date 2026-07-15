@@ -250,13 +250,11 @@ $temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
 
                                             <div class="mt-2">
                                                 <small class="text-muted">PDF actual:</small><br>
-
                                                 <a href="<?php echo $URL . '/' . $ruta_pdf; ?>"
                                                 target="_blank"
                                                 class="btn btn-outline-danger btn-sm">
                                                     📄 Ver PDF actual
                                                 </a>
-
                                             </div>
 
                                         <?php endif; ?>
@@ -268,7 +266,7 @@ $temasSeleccionados = $query_temas->fetchAll(PDO::FETCH_COLUMN);
                                     <div class="col-md-2"></div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <a href="<?php echo $URL; ?>/admin" class="btn btn-default">Cancelar</a>
+                                            <a href="<?php echo $URL; ?>/admin/libros" class="btn btn-default">Cancelar</a>
                                         </div>
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">

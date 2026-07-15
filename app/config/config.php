@@ -4,7 +4,7 @@
 defined('BD_SERVIDOR') || define('BD_SERVIDOR','localhost');
 defined('BD_USUARIO') || define('BD_USUARIO','root');
 defined('BD_PASSWORD') || define('BD_PASSWORD','');
-defined('BD_SISTEMA') || define('BD_SISTEMA','bd_sis_biblioteca');
+defined('BD_SISTEMA') || define('BD_SISTEMA','bd_sis_biblioteca'); 
 
 
 //servidor
