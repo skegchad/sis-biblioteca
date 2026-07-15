@@ -32,14 +32,7 @@
             gap: 25px;
         }
 
-        .catalogo-tarjeta{
-            height: 280px;
-            border-radius: 10px;
-            background-size: cover;
-            background-position: center;
-            cursor: pointer;
-            transition: transform .3s ease;
-        }
+
 
         .catalogo-tarjeta:hover{
             transform: scale(1.05);
@@ -326,7 +319,8 @@
 }
 
 .catalogo-tarjeta{
-    height:300px;
+    height:240px;
+    width: 240px;
     border-radius:12px;
     background-size:cover;
     background-position:center;

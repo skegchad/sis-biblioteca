@@ -7,10 +7,11 @@ Array
         (
             [0] => Array
                 (
-                    [campo] => temas
-                    [valor] => soledad
+                    [campo] => autor
+                    [valor] => Nietzsche
                 )
 
         )
 
+    [indice] => 
 )

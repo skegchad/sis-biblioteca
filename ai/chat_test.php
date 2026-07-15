@@ -1,4 +1,3 @@
-
 <?php
 // chat.php - Endpoint del chat con integración a la BD de libros + roles de usuario
 // SOLO PARA PRUEBAS
@@ -209,6 +208,15 @@ switch($accion) {
         }
 
     break;
+    
+    case "edicion":
+        if (isset($_SESSION["contexto_libros"]["ultimo"])) {
+            $libro = $_SESSION["contexto_libros"]["ultimo"];
+            $respuestaDirectaLibros = !empty($libro['edicion'])
+                ? "La edición de \"{$libro['titulo']}\" es: {$libro['edicion']}."
+                : "No hay una edición registrada para este libro.";
+        }
+    break;
 
     case "temas":
 
@@ -328,38 +336,26 @@ switch($accion) {
         break;
 
     case 'usuarios':
-
         if ($esAdmin) {
-
-            $usuarios = buscarUsuariosRelevantes($pdo, []);
-
-            if (!empty($usuarios)) {
-                $contexto = construirContextoUsuarios($usuarios);
-            } else {
-                $contexto = "No se encontraron usuarios.";
-            }
-
+            $palabras = array_values(array_filter(
+                preg_split('/[^\p{L}0-9]+/u', $pregunta),
+                fn($p) => mb_strlen($p) >= 3
+            ));
+            $usuarios = buscarUsuariosRelevantes($pdo, $palabras);
+            $contexto = !empty($usuarios)
+                ? construirContextoUsuarios($usuarios)
+                : "No se encontraron usuarios.";
         } else {
-
             $contexto = "El usuario no tiene permisos para consultar usuarios.";
-
         }
-
     break;
 
-        case 'saludo':
-
-        $contexto = 
-        "El usuario está saludando. Responde de forma amigable.";
-
-    break;
-
-
-    case 'social':
-
-        $contexto =
-        "El usuario está conversando de forma casual. Responde naturalmente.";
-
+    case "ninguna":
+        if ($intencion === "saludo") {
+            $contexto = "El usuario está saludando. Responde de forma amigable.";
+        } elseif ($intencion === "social") {
+            $contexto = "El usuario está conversando de forma casual. Responde naturalmente.";
+        }
     break;
 
     case "similares":
@@ -496,7 +492,7 @@ if ($sinRecomendaciones) {
 // Guardamos el intercambio en el historial (limitado a los últimos 6 mensajes = 3 turnos)
 $_SESSION['historial_chat'][] = ['rol' => 'usuario', 'texto' => $pregunta];
 $_SESSION['historial_chat'][] = ['rol' => 'asistente', 'texto' => $respuesta];
-$_SESSION['historial_chat'] = array_slice($_SESSION['historial_chat'], -4);
+$_SESSION['historial_chat'] = array_slice($_SESSION['historial_chat'], -6);
 
 echo json_encode(['respuesta' => $respuesta]);
 
@@ -506,7 +502,6 @@ $temas = $pdo->query("
     ORDER BY nombre
 ")->fetchAll(PDO::FETCH_COLUMN);
 
-$listaTemas = implode(", ", $temas);
 // ============================================================
 // FUNCIONES
 // ============================================================
@@ -896,7 +891,10 @@ function buscarLibroBaseSimilitud(PDO $pdo, array $filtros): array
 function buscarLibrosSimilares(PDO $pdo,array $libro): array
 {
 
-    $temas = explode(',', $libro['temas']);
+    $temas = array_filter(array_map('trim', explode(',', $libro['temas'] ?? '')));
+    if (empty($temas)) {
+        return [];
+    }
 
 
     $condiciones = [];
@@ -918,7 +916,6 @@ function buscarLibrosSimilares(PDO $pdo,array $libro): array
     SELECT *
     FROM tb_libros
     WHERE estado='1'
-    AND fyh_eliminacion IS NULL
     AND id_libro <> :id
     AND (
         ".implode(" OR ",$condiciones)."
@@ -1547,18 +1544,15 @@ PROMPT;
         $respuesta
     );
 
-    $json = json_decode(trim($respuesta), true);
-
-    if (!is_array($json)) {
-
-        return [
-            "intencion"=>"general",
-            "seguimiento"=>false,
-            "accion"=>"ninguna",
-            "filtros"=>[]
-        ];
-
+    $json = null;
+    if (preg_match('/\{.*\}/s', $respuesta, $match)) {
+        $json = json_decode($match[0], true);
     }
 
-    return $json;
+    $default = [
+        "intencion" => "general", "seguimiento" => false,
+        "accion" => "ninguna", "indice" => null, "filtros" => []
+    ];
+
+    return is_array($json) ? ($json + $default) : $default;
 }
