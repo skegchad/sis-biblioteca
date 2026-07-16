@@ -471,6 +471,39 @@
               </li>
               <!-- ===== FIN SECCIÓN LIBROS ===== -->
             </ul>
+            <ul
+              class="nav sidebar-menu flex-column"
+              data-lte-toggle="treeview"
+              role="navigation"
+              aria-label="Main navigation"
+              data-accordion="false"
+              id="navigation"
+            >
+                  <li class="nav-item" data-menu-id="prestamos">
+                      <a href="#" class="nav-link active">
+                        <i class="nav-icon bi-journal-bookmark-fill"></i>
+                        <p>
+                          Prestamos
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="<?php echo $URL; ?>/admin/prestamos" class="nav-link active">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Prestamos vigentes</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="<?php echo $URL; ?>/admin/prestamos/create.php" class="nav-link active">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Prestar libro</p>
+                          </a>
+                        </li>
+                      </ul>
+                  </li>
+            </ul>
+
             <!--end::Sidebar Menu-->
           </nav>
         </div>
