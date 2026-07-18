@@ -23,4 +23,4 @@ date_default_timezone_set("America/Guayaquil");
 $fyh_actual = date("Y-m-d H:i:s");
 $estado = 1;
 $estado_eliminado=0;
-$modelo_ia='qwen2.5-coder:3b-instruct';
+$modelo_ia='gemma3n:e2b';
