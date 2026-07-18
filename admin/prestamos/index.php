@@ -211,6 +211,7 @@ table.dataTable {
                                 $query->execute();
                                 $prestamos = $query->fetchAll(PDO::FETCH_ASSOC);
                                 foreach($prestamos as $prestamo){
+                                    $id_prestamo = $prestamo['id_prestamo'];
                                     $id_libro = $prestamo['id_libro'];
                                     $id_user = $prestamo['id_usuario'];
                                     $fecha_creacion = $prestamo['fyh_creacion'];
@@ -271,11 +272,11 @@ table.dataTable {
 
                                         <td>
                                             <center>
-                                                <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">
+                                                <a href="edit.php?id=<?php echo $id_prestamo;?>" class="btn btn-success btn-sm">
                                                     <i class="ti ti-edit"></i> Editar
                                                 </a>
-                                                <a href="erase.php?id=<?php echo $id;?>" class="btn btn-danger btn-sm">
-                                                    <i class="ti ti-trash"></i> Borrar
+                                                <a href="erase.php?id=<?php echo $id_prestamo;?>" class="btn btn-danger btn-sm">
+                                                    <i class="ti ti-book"></i> Devolución
                                                 </a>
                                             </center>
                                         </td>

@@ -1,0 +1,11 @@
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 
+    [filtros] => Array
+        (
+        )
+
+)
