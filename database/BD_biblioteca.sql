@@ -83,3 +83,14 @@ CREATE TABLE libro_tema (
     FOREIGN KEY (id_libro) REFERENCES tb_libros(id_libro) ON DELETE CASCADE,
     FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE CASCADE
 );
+
+CREATE TABLE prestamos (
+    id_prestamo INT (11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id_libro INT NOT NULL,
+    id_usuario INT NOT NULL,
+    FOREIGN KEY (id_libro) REFERENCES tb_libros(id_libro) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES tb_usuarios(id_usuario) ON DELETE CASCADE,
+    fyh_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fyh_devolucion DATETIME NULL,
+    estado VARCHAR (255) NULL
+);

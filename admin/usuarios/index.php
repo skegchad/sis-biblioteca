@@ -162,6 +162,8 @@ table.dataTable {
                                 pageLength: 5,        // filas por página
                                 ordering: true,        // ordenar columnas al hacer clic
                                 searching: true,       // buscador (true por defecto)
+                                scrollX: true,        // <-- activa el scroll horizontal SOLO de la tabla
+                                scrollCollapse: true,
                                 language: {
                                     search: "Buscar:",
                                     lengthMenu: "Mostrar _MENU_ registros",

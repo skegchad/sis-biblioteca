@@ -1,0 +1,877 @@
+[2026-07-17 18:12:48] analisis:
+Array
+(
+    [intencion] => saludo
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:13:19] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:13:19] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.autor LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Nietzsche%
+        )
+
+)
+
+
+[2026-07-17 18:13:29] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => categoria
+                    [valor] => Filosofía
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:13:29] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.categoria LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Filosofía%
+        )
+
+)
+
+
+[2026-07-17 18:13:32] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => categoria
+                    [valor] => Programación
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:13:32] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.categoria LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Programación%
+        )
+
+)
+
+
+[2026-07-17 18:13:40] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => categoria
+                    [valor] => Programación
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:13:40] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.categoria LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Programación%
+        )
+
+)
+
+
+[2026-07-17 18:13:55] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => categoria
+                    [valor] => Programación
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:13:55] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.categoria LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Programación%
+        )
+
+)
+
+
+[2026-07-17 18:14:03] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Kafka
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:14:03] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.autor LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Kafka%
+        )
+
+)
+
+
+[2026-07-17 18:29:13] analisis:
+Array
+(
+    [intencion] => saludo
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:29:31] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:29:31] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.autor LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Nietzsche%
+        )
+
+)
+
+
+[2026-07-17 18:29:37] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => temas
+                    [valor] => soledad
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:29:37] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND ((l.categoria LIKE :f0 OR l.temas LIKE :f0))
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %soledad%
+        )
+
+)
+
+
+[2026-07-17 18:29:48] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => temas
+                    [valor] => programación
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:29:48] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND ((l.categoria LIKE :f0 OR l.temas LIKE :f0))
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %programación%
+        )
+
+)
+
+
+[2026-07-17 18:30:05] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => descripcion
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:30:21] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => mostrar
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:30:37] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => descripcion
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => titulo
+                    [valor] => The C Programming Language
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:30:59] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => disponibilidad
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:31:10] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => edicion
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:31:16] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => editorial
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:31:25] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 1
+    [accion] => ano
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:31:42] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => idioma
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:35:21] analisis:
+Array
+(
+    [intencion] => saludo
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:35:30] analisis:
+Array
+(
+    [intencion] => saludo
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:35:39] analisis:
+Array
+(
+    [intencion] => saludo
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:50:34] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:50:40] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:50:58] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => temas
+                    [valor] => soledad
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:50:58] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND ((l.categoria LIKE :f0 OR l.temas LIKE :f0))
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %soledad%
+        )
+
+)
+
+
+[2026-07-17 18:51:07] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:51:07] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.autor LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Nietzsche%
+        )
+
+)
+
+
+[2026-07-17 18:51:15] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => descripcion
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:51:27] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => descripcion
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => temas
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:51:49] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => mostrar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:52:03] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => titulo
+                    [valor] => Anticristo
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:52:03] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.titulo LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Anticristo%
+        )
+
+)
+
+
+[2026-07-17 18:56:27] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:56:33] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => autor
+                    [valor] => Nietzsche
+                )
+
+        )
+
+)
+
+
+[2026-07-17 18:56:33] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND (l.autor LIKE :f0)
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %Nietzsche%
+        )
+
+)
+
+
+[2026-07-17 18:56:46] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => descripcion
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-17 18:56:53] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => temas
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+

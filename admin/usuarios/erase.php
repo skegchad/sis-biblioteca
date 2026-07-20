@@ -121,7 +121,7 @@ foreach($usuarios as $usuario){
                                     <div class="col-md-2"></div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <a href="<?php echo $URL; ?>/admin" class="btn btn-default">Cancelar</a>
+                                            <a href="<?php echo $URL; ?>/admin/usuarios" class="btn btn-default">Cancelar</a>
                                         </div>
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">
