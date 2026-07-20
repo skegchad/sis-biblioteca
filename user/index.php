@@ -25,33 +25,23 @@ include ("../layout/user/part1.php");
         <h2 class="catalogo-titulo">Catálogo</h2>
 
         <div class="catalogo-contenedor">
-
-            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS SOCIALES.png');"></div></a>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/LITERATURA RETÓRICA.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/TECNOLOGÍA.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/RELIGIÓN.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/FILOSOFÍA Y PSICOLOGÍA.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/CIENCIAS NATURALES Y MATEMÁTICAS.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/GEOGRAFÍA E HISTORIA.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/LENGUAS.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/ARTES.png');"></div>
-
-            <div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/GENERALIDADES.png');"></div>
+          <?php
+          $query_categorias = $pdo->prepare('SELECT * FROM categorias');
+          $query_categorias->execute();
+          $categorias = $query_categorias->fetchAll(PDO::FETCH_ASSOC);
+          foreach ($categorias as $categoria):
+            $foto = $categoria['foto'];
+          ?>  
+            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/<?php echo trim($foto); ?>');"></div></a>
+          <?php endforeach;?>
 
         </div>
 
     </section>
     <!-- section featured -->
-    <section id="featured">
 
+    <section id="featured">
+      <h2 class="catalogo-titulo">Noticias</h2>
       <!-- slideshow start here -->
 
       <div class="camera_wrap" id="camera-slide">
@@ -546,3 +536,5 @@ include ("../layout/user/part1.php");
 
 </body>
 </html>
+
+<?php include("../ai/chat_widget.php"); ?>

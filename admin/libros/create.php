@@ -106,8 +106,8 @@ foreach ($tipos as $tipo) {
                                         <label for="disponibilidad" class="form-label">Disponibilidad</label>
                                         <select name="disponibilidad" class="form-select" id="disponibilidad" required>
                                             <option value="">-- Selecciona --</option>
-                                            <option value="Disponible">Disponible</option>
-                                            <option value="No disponible">No disponible</option>
+                                            <option value="1">Disponible</option>
+                                            <option value="0">No disponible</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -207,7 +207,7 @@ foreach ($tipos as $tipo) {
                                     <div class="col-md-2"></div>
                                     <div class="col-md-4 d-grid gap-2">
                                         <div class="d-grid gap-2">
-                                            <a href="<?php echo $URL; ?>/admin" class="btn btn-default">Cancelar</a>
+                                            <a href="<?php echo $URL; ?>/admin/libros" class="btn btn-default">Cancelar</a>
                                         </div>
                                     </div>
                                     <div class="col-md-4 d-grid gap-2">
