@@ -512,7 +512,7 @@
                         </li>
 
                         <li>
-                            <a href="<?php echo $URL; ?>/layout/user/catalogo.php">
+                            <a href="<?php echo $URL; ?>/user/catalogo.php">
                                 Catalogación
                             </a>
                         </li>
