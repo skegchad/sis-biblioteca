@@ -178,7 +178,7 @@ if(!$prestamo){
 
         if(result.isConfirmed){
 
-            document.getElementById("formEditarPrestamo").submit();
+            document.getElementById("formDevolverPrestamo").submit();
 
         }
 
