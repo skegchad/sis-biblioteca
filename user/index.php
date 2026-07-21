@@ -43,6 +43,8 @@ include ("../layout/user/part1.php");
     <section id="featured">
       <h2 class="catalogo-titulo">Noticias</h2>
       <!-- slideshow start here -->
+      
+      
 
       <div class="camera_wrap" id="camera-slide">
 

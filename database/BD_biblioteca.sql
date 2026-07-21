@@ -96,7 +96,6 @@ CREATE TABLE prestamos (
 );
 
 CREATE TABLE noticias (
-
-
-
+    id_noticia INT (11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    ruta_foto VARCHAR(255) NOT NULL
 );
