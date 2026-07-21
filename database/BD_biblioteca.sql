@@ -94,3 +94,9 @@ CREATE TABLE prestamos (
     fyh_devolucion DATETIME NULL,
     estado VARCHAR (255) NULL
 );
+
+CREATE TABLE noticias (
+
+
+
+);
