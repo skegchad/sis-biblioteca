@@ -67,7 +67,7 @@ try {
                       SET
                           prestados = prestados + 1,
                           disponibilidad = CASE
-                              WHEN (prestados + 1) >= ejemplares THEN 0
+                              WHEN (prestados) >= ejemplares THEN 0
                               ELSE 1
                           END,
                           fyh_actualizacion = NOW()

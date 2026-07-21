@@ -47,65 +47,15 @@ include ("../layout/user/part1.php");
       <div class="camera_wrap" id="camera-slide">
 
         <!-- slide 1 here -->
-        <div data-src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide1/img1.jpg">
-          <div class="camera_caption fadeFromLeft">
-            <div class="container">
-              <div class="row">
-                <div class="span6">
-                  <h2 class="animated fadeInDown"><strong>Great template for <span class="colored">multi usage</span></strong></h2>
-                  <p class="animated fadeInUp"> Vim porro dicam reprehendunt te, populo quodsi dissentiet cum ad. Ne natum deseruisse vis. Iisque deseruisse sententiae mel ne, dolores appetere vim ut. Sea no tamquam reprimique.</p>
-                  <a href="#" class="btn btn-success btn-large animated fadeInUp">
-											<i class="icon-link"></i> Read more
-										</a>
-                  <a href="#" class="btn btn-theme btn-large animated fadeInUp">
-											<i class="icon-download"></i> Download
-										</a>
-                </div>
-                <div class="span6">
-                  <img src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide1/screen.png" alt="" class="animated bounceInDown delay1" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia1.jpg">
         </div>
 
         <!-- slide 2 here -->
-        <div data-src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide2/img1.jpg">
-          <div class="camera_caption fadeFromLeft">
-            <div class="container">
-              <div class="row">
-                <div class="span6">
-                  <img src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide2/iMac.png" alt="" />
-                </div>
-                <div class="span6">
-                  <h2 class="animated fadeInDown"><strong>Put your <span class="colored">Opt in form</span></strong></h2>
-                  <p class="animated fadeInUp"> Vim porro dicam reprehendunt te, populo quodsi dissentiet cum ad. Ne natum deseruisse vis. Iisque deseruisse sententiae mel ne, dolores appetere vim ut. Sea no tamquam reprimique.</p>
-                  <form>
-                    <div class="input-append">
-                      <input class="span3 input-large" type="text">
-                      <button class="btn btn-theme btn-large" type="submit">Subscribe</button>
-                    </div>
-                  </form>
-                </div>
-
-              </div>
-            </div>
-          </div>
+        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia2.jpg">
         </div>
 
         <!-- slide 3 here -->
-        <div data-src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide2/img1.jpg">
-          <div class="camera_caption fadeFromLeft">
-            <div class="container">
-              <div class="row">
-                <div class="span12 aligncenter">
-                  <h2 class="animated fadeInDown"><strong><span class="colored">Responsive</span> and <span class="colored">cross broswer</span> compatibility</strong></h2>
-                  <p class="animated fadeInUp">Pellentesque habitant morbi tristique senectus et netus et malesuada</p>
-                  <img src="<?php echo $URL; ?>/public/assets/img/slides/camera/slide3/browsers.png" alt="" class="animated bounceInDown delay1" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia3.jpg">
         </div>
 
       </div>
@@ -522,7 +472,86 @@ include ("../layout/user/part1.php");
   <script src="<?php echo $URL; ?>/public/js/jquery.bxslider.min.js"></script>
   <script src="<?php echo $URL; ?>/public/js/camera/camera.js"></script>
   <script src="<?php echo $URL; ?>/public/js/camera/setting.js"></script>
+  <script>
 
+    
+  (function ($) {
+      "use strict";
+  
+      var SELECTOR_WRAP = "#camera-slide"; // el contenedor de tu slideshow
+  
+      // Opción A: altura fija en px. Ejemplo: 500
+      // Opción B: altura como % del alto de la ventana (equivalente a vh). Ejemplo: "50%"
+      var ALTURA_DESEADA = "90%";
+  
+      // Solo se usan si ALTURA_DESEADA es un porcentaje (opcionales)
+      var ALTURA_MIN_PX = 300;
+      var ALTURA_MAX_PX = 800;
+  
+      function calcularAlturaPx() {
+          if (typeof ALTURA_DESEADA === "number") {
+              return ALTURA_DESEADA;
+          }
+          // es un string tipo "50%"
+          var porcentaje = parseFloat(ALTURA_DESEADA) / 100;
+          var alturaPx = window.innerHeight * porcentaje;
+  
+          if (ALTURA_MIN_PX) alturaPx = Math.max(alturaPx, ALTURA_MIN_PX);
+          if (ALTURA_MAX_PX) alturaPx = Math.min(alturaPx, ALTURA_MAX_PX);
+  
+          return Math.round(alturaPx);
+      }
+  
+      function forzarAltura() {
+          var wrap = document.querySelector(SELECTOR_WRAP);
+          if (!wrap) return;
+  
+          var alturaPx = calcularAlturaPx() + "px";
+  
+          // jQuery.css() NO soporta !important, por eso el plugin lo seguía
+          // pisando. Usamos setProperty con el tercer parámetro "important".
+          wrap.style.setProperty("height", alturaPx, "important");
+  
+          wrap.querySelectorAll(".camera_slides, .cameraContent, .camera_wrap")
+              .forEach(function (el) {
+                  el.style.setProperty("height", alturaPx, "important");
+              });
+      }
+  
+      // 1) Al terminar de cargar todo (imágenes incluidas, que es cuando
+      //    el plugin suele recalcular su altura por primera vez)
+      $(window).on("load", function () {
+          forzarAltura();
+          // el plugin a veces recalcula con un pequeño delay tras el load,
+          // así que reforzamos un par de veces más por las dudas
+          setTimeout(forzarAltura, 300);
+          setTimeout(forzarAltura, 1000);
+      });
+  
+      // 2) Cada vez que el plugin recalcula por resize
+      $(window).on("resize", function () {
+          setTimeout(forzarAltura, 100);
+      });
+  
+      // 3) Vigilante: si el plugin vuelve a tocar el style en cualquier
+      //    momento (transición entre slides, etc.), lo corregimos al toque.
+      var nodo = document.querySelector(SELECTOR_WRAP);
+      if (nodo && window.MutationObserver) {
+          var observer = new MutationObserver(function (mutaciones) {
+              mutaciones.forEach(function (m) {
+                  if (m.attributeName === "style") {
+                      var alturaActual = nodo.style.height;
+                      var alturaEsperada = calcularAlturaPx() + "px";
+                      if (alturaActual !== alturaEsperada) {
+                          forzarAltura();
+                      }
+                  }
+              });
+          });
+          observer.observe(nodo, { attributes: true, attributeFilter: ["style"] });
+      }
+  })(jQuery);
+  </script>
   <script src="<?php echo $URL; ?>/public/js/jquery.prettyPhoto.js"></script>
   <script src="<?php echo $URL; ?>/public/js/portfolio/jquery.quicksand.js"></script>
   <script src="<?php echo $URL; ?>/public/js/portfolio/setting.js"></script>
