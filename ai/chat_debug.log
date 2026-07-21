@@ -875,3 +875,63 @@ Array
 )
 
 
+[2026-07-20 22:42:07] OllamaException en clasificador:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2041 ms: Couldn't connect to server
+
+[2026-07-20 22:42:07] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-20 22:42:09] OllamaException en respuestaGeneral:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2033 ms: Couldn't connect to server
+
+[2026-07-20 22:43:10] OllamaException en clasificador:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2035 ms: Couldn't connect to server
+
+[2026-07-20 22:43:10] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-20 22:43:12] OllamaException en respuestaGeneral:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2036 ms: Couldn't connect to server
+
+[2026-07-20 22:43:28] OllamaException en clasificador:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2021 ms: Couldn't connect to server
+
+[2026-07-20 22:43:28] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-20 22:43:30] OllamaException en respuestaGeneral:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2017 ms: Couldn't connect to server
+

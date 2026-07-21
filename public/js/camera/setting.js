@@ -3,7 +3,6 @@ jQuery(document).ready(function($) {
 "use strict";
 	//Camera Jquery
 	$('#camera-slide').camera({
-    height: '80%',
     thumbnails: false,
     hover: false,
     fx: 'random',
@@ -11,5 +10,5 @@ jQuery(document).ready(function($) {
     transPeriod: 1500,
     pagination: false,
     loader: 'none'
-	});
+    });
 });

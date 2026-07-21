@@ -473,84 +473,93 @@ include ("../layout/user/part1.php");
   <script src="<?php echo $URL; ?>/public/js/camera/camera.js"></script>
   <script src="<?php echo $URL; ?>/public/js/camera/setting.js"></script>
   <script>
+/**
+ * Sobreescribe el height, el centrado de imágenes y el tamaño de las
+ * flechas del plugin "Camera" (camera_wrap).
+ *
+ * ENFOQUE: en vez de pelear en JS contra el loop de animación del plugin
+ * (lo cual genera carreras / resultados intermitentes), inyectamos una
+ * hoja de estilos con !important. El navegador aplica el cascade de CSS
+ * en cada repintado, así que estas reglas SIEMPRE ganan, sin importar
+ * cuándo el plugin toque el style inline durante sus animaciones.
+ *
+ * Cómo usarlo:
+ * 1. Ajustá RELACION_ANCHO_ALTO si cambiás el ratio de tus imágenes.
+ * 2. Incluí este archivo con <script> DESPUÉS del script del plugin Camera
+ *    y después de donde llames a .camera().
+ */
+(function ($) {
+    "use strict";
 
-    
-  (function ($) {
-      "use strict";
-  
-      var SELECTOR_WRAP = "#camera-slide"; // el contenedor de tu slideshow
-  
-      // Opción A: altura fija en px. Ejemplo: 500
-      // Opción B: altura como % del alto de la ventana (equivalente a vh). Ejemplo: "50%"
-      var ALTURA_DESEADA = "90%";
-  
-      // Solo se usan si ALTURA_DESEADA es un porcentaje (opcionales)
-      var ALTURA_MIN_PX = 300;
-      var ALTURA_MAX_PX = 800;
-  
-      function calcularAlturaPx() {
-          if (typeof ALTURA_DESEADA === "number") {
-              return ALTURA_DESEADA;
-          }
-          // es un string tipo "50%"
-          var porcentaje = parseFloat(ALTURA_DESEADA) / 100;
-          var alturaPx = window.innerHeight * porcentaje;
-  
-          if (ALTURA_MIN_PX) alturaPx = Math.max(alturaPx, ALTURA_MIN_PX);
-          if (ALTURA_MAX_PX) alturaPx = Math.min(alturaPx, ALTURA_MAX_PX);
-  
-          return Math.round(alturaPx);
-      }
-  
-      function forzarAltura() {
-          var wrap = document.querySelector(SELECTOR_WRAP);
-          if (!wrap) return;
-  
-          var alturaPx = calcularAlturaPx() + "px";
-  
-          // jQuery.css() NO soporta !important, por eso el plugin lo seguía
-          // pisando. Usamos setProperty con el tercer parámetro "important".
-          wrap.style.setProperty("height", alturaPx, "important");
-  
-          wrap.querySelectorAll(".camera_slides, .cameraContent, .camera_wrap")
-              .forEach(function (el) {
-                  el.style.setProperty("height", alturaPx, "important");
-              });
-      }
-  
-      // 1) Al terminar de cargar todo (imágenes incluidas, que es cuando
-      //    el plugin suele recalcular su altura por primera vez)
-      $(window).on("load", function () {
-          forzarAltura();
-          // el plugin a veces recalcula con un pequeño delay tras el load,
-          // así que reforzamos un par de veces más por las dudas
-          setTimeout(forzarAltura, 300);
-          setTimeout(forzarAltura, 1000);
-      });
-  
-      // 2) Cada vez que el plugin recalcula por resize
-      $(window).on("resize", function () {
-          setTimeout(forzarAltura, 100);
-      });
-  
-      // 3) Vigilante: si el plugin vuelve a tocar el style en cualquier
-      //    momento (transición entre slides, etc.), lo corregimos al toque.
-      var nodo = document.querySelector(SELECTOR_WRAP);
-      if (nodo && window.MutationObserver) {
-          var observer = new MutationObserver(function (mutaciones) {
-              mutaciones.forEach(function (m) {
-                  if (m.attributeName === "style") {
-                      var alturaActual = nodo.style.height;
-                      var alturaEsperada = calcularAlturaPx() + "px";
-                      if (alturaActual !== alturaEsperada) {
-                          forzarAltura();
-                      }
-                  }
-              });
-          });
-          observer.observe(nodo, { attributes: true, attributeFilter: ["style"] });
-      }
-  })(jQuery);
+    var SELECTOR_WRAP = "#camera-slide"; // el contenedor de tu slideshow
+
+    // Relación ancho:alto recomendada para las imágenes de "noticias".
+    // Con tu medida de referencia (1351x539) da aprox 2.5 (osea 5:2).
+    var RELACION_ANCHO_ALTO = 1351 / 539;
+
+    // Ancho de referencia: a este ancho de contenedor, las flechas se ven
+    // a su tamaño original de diseño (40x40px, escala 1).
+    var ANCHO_BASE_FLECHAS = 1351;
+    var ESCALA_MIN = 0.6; // no dejar que se achiquen más de esto
+    var ESCALA_MAX = 2;   // no dejar que crezcan más de esto
+
+    // ------------------------------------------------------------------
+    // 1) HEIGHT → resuelto con CSS inyectado (aspect-ratio), sin JS.
+    //    Ya NO forzamos el centrado/recorte de la imagen: el admin sube
+    //    las imágenes en la proporción correcta y el plugin las muestra
+    //    tal cual, empezando desde arriba-izquierda como el comportamiento
+    //    original. Esto también deja 100% compatible fx: 'random'.
+    // ------------------------------------------------------------------
+    var css = ""
+        + SELECTOR_WRAP + " {"
+        + "  aspect-ratio: " + RELACION_ANCHO_ALTO + " !important;"
+        + "  height: auto !important;"
+        + "}"
+        + SELECTOR_WRAP + " .camera_slides,"
+        + SELECTOR_WRAP + " .cameraContent,"
+        + SELECTOR_WRAP + " .camera_target,"
+        + SELECTOR_WRAP + " .camera_overlayer,"
+        + SELECTOR_WRAP + " .cameraSlide,"
+        + SELECTOR_WRAP + " .camera_wrap {"
+        + "  height: 100% !important;"
+        + "}";
+
+    var styleTag = document.createElement("style");
+    styleTag.setAttribute("data-source", "override-camera-height");
+    styleTag.appendChild(document.createTextNode(css));
+    document.head.appendChild(styleTag);
+
+    // ------------------------------------------------------------------
+    // 2) FLECHAS prev/next → esto sí necesita JS porque el factor de
+    //    escala depende de un cálculo (ancho actual / ancho base), pero
+    //    NO corre en loop continuo: solo en load/resize, así que no hay
+    //    carrera posible con la animación del plugin.
+    // ------------------------------------------------------------------
+    function escalarFlechas() {
+        var wrap = document.querySelector(SELECTOR_WRAP);
+        if (!wrap) return;
+
+        var anchoActual = wrap.offsetWidth;
+        var escala = anchoActual / ANCHO_BASE_FLECHAS;
+        escala = Math.max(ESCALA_MIN, Math.min(ESCALA_MAX, escala));
+
+        var iconos = wrap.querySelectorAll(".camera_prev > span, .camera_next > span");
+        iconos.forEach(function (el) {
+            el.style.setProperty("transform", "scale(" + escala.toFixed(2) + ")", "important");
+            el.style.setProperty("transform-origin", "center center", "important");
+        });
+    }
+
+    $(window).on("load", function () {
+        escalarFlechas();
+        setTimeout(escalarFlechas, 300);
+        setTimeout(escalarFlechas, 1000);
+    });
+
+    $(window).on("resize", function () {
+        setTimeout(escalarFlechas, 100);
+    });
+})(jQuery);
   </script>
   <script src="<?php echo $URL; ?>/public/js/jquery.prettyPhoto.js"></script>
   <script src="<?php echo $URL; ?>/public/js/portfolio/jquery.quicksand.js"></script>
