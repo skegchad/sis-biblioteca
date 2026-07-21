@@ -516,8 +516,7 @@ function respuestaGeneral(string $pregunta, array $historial): string
     } catch (OllamaException $e) {
         debugLog('OllamaException en respuestaGeneral', $e->getMessage());
         // Red de seguridad si el modelo falla: no rompemos el chat.
-        return 'Ahora mismo no puedo responder eso, pero puedo ayudarte a '
-            . 'buscar libros por título, autor o tema. ¿Qué buscas?';
+        return 'Ahora mismo no puedo responder eso, ¡Estoy apagado!';
     }
 
     $texto = trim($texto);
