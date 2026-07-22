@@ -43,25 +43,25 @@ include ("../layout/user/part1.php");
     <section id="featured">
       <h2 class="catalogo-titulo">Noticias</h2>
       <!-- slideshow start here -->
-      
-      
-
       <div class="camera_wrap" id="camera-slide">
-
+      <?php
+        $query_noticias=$pdo->prepare('SELECT * FROM noticias');
+        $query_noticias->execute();
+        $noticias = $query_noticias->fetchAll(PDO::FETCH_ASSOC);    
+        foreach ($noticias as $noticia):
+          $id_noticia = $noticia['id_noticia'];
+          $ruta_fotoo = $noticia['ruta_foto'];
+          echo $ruta_fotoo;
+      ?>
+      
         <!-- slide 1 here -->
-        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia1.jpg">
-        </div>
-
-        <!-- slide 2 here -->
-        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia2.jpg">
-        </div>
-
-        <!-- slide 3 here -->
-        <div data-src="<?php echo $URL; ?>/public/uploads/img/noticias/noticia3.jpg">
-        </div>
-
+        <div data-src="<?php echo $URL; ?>/<?php echo $ruta_fotoo; ?>">
+        </div> 
+        <?php if($cargo=='Administrador'){ echo '<a href="<?php echo $URL/admin/noticias_controller_create.php?id=$id_noticia;?>"><div data-src="<?php echo $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg ?>">
+        </div></a>'} ?>
+      
+      <?php endforeach; ?>
       </div>
-
       <!-- slideshow end here -->
 
     </section>
