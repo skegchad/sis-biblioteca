@@ -56,6 +56,24 @@ include ("../layout/user/part1.php");
     from { transform: translateX(0);    opacity: 1; }
     to   { transform: translateX(120%); opacity: 0; }
 }
+.camera_prev > span::before,
+.camera_next > span::before {
+    border-color: #0d6efd !important;
+}
+
+.camera_prev > span,
+.camera_next > span {
+    color: #0d6efd !important;
+    background-color: #0d6efd !important;
+}
+
+.camera_prev:hover span::before,
+.camera_next:hover span::before,
+.camera_prev:hover span,
+.camera_next:hover span {
+    border-color: #0d6efd !important;
+    background-color: #0d6efd !important;
+}
 </style>
 
 
@@ -71,7 +89,29 @@ include ("../layout/user/part1.php");
         ¡Noticia eliminada!
     </div>
     <?php endif; ?>
-    <div class="banner-biblioteca">
+
+
+    <div class="banner-biblioteca-wrapper" id="bannerWrapper">
+
+        <div class="banner-slides-track" id="slidesTrack">
+            <div class="banner-slide" data-file="libross.jpeg" style="background-image: linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross.jpeg'); ?>');"></div>
+
+            <div class="banner-slide" data-file="libross2.jpeg" style="background-image: linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross2.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross2.jpeg'); ?>');"></div>
+        </div>
+
+        <span class="texto-banner">Biblioteca P. Luigi Ghezzi</span>
+
+        <?php if ($cargo === 'Administrador'): ?>
+            <div class="banner-click-overlay" onclick="document.getElementById('inputBanner').click()"></div>
+            <input type="file" id="inputBanner" accept="image/*" style="display:none">
+        <?php endif; ?>
+
+        <button class="banner-arrow banner-arrow-left" onclick="cambiarSlide(-1)">&#10094;</button>
+        <button class="banner-arrow banner-arrow-right" onclick="cambiarSlide(1)">&#10095;</button>
+
+    </div>
+
+    
     </div>
 
     <section class="seccion-catalogo">
@@ -465,6 +505,54 @@ include ("../layout/user/part1.php");
         setTimeout(escalarFlechas, 100);
     });
 })(jQuery);
+
+  let slideActual = 0;
+  const track = document.getElementById('slidesTrack');
+  const slides = document.querySelectorAll('.banner-slide');
+  const totalSlides = slides.length;
+
+  function moverTrack() {
+      track.style.transform = `translateX(-${slideActual * 100}%)`;
+  }
+
+  function cambiarSlide(direccion) {
+      slideActual = (slideActual + direccion + totalSlides) % totalSlides;
+      moverTrack();
+  }
+
+  setInterval(() => cambiarSlide(1), 6000);
+
+  document.getElementById('inputBanner')?.addEventListener('change', function () {
+      if (!this.files.length) return;
+
+      const slideActivo = slides[slideActual];
+      const nombreArchivo = slideActivo.dataset.file;
+
+      const formData = new FormData();
+      formData.append('banner', this.files[0]);
+      formData.append('archivo', nombreArchivo);
+
+      fetch('<?php echo $URL; ?>/admin/banner/subir_banner.php', {
+          method: 'POST',
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              const nuevaUrl = "<?php echo $URL; ?>/public/assets/img/grupoProyecto/" + nombreArchivo + "?v=" + new Date().getTime();
+              slideActivo.style.backgroundImage =
+                  `linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('${nuevaUrl}')`;
+          } else {
+              alert(data.message || 'Error al subir el banner');
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          alert('Ocurrió un error al subir la imagen');
+      });
+
+      this.value = '';
+  });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="<?php echo $URL; ?>/public/js/jquery.prettyPhoto.js"></script>
@@ -545,6 +633,10 @@ include ("../layout/user/part1.php");
       #camera-slide .camera_next {
           opacity: 1 !important;
       }
+  }
+
+  .banner-biblioteca:hover{
+    cursor: pointer;
   }
   </style>
 </body>

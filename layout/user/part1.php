@@ -1,20 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-        .banner-biblioteca {
-            /* Ajusta la altura que prefieras para tu banner */
-            height: 250px; 
+        .banner-biblioteca-wrapper {
+            height: 250px;
             width: 1200px;
-            margin:auto;
-            margin-top: 40px;
-            /* 1. Ponemos un fondo oscuro semitransparente (linear-gradient) para que el texto resalte.
-               2. Ponemos la imagen de fondo. ¡REEMPLAZA 'tu-imagen-aqui.jpg' por la ruta real de tu foto de libros! */
-            background-image: linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg');
-            background-size:cover; /* Hace que la imagen cubra todo el espacio sin deformarse */
-            background-position: center; /* Centra la imagen de fondo */
-            
+            margin: 40px auto 0;
+            position: relative;
+            overflow: hidden;
         }
+
+        .banner-slide {
+            flex: 0 0 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .banner-slides-track {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .banner-slide.active {
+            opacity: 1;
+        }
+
+        .texto-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: #C9A227;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            white-space: nowrap;
+            width: max-content;
+            max-width: 90%;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 2px 2px 6px rgba(0,0,0,0.5);
+            z-index: 3;
+            pointer-events: none; /* para que no bloquee el click del banner en admin */
+        }
+
+        .banner-click-overlay {
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .banner-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            border: none;
+            font-size: 1.5rem;
+            padding: 10px 14px;
+            cursor: pointer;
+            z-index: 4;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .banner-arrow:hover {
+            background: rgba(0,0,0,0.7);
+        }
+
+        .banner-arrow-left { left: 15px; }
+        .banner-arrow-right { right: 15px; }
         .seccion-catalogo{
             max-width: 1200px;
             margin: 40px auto;
