@@ -6,17 +6,11 @@
 <style>
         .banner-biblioteca-wrapper {
             height: 250px;
-            width: 1200px;
+            width: 100%;
+            max-width: 1200px;
             margin: 40px auto 0;
             position: relative;
             overflow: hidden;
-        }
-
-        .banner-slide {
-            flex: 0 0 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
         }
 
         .banner-slides-track {
@@ -26,8 +20,11 @@
             transition: transform 0.6s ease-in-out;
         }
 
-        .banner-slide.active {
-            opacity: 1;
+        .banner-slide {
+            flex: 0 0 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
         }
 
         .texto-banner {
@@ -47,7 +44,7 @@
             max-width: 90%;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 2px 2px 6px rgba(0,0,0,0.5);
             z-index: 3;
-            pointer-events: none; /* para que no bloquee el click del banner en admin */
+            pointer-events: none;
         }
 
         .banner-click-overlay {
@@ -78,6 +75,33 @@
 
         .banner-arrow-left { left: 15px; }
         .banner-arrow-right { right: 15px; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 992px) {
+            .banner-biblioteca-wrapper {
+                height: 200px;
+            }
+            .texto-banner {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .banner-biblioteca-wrapper {
+                height: 150px;
+                margin-top: 20px;
+            }
+            .texto-banner {
+                font-size: 1rem;
+                letter-spacing: 1px;
+            }
+            .banner-arrow {
+                font-size: 1rem;
+                padding: 6px 10px;
+            }
+            .banner-arrow-left { left: 8px; }
+            .banner-arrow-right { right: 8px; }
+        }
         .seccion-catalogo{
             max-width: 1200px;
             margin: 40px auto;
