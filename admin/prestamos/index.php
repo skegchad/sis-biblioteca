@@ -193,6 +193,11 @@ table.dataTable {
                         });
                     });
                     </script>
+                    <a href="<?php echo $URL . '/admin/prestamos/controller_export.php'; ?>"
+                            target="_blank"
+                            class="btn btn-outline-danger btn-sm">
+                            Ver PDF actual
+                            </a>
                     <table id="tablaLibros" class="table table-hover">
                         <thead>
                             <tr>

@@ -193,6 +193,11 @@ table.dataTable {
                         });
                     });
                     </script>
+                    <a href="<?php echo $URL . '/admin/libros/controller_export.php'; ?>"
+                            target="_blank"
+                            class="btn btn-outline-danger btn-sm">
+                            Ver PDF actual
+                            </a>
                     <table id="tablaLibros" class="table table-hover">
                         <thead>
                             <tr>
@@ -294,7 +299,7 @@ table.dataTable {
                                                 <a href="<?php echo $URL . '/' . $ruta_pdf; ?>"
                                                 target="_blank"
                                                 class="btn btn-outline-danger btn-sm">
-                                                    📄 Ver PDF actual
+                                                    Ver PDF actual
                                                 </a>
                                             </div>
                                         </td>
@@ -303,6 +308,9 @@ table.dataTable {
                                             <center>
                                                 <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">
                                                     <i class="ti ti-edit"></i> Editar
+                                                </a>
+                                                <a href="<?php echo $URL?>/admin/prestamos/create.php?id=<?php echo $id?>" class="btn btn-primary btn-sm">
+                                                    <i class="ti ti-book"></i> Prestar
                                                 </a>
                                                 <a href="erase.php?id=<?php echo $id;?>" class="btn btn-danger btn-sm">
                                                     <i class="ti ti-trash"></i> Borrar
