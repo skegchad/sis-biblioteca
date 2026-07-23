@@ -13,10 +13,64 @@ if($cargo=="Administrador"){
 }
 include ("../layout/user/part1.php");
 ?>
+<style>
+#toast-success {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #198754;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: entrar 0.4s ease, salir 0.5s ease 3s forwards;
+}
+#toast-success-eliminado {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff0000;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: entrar 0.4s ease, salir 0.5s ease 3s forwards;
+}
+
+@keyframes entrar {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes salir {
+    from { transform: translateX(0);    opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+</style>
 
 
     <!-- end header -->
-
+    <?php if(isset($_GET['success']) && $_GET['success'] === 'noticia'): ?>
+    <div id="toast-success">
+        ¡Noticia registrada!
+    </div>
+    <?php endif; ?>
+    <!-- end header -->
+    <?php if(isset($_GET['success']) && $_GET['success'] === 'eliminada'): ?>
+    <div id="toast-success-eliminado">
+        ¡Noticia eliminada!
+    </div>
+    <?php endif; ?>
     <div class="banner-biblioteca">
     </div>
 
@@ -42,265 +96,52 @@ include ("../layout/user/part1.php");
 
     <section id="featured">
       <h2 class="catalogo-titulo">Noticias</h2>
+
+      <?php if ($cargo == 'Administrador'): ?>
+        <form id="uploadForm"
+              action="<?= $URL; ?>/admin/noticias_controller_create.php"
+              method="POST"
+              enctype="multipart/form-data">
+            <input
+                type="file"
+                id="imagen"
+                name="imagen"
+                accept="image/*"
+                hidden>
+        </form>
+      <?php endif; ?>
+
       <!-- slideshow start here -->
       <div class="camera_wrap" id="camera-slide">
-      <?php
-        $query_noticias=$pdo->prepare('SELECT * FROM noticias');
-        $query_noticias->execute();
-        $noticias = $query_noticias->fetchAll(PDO::FETCH_ASSOC);    
-        foreach ($noticias as $noticia):
-          $id_noticia = $noticia['id_noticia'];
-          $ruta_fotoo = $noticia['ruta_foto'];
-          echo $ruta_fotoo;
-      ?>
-      
-        <!-- slide 1 here -->
-        <div data-src="<?php echo $URL; ?>/<?php echo $ruta_fotoo; ?>">
-        </div> 
-        <?php if($cargo=='Administrador'){ echo '<a href="<?php echo $URL/admin/noticias_controller_create.php?id=$id_noticia;?>"><div data-src="<?php echo $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg ?>">
-        </div></a>'} ?>
-      
-      <?php endforeach; ?>
+        <?php
+          $query_noticias = $pdo->prepare('SELECT * FROM noticias');
+          $query_noticias->execute();
+          $noticias = $query_noticias->fetchAll(PDO::FETCH_ASSOC);
+          foreach ($noticias as $noticia):
+            $ruta_fotoo = $noticia['ruta_foto'];
+            $id_noticia = $noticia['id_noticia'];
+        ?>
+          <div data-src="<?php echo $URL; ?>/<?php echo $ruta_fotoo; ?>">
+            <?php if ($cargo == 'Administrador'): ?>
+              <div class="camera_caption custom-caption">
+                <span class="delete-news-btn" data-id="<?= $id_noticia; ?>" title="Eliminar noticia">&times;</span>
+              </div>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+
+        <?php if ($cargo == 'Administrador'): ?>
+          <div data-src="<?= $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg">
+            <div class="camera_caption custom-caption">
+              <a href="#" id="addNewSlide" class="add-new-slide-link"></a>
+            </div>
+          </div>
+        <?php endif; ?>
       </div>
       <!-- slideshow end here -->
 
     </section>
     <!-- /section featured -->
-
-    <section id="content">
-      <div class="container">
-
-
-        <div class="row">
-          <div class="span12">
-            <div class="row">
-              <div class="span4">
-                <div class="box flyLeft">
-                  <div class="icon">
-                    <i class="ico icon-circled icon-bgdark icon-star active icon-3x"></i>
-                  </div>
-                  <div class="text">
-                    <h4>High <strong>Quality</strong></h4>
-                    <p>
-                      Lorem ipsum dolor sit amet, has ei ipsum scaevola deseruisse am sea facilisis.
-                    </p>
-                    <a href="#">Learn More</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="span4">
-                <div class="box flyIn">
-                  <div class="icon">
-                    <i class="ico icon-circled icon-bgdark icon-dropbox active icon-3x"></i>
-                  </div>
-                  <div class="text">
-                    <h4>Rich of <strong>Features</strong></h4>
-                    <p>
-                      Lorem ipsum dolor sit amet, has ei ipsum scaevola deseruisse am sea facilisis.
-                    </p>
-                    <a href="#">Learn More</a>
-                  </div>
-                </div>
-              </div>
-              <div class="span4">
-                <div class="box flyRight">
-                  <div class="icon">
-                    <i class="ico icon-circled icon-bgdark icon-laptop active icon-3x"></i>
-                  </div>
-                  <div class="text">
-                    <h4>Modern <strong>Design</strong></h4>
-                    <p>
-                      Lorem ipsum dolor sit amet, has ei ipsum scaevola deseruisse am sea facilisis.
-                    </p>
-                    <a href="#">Learn More</a>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="span12">
-            <div class="solidline"></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="span12">
-            <div class="row">
-              <div class="span12">
-                <div class="aligncenter">
-                  <h3>Our <strong>Pricing</strong></h3>
-                  <p>Lorem ipsum dolor sit amet, labores dolorum scriptorem eum an, te quodsi sanctus neglegentur.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-
-            <div class="row">
-
-              <div class="span3">
-                <div class="pricing-box-wrap animated-fast flyIn">
-                  <div class="pricing-heading">
-                    <h3>Very <strong>Basic</strong></h3>
-                  </div>
-                  <div class="pricing-terms">
-                    <h6>&#36;15.00 / Month</h6>
-                  </div>
-                  <div class="pricing-content">
-                    <ul>
-                      <li><i class="icon-ok"></i> 100 applications</li>
-                      <li><i class="icon-ok"></i> 24x7 support available</li>
-                      <li><i class="icon-ok"></i> No hidden fees</li>
-                      <li><i class="icon-ok"></i> Free 30-days trial</li>
-                      <li><i class="icon-ok"></i> Stop anytime easily</li>
-                    </ul>
-                  </div>
-                  <div class="pricing-action">
-                    <a href="#" class="btn btn-medium btn-theme"><i class="icon-chevron-down"></i> Sign Up</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="span3">
-                <div class="pricing-box-wrap animated-fast flyIn">
-                  <div class="pricing-heading">
-                    <h3>Simple <strong>Choice</strong></h3>
-                  </div>
-                  <div class="pricing-terms">
-                    <h6>&#36;20.00 / Month</h6>
-                  </div>
-                  <div class="pricing-content">
-                    <ul>
-                      <li><i class="icon-ok"></i> 100 applications</li>
-                      <li><i class="icon-ok"></i> 24x7 support available</li>
-                      <li><i class="icon-ok"></i> No hidden fees</li>
-                      <li><i class="icon-ok"></i> Free 30-days trial</li>
-                      <li><i class="icon-ok"></i> Stop anytime easily</li>
-                    </ul>
-                  </div>
-                  <div class="pricing-action">
-                    <a href="#" class="btn btn-medium btn-theme"><i class="icon-chevron-down"></i> Sign Up</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="span3">
-                <div class="pricing-box-wrap special animated-slow flyIn">
-                  <div class="pricing-heading">
-                    <h3>Special <strong>Choice</strong></h3>
-                  </div>
-                  <div class="pricing-terms">
-                    <h6>&#36;15.00 / Month</h6>
-                  </div>
-                  <div class="pricing-content">
-                    <ul>
-                      <li><i class="icon-ok"></i> 100 applications</li>
-                      <li><i class="icon-ok"></i> 24x7 support available</li>
-                      <li><i class="icon-ok"></i> No hidden fees</li>
-                      <li><i class="icon-ok"></i> Free 30-days trial</li>
-                      <li><i class="icon-ok"></i> Stop anytime easily</li>
-                    </ul>
-                  </div>
-                  <div class="pricing-action">
-                    <a href="#" class="btn btn-medium btn-theme"><i class="icon-chevron-down"></i> Sign Up</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="span3">
-                <div class="pricing-box-wrap animated flyIn">
-                  <div class="pricing-heading">
-                    <h3>Just <strong>Happy</strong></h3>
-                  </div>
-                  <div class="pricing-terms">
-                    <h6>&#36;15.00 / Month</h6>
-                  </div>
-                  <div class="pricing-content">
-                    <ul>
-                      <li><i class="icon-ok"></i> 100 applications</li>
-                      <li><i class="icon-ok"></i> 24x7 support available</li>
-                      <li><i class="icon-ok"></i> No hidden fees</li>
-                      <li><i class="icon-ok"></i> Free 30-days trial</li>
-                      <li><i class="icon-ok"></i> Stop anytime easily</li>
-                    </ul>
-                  </div>
-                  <div class="pricing-action">
-                    <a href="#" class="btn btn-medium btn-theme"><i class="icon-chevron-down"></i> Sign Up</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-
-        </div>
-
-
-
-        <div class="row">
-          <div class="span12 aligncenter">
-            <h3 class="title">What people <strong>saying</strong> about us</h3>
-            <div class="blankline30"></div>
-
-            <ul class="bxslider">
-              <li>
-                <blockquote>
-                  Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis feugiat.Suspendisse eu erat quam. Vivamus porttitor eros quis nisi lacinia sed interdum lorem vulputate. Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis
-                  feugiat
-                </blockquote>
-                <div class="testimonial-autor">
-                  <img src="<?php echo $URL; ?>/public/assets/img/dummies/testimonial/1.png" alt="" />
-                  <h4>Hillary Doe</h4>
-                  <a href="#">www.companyname.com</a>
-                </div>
-              </li>
-              <li>
-                <blockquote>
-                  Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis feugiat.Suspendisse eu erat quam. Vivamus porttitor eros quis nisi lacinia sed interdum lorem vulputate. Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis
-                  feugiat
-                </blockquote>
-                <div class="testimonial-autor">
-                  <img src="<?php echo $URL; ?>/public/assets/img/dummies/testimonial/2.png" alt="" />
-                  <h4>Michael Doe</h4>
-                  <a href="#">www.companyname.com</a>
-                </div>
-              </li>
-              <li>
-                <blockquote>
-                  Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis feugiat.Suspendisse eu erat quam. Vivamus porttitor eros quis nisi lacinia sed interdum lorem vulputate. Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis
-                  feugiat
-                </blockquote>
-                <div class="testimonial-autor">
-                  <img src="<?php echo $URL; ?>/public/assets/img/dummies/testimonial/3.png" alt="" />
-                  <h4>Mark Donovan</h4>
-                  <a href="#">www.companyname.com</a>
-                </div>
-              </li>
-              <li>
-                <blockquote>
-                  Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis feugiat.Suspendisse eu erat quam. Vivamus porttitor eros quis nisi lacinia sed interdum lorem vulputate. Aliquam a orci quis nisi sagittis sagittis. Etiam adipiscing, justo quis
-                  feugiat
-                </blockquote>
-                <div class="testimonial-autor">
-                  <img src="<?php echo $URL; ?>/public/assets/img/dummies/testimonial/4.png" alt="" />
-                  <h4>Marry Doe Elliot</h4>
-                  <a href="#">www.companyname.com</a>
-                </div>
-              </li>
-            </ul>
-
-          </div>
-        </div>
-
-      </div>
-    </section>
-
 
     <section id="works">
       <div class="container">
@@ -475,6 +316,68 @@ include ("../layout/user/part1.php");
   <script src="<?php echo $URL; ?>/public/js/camera/camera.js"></script>
   <script src="<?php echo $URL; ?>/public/js/camera/setting.js"></script>
   <script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+      const input = document.getElementById("imagen");
+      const uploadForm = document.getElementById("uploadForm");
+
+      // --- Eliminar noticia ---
+      $(document).on("click", "#camera-slide .delete-news-btn", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const idNoticia = $(this).data("id");
+          if (!idNoticia) return;
+
+          Swal.fire({
+              title: '¿Eliminar esta noticia?',
+              text: "Esta acción no se puede deshacer.",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33'
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  window.location.href = "<?= $URL; ?>/admin/noticias_controller_erase.php?id=" + idNoticia;
+              }
+          });
+      });
+
+      // --- Agregar noticia ---
+      if (input) {
+
+          $(document).on("click", "#addNewSlide", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              Swal.fire({
+                  title: 'Agregar imagen',
+                  html: `
+                      <p>Para obtener un mejor resultado en el carrusel:</p>
+                      <ul style="text-align:left;display:inline-block;">
+                          <li>📐 Relación de aspecto recomendada: <b>4:1</b>.</li>
+                          <li>🖼️ Formatos permitidos: JPG, PNG o WEBP.</li>
+                          <li>📦 Tamaño máximo: 5 MB.</li>
+                      </ul>
+                  `,
+                  icon: 'info',
+                  confirmButtonText: 'Entendido'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      input.click();
+                  }
+              });
+          });
+
+          input.addEventListener("change", function () {
+              if (this.files.length > 0) {
+                  uploadForm.submit();
+              }
+          });
+      }
+
+  });
 /**
  * Sobreescribe el height, el centrado de imágenes y el tamaño de las
  * flechas del plugin "Camera" (camera_wrap).
@@ -497,13 +400,13 @@ include ("../layout/user/part1.php");
 
     // Relación ancho:alto recomendada para las imágenes de "noticias".
     // Con tu medida de referencia (1351x539) da aprox 2.5 (osea 5:2).
-    var RELACION_ANCHO_ALTO = 1351 / 539;
+    var RELACION_ANCHO_ALTO = 6 / 3;
 
     // Ancho de referencia: a este ancho de contenedor, las flechas se ven
     // a su tamaño original de diseño (40x40px, escala 1).
     var ANCHO_BASE_FLECHAS = 1351;
-    var ESCALA_MIN = 0.6; // no dejar que se achiquen más de esto
-    var ESCALA_MAX = 2;   // no dejar que crezcan más de esto
+    var ESCALA_MIN = 0.5; // no dejar que se achiquen más de esto
+    var ESCALA_MAX = 1;   // no dejar que crezcan más de esto
 
     // ------------------------------------------------------------------
     // 1) HEIGHT → resuelto con CSS inyectado (aspect-ratio), sin JS.
@@ -563,6 +466,7 @@ include ("../layout/user/part1.php");
     });
 })(jQuery);
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="<?php echo $URL; ?>/public/js/jquery.prettyPhoto.js"></script>
   <script src="<?php echo $URL; ?>/public/js/portfolio/jquery.quicksand.js"></script>
   <script src="<?php echo $URL; ?>/public/js/portfolio/setting.js"></script>
@@ -573,7 +477,76 @@ include ("../layout/user/part1.php");
 
   <!-- Template Custom JavaScript File -->
   <script src="<?php echo $URL; ?>/public/js/custom.js"></script>
+  <style>
+    #addNewSlide {
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 10; /* por encima de overlays del plugin Camera */
+  }
+  .add-new-slide-trigger {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    cursor: pointer;
+  }
+  #featured {
+      position: relative;
+  }
 
+  #camera-slide .cameraContent .camera_caption.custom-caption {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: none;
+      padding: 0;
+      margin: 0;
+  }
+
+  #camera-slide .add-new-slide-link {
+      display: block;
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      z-index: 10;
+  }
+
+  #camera-slide .delete-news-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 20px;
+      line-height: 32px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 20;
+      font-family: Arial, sans-serif;
+  }
+
+  #camera-slide .delete-news-btn:hover {
+      background: rgba(200,0,0,0.85);
+  }
+    /* Las flechas del plugin Camera dependen de :hover (mouseenter) para
+    hacerse visibles, lo cual no existe en dispositivos táctiles.
+    Forzamos que sean visibles siempre en pantallas de mobile/tablet. */
+  @media (max-width: 991px) {
+      #camera-slide .camera_prev,
+      #camera-slide .camera_next {
+          opacity: 1 !important;
+      }
+  }
+  </style>
 </body>
 </html>
 

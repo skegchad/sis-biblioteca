@@ -955,3 +955,88 @@ Array
 [2026-07-21 08:45:12] OllamaException en respuestaGeneral:
 No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2043 ms: Couldn't connect to server
 
+[2026-07-22 20:03:29] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-22 20:03:40] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-22 20:03:56] analisis:
+Array
+(
+    [intencion] => libros
+    [seguimiento] => 
+    [accion] => buscar
+    [indice] => 0
+    [filtros] => Array
+        (
+            [0] => Array
+                (
+                    [campo] => temas
+                    [valor] => programación
+                )
+
+        )
+
+)
+
+
+[2026-07-22 20:03:56] sql_buscar:
+Array
+(
+    [sql] => 
+        SELECT
+            l.id_libro, l.titulo, l.descripcion, l.autor, l.idioma,
+            l.disponibilidad, l.temas, l.tipo, l.edicion, l.ano, l.cdd,
+            l.bloque, l.categoria, l.subcategoria, l.seccion, l.editorial,
+            l.ejemplares, l.prestados
+        FROM tb_libros l
+        WHERE l.estado = '1'
+          AND l.fyh_eliminacion IS NULL
+          AND ((l.categoria LIKE :f0 OR l.temas LIKE :f0))
+        LIMIT 10
+    
+    [params] => Array
+        (
+            [:f0] => %programación%
+        )
+
+)
+
+
+[2026-07-22 20:05:18] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
