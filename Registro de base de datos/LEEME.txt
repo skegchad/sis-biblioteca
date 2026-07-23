@@ -1,1 +1,16 @@
-Copiarla en la carpeta 'C:/xampp' para probar
+Copiarla en la carpeta 'C:/xampp' para probar.
+
+
+
+
+
+
+EVENTO ACTUALIZACIÓN
+CREATE EVENT actualizar_prestamos_vencidos
+   ON SCHEDULE EVERY 1 HOUR
+   STARTS CURRENT_TIMESTAMP
+   DO
+   UPDATE prestamos
+   SET estado = 'vencido'
+   WHERE NOW() > fyh_devolucion
+     AND (estado IS NULL OR estado != 'vencido');

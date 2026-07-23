@@ -319,8 +319,8 @@
 }
 
 .catalogo-tarjeta{
-    height:240px;
-    width: 240px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     border-radius:12px;
     background-size:cover;
     background-position:center;
