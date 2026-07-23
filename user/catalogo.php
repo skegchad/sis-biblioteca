@@ -1077,3 +1077,4 @@ include ("../layout/user/part1.php");
 </body>
 
 </html>
+<?php include("../ai/chat_widget.php"); ?>

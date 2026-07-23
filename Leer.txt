@@ -1,0 +1,2 @@
+INSTALAR COMPOSER PARA QUE CORRA EL SCRIPT DE LOS REPORTES
+y en C:/xampp/php/php.ini, cambiar    ;extension=zip a    extension=zip

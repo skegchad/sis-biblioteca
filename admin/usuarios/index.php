@@ -125,6 +125,11 @@ table.dataTable {
   width: 100% !important;
   flex-basis: 100%;
 }
+.padre_botones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 </style>
 
 <?php if(isset($_GET['success']) && $_GET['success'] === 'registrado'): ?>
@@ -176,6 +181,18 @@ table.dataTable {
                                 });
                         });
                     </script>
+                    <div class="padre_botones">
+                        <a href="<?php echo $URL . '/admin/usuarios/controller_export.php'; ?>"
+                            target="_blank"
+                            class="btn btn-outline-danger btn-sm">
+                            Ver PDF actual
+                            </a>
+                        <a href="<?php echo $URL . '/admin/usuarios/controller_export_estudiantes.php'; ?>"
+                            target="_blank"
+                            class="btn btn-outline-primary btn-sm">
+                            Ver PDF Estudiantes
+                            </a>
+                    </div>
                     <table id="tablaUsuarios" class="table table-hover">
                         <thead>
                             <tr>

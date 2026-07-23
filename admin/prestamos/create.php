@@ -6,6 +6,9 @@ include ("../../layout/admin/datos_usuario.php");
 include ("../../layout/admin/comprueba_admin.php");
 include("../../layout/admin/parte1.php"); 
 // --- Libros con al menos un ejemplar disponible, para el select ---
+
+$id_libro_seleccionado = !empty($_GET['id']) ? $_GET['id'] : null;
+
 $stmtLibros = $pdo->prepare("
     SELECT id_libro, titulo, autor, ejemplares, prestados
     FROM tb_libros
@@ -137,7 +140,7 @@ $librosDisponibles = $stmtLibros->fetchAll(PDO::FETCH_ASSOC);
                                             <option value="">-- Selecciona un libro --</option>
                                             <?php foreach ($librosDisponibles as $libro): ?>
                                                 <?php $disponibles = (int)$libro['ejemplares'] - (int)$libro['prestados']; ?>
-                                                <option value="<?= (int)$libro['id_libro'] ?>">
+                                                <option value="<?= (int)$libro['id_libro'] ?>" <?php if($id_libro_seleccionado!=null && $id_libro_seleccionado == $libro['id_libro']){echo 'selected';}?>>
                                                     <?= htmlspecialchars($libro['titulo']) ?> — <?= htmlspecialchars($libro['autor']) ?>
                                                     (<?= $disponibles ?> disponible<?= $disponibles === 1 ? '' : 's' ?>)
                                                 </option>
