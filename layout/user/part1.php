@@ -634,7 +634,7 @@
 
                           <img src="<?php echo $URL.'/'.$rutaFoto; ?>" alt="Usuario">
 
-                          <span><?php echo $nombre; ?></span>
+                          <span><?php echo $nombreusuario; ?></span>
 
                       </summary>
 
