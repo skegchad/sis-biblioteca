@@ -8,7 +8,7 @@ include ("../../../layout/admin/comprueba_admin.php");
 $nombre = trim($_POST['Nombre'] ?? '');
 
 if (empty($nombre)) {
-    header("Location: " . $URL . "/admin/categorias/create.php?error=nombre_vacio");
+    header("Location: " . $URL . "/admin/libros/categorias/create.php?error=nombre_vacio");
     exit;
 }
 
@@ -38,7 +38,7 @@ if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
         $rutaFoto = $destino_bd;
     } else {
         // No se pudo mover, queda el default
-        header("Location: " . $URL . "/admin/categorias/create.php?error=subida");
+        header("Location: " . $URL . "/admin/libros/categorias/create.php?error=subida");
         exit;
     }
 }
@@ -74,11 +74,11 @@ try {
 
     $pdo->commit();
 
-    header("Location: " . $URL . "/admin/categorias?success=registrado");
+    header("Location: " . $URL . "/admin/libros/categorias?success=registrado");
     exit;
 
 } catch (Exception $e) {
     $pdo->rollBack();
-    header("Location: " . $URL . "/admin/categorias/create.php?error=db");
+    header("Location: " . $URL . "/admin/libros/categorias/create.php?error=db");
     exit;
 }
