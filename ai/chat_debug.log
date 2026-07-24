@@ -1040,3 +1040,37 @@ Array
 )
 
 
+[2026-07-22 23:57:53] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-24 00:07:59] OllamaException en clasificador:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2009 ms: Couldn't connect to server
+
+[2026-07-24 00:07:59] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
+[2026-07-24 00:08:01] OllamaException en respuestaGeneral:
+No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2004 ms: Couldn't connect to server
+

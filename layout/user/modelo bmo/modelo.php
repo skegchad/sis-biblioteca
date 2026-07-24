@@ -423,9 +423,9 @@ include ("../../../layout/user/part1.php");
 </script>
 
 <?php
-// Cerramos aquí lo que part1.php dejó abierto (<div id="wrapper">),
-// ya que no existe un part2.php/footer.php en el proyecto.
+
 ?>
 </div><!-- cierre de #wrapper -->
 </body>
 </html>
+<?php include("../../../ai/chat_widget.php"); ?>

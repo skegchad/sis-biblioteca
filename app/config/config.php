@@ -24,3 +24,4 @@ $fyh_actual = date("Y-m-d H:i:s");
 $estado = 1;
 $estado_eliminado=0;
 $modelo_ia='gemma3n:e2b';
+?>
