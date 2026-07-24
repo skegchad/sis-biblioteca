@@ -194,7 +194,7 @@ include ("../../layout/user/part1.php");
                 <td class="perfil-valor">
                     ••••••••
                     <a href="<?= $URL; ?>/login/change_password/index.php" class="perfil-btn-password">
-                        Cambiar contraseña
+                        Cambiar
                     </a>
                 </td>
             </tr>
@@ -209,9 +209,12 @@ include ("../../layout/user/part1.php");
             <div class="perfil-foto-wrap" id="fotoPerfilTrigger">
                 <img src="<?= $foto_perfil; ?>" alt="Foto de perfil" id="fotoPerfilPreview">
                 <div class="perfil-foto-overlay">Click para cambiar foto</div>
+                
             </div>
+            <span>Cambiar foto</span>
             <input type="file" name="foto" id="fotoPerfilInput" accept="image/*" hidden>
         </form>
+        
     </div>
 
 </div>

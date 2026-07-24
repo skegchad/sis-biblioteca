@@ -1,18 +1,3 @@
-<?php
-include ("../../../app/config/config.php");
-include ("../../../app/config/conexion.php");
-include ("../../../layout/admin/login.php");
-include ("../../../layout/admin/datos_usuario.php");
-
-if($cargo=="Administrador"){
-    $msj="Ir a página de administrador";
-    $rutaAdmin= $URL."/admin";
-}else{
-    $msj="Cerrar Sesión";
-    $rutaAdmin= $URL."/login/controller_logout.php";
-}
-include ("../../../layout/user/part1.php");
-?>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap');
@@ -328,7 +313,7 @@ include ("../../../layout/user/part1.php");
     let floatT = 0;
 
     loader.load(
-      'bmo.glb',
+      '<?php echo $URL; ?>/layout/user/modelo bmo/bmo.glb',
       (gltf) => {
         model = gltf.scene;
 
@@ -428,4 +413,3 @@ include ("../../../layout/user/part1.php");
 </div><!-- cierre de #wrapper -->
 </body>
 </html>
-<?php include("../../../ai/chat_widget.php"); ?>

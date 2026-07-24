@@ -116,7 +116,7 @@ include ("../layout/user/part1.php");
 
     <section class="seccion-catalogo">
 
-        <h2 class="catalogo-titulo">Catálogo</h2>
+        <h2 class="catalogo-titulo"><strong>Catálogo</strong></h2>
 
         <div class="catalogo-contenedor">
           <?php
@@ -128,6 +128,9 @@ include ("../layout/user/part1.php");
           ?>  
             <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/<?php echo trim($foto); ?>');"></div></a>
           <?php endforeach;?>
+          <?php if($cargo=="Administrador"):?>
+            <a href="<?php echo $URL?>/admin/libros/categorias/create.php"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg');"></div></a>
+          <?php endif;?>
 
         </div>
 
@@ -135,7 +138,7 @@ include ("../layout/user/part1.php");
     <!-- section featured -->
 
     <section id="featured">
-      <h2 class="catalogo-titulo">Noticias</h2>
+      <h2 class="catalogo-titulo"><strong>Noticias</strong></h2>
 
       <?php if ($cargo == 'Administrador'): ?>
         <form id="uploadForm"
@@ -187,81 +190,63 @@ include ("../layout/user/part1.php");
       <div class="container">
         <div class="row">
           <div class="span12">
-            <h4 class="title">Recent <strong>Works</strong></h4>
-            <div class="row">
+            <h4 class="title"><strong>Tipos</strong> y <strong>TEMAS</strong></h4>
+            <?php 
+              $query_tipos = $pdo->prepare('SELECT id, nombre FROM tipos');
+              $query_tipos->execute();
+              $listaTipos=$query_tipos->fetchAll(PDO::FETCH_ASSOC);
+              $vueltas=round(count($listaTipos)/4);
+              $tipoActual=0;
+              for ( $i=0 ;$i<$vueltas;$i++):
+            ?>
+              <div class="row">
+                  <?php
+                        $recorrido=4;
+                        if($i==$vueltas-1 && count($listaTipos)%4!=0){$recorrido=count($listaTipos)%4;}
+                        for ($j = 0; $j < $recorrido; $j++){
+                        $tipo = $listaTipos[$tipoActual];
+                        $id_tipo = $tipo['id'];
+                        $nombreTipo = $tipo['nombre'];
+                        $tipoActual++; 
+                        $query_temas=$pdo->prepare('SELECT id, tipo_id, nombre FROM temas WHERE tipo_id=:tipo_id');
+                        $query_temas->bindParam('tipo_id', $id_tipo, PDO::PARAM_INT);
+                        $query_temas->execute();
+                        $listaTemas=$query_temas->fetchAll(PDO::FETCH_ASSOC);  ?>
+                    <div class="grid cs-style-4">
+                      <div class="span3">
+                        <div class="item item-tipos" >
+                          <div>
+                            <center>
+                            <br>
+                            <h3 style="color: aliceblue; font-weight: bold;"><?php echo $nombreTipo;?></h3>
+                            </center>
+                            <div class="contenedor-temas">
+                              <ul class="celda-temas">
+                                <?php foreach($listaTemas as $tema): ?>
+                                <li style="color: black;"><a style="color: aliceblue" href="<?php echo $URL;?>/user/catalogo.php?tema=<?php echo $tema['nombre']; ?>"><?php echo $tema['nombre'];?></a></li>
+                                <?php endforeach; ?>
+                              </ul>
+                            </div>
+                          </div>                          
+                        </div>
+                      </div>
+                    </div>
+                  <?php } ?>
 
-              <div class="grid cs-style-4">
-                <div class="span3">
-                  <div class="item">
-                    <figure>
-                      <div><img src="<?php echo $URL; ?>/public/assets/img/dummies/works/1.jpg" alt="" /></div>
-                      <figcaption>
-                        <div>
-                          <span>
-								<a href="<?php echo $URL; ?>/public/assets/img/dummies/works/big.png" data-pretty="prettyPhoto[gallery1]" title="Portfolio caption here"><i class="icon-plus icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                          <span>
-								<a href="#"><i class="icon-file icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </div>
-                </div>
-                <div class="span3">
-                  <div class="item">
-                    <figure>
-                      <div><img src="<?php echo $URL; ?>/public/assets/img/dummies/works/2.jpg" alt="" /></div>
-                      <figcaption>
-                        <div>
-                          <span>
-								<a href="<?php echo $URL; ?>/public/assets/img/dummies/works/big.png" data-pretty="prettyPhoto[gallery1]" title="Portfolio caption here"><i class="icon-plus icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                          <span>
-								<a href="#"><i class="icon-file icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </div>
-                </div>
-                <div class="span3">
-                  <div class="item">
-                    <figure>
-                      <div><img src="<?php echo $URL; ?>/public/assets/img/dummies/works/3.jpg" alt="" /></div>
-                      <figcaption>
-                        <div>
-                          <span>
-								<a href="<?php echo $URL; ?>/public/assets/img/dummies/works/big.png" data-pretty="prettyPhoto[gallery1]" title="Portfolio caption here"><i class="icon-plus icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                          <span>
-								<a href="#"><i class="icon-file icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </div>
-                </div>
-                <div class="span3">
-                  <div class="item">
-                    <figure>
-                      <div><img src="<?php echo $URL; ?>/public/assets/img/dummies/works/4.jpg" alt="" /></div>
-                      <figcaption>
-                        <div>
-                          <span>
-								<a href="<?php echo $URL; ?>/public/assets/img/dummies/works/big.png" data-pretty="prettyPhoto[gallery1]" title="Portfolio caption here"><i class="icon-plus icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                          <span>
-								<a href="#"><i class="icon-file icon-circled icon-bglight icon-2x"></i></a>
-								</span>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </div>
-                </div>
+                  <?php if ($i == $vueltas-1 && $cargo === 'Administrador'): ?>
+                    <div class="grid cs-style-4">
+                      <div class="span3">
+                        <a href="<?php echo $URL ?>/admin/libros/tipos/create.php">
+                          <div class="item item-tipos item-admin" style="background-image: url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg')">
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                  <?php endif; ?>
               </div>
+            <?php
+            endfor;?>
 
-            </div>
           </div>
         </div>
       </div>
@@ -637,6 +622,28 @@ include ("../layout/user/part1.php");
 
   .banner-biblioteca:hover{
     cursor: pointer;
+  }
+
+  .item-tipos{
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius:12px;
+    background-size:cover;
+    background-position:center;
+    background-color: #0d6efd;
+    transition:transform .25s;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+  }
+  .item-tipos:hover{
+    transform:scale(1.05);
+  }
+  .contenedor-temas {
+    max-height: 190px;
+    overflow-y: auto;
+  }
+
+  .celda-temas {
+      padding-left: 20px;
   }
   </style>
 </body>

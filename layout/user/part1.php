@@ -605,19 +605,19 @@
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="<?php echo $URL; ?>/user/prestamo.php">
                                 Préstamo
                             </a>
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="<?php echo $URL; ?>/user/contacto.php">
                                 Contacto
                             </a>
                         </li>
 
                         <li>
-                            <a href="<?php echo $URL; ?>/layout/user/modelo bmo/modelo.php">
+                            <a href="<?php echo $URL; ?>/user/modelo.php">
                                 Conoce a BMO
                             </a>
                         </li>
