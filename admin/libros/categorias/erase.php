@@ -71,7 +71,7 @@ $subcategorias = $querySub->fetchAll(PDO::FETCH_ASSOC);
                         <h5 class="card-header">Llene la información con mucho cuidado</h5>
                         
                         <div class="card-body">
-                            <form action="controller_erase.php" method="post" enctype="multipart/form-data">    
+                            <form action="controller_erase.php?id=<?php echo $id_get;?>" method="post" enctype="multipart/form-data">    
                                 <fieldset disabled>
                                 <input type="hidden" name="id" value="<?php echo $id_get; ?>">
                                 

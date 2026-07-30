@@ -199,22 +199,30 @@ function mostrarCurso(select) {
     }
 }
 function filtrarParalelo(select) {
-    const esBachillerato = ['1roB', '2doB', '3roB'].includes(select.value);
+    const cursoSeleccionado = select.value;
     const paralelo = document.getElementById('Paralelo');
 
     // Resetea selección
     paralelo.value = '';
 
+    // Identifica si es bachillerato comparando con los valores exactos del HTML
+    const cursosBachillerato = ['1ro Bachillerato', '2do Bachillerato', '3ro Bachillerato'];
+    const esBachillerato = cursosBachillerato.includes(cursoSeleccionado);
+
+    // Listas de valores exactos según el tipo
+    const letras = ['A', 'B', 'C', 'D', 'E'];
+    const especialidades = ['INSTALACIONES', 'INFORMÁTICA', 'MECANIZADO', 'ELECTROMECANICA', 'CONTABILIDAD'];
+
     // Muestra u oculta cada opción según el curso
     paralelo.querySelectorAll('option').forEach(option => {
-        const esEspecialidad = ['instalaciones', 'informatica', 'mecanizado', 'electromecanica', 'contabilidad'].includes(option.value);
-        const esLetra = ['A', 'B', 'C', 'D', 'E'].includes(option.value);
+        if (option.value === '') return; // No tocar la opción "-- Selecciona --"
 
-        if (esEspecialidad) {
-            option.hidden = !esBachillerato;  // solo bachillerato ve especialidades
-        }
-        if (esLetra) {
-            option.hidden = esBachillerato;   // bachillerato no ve A, B, C, D, E
+        if (esBachillerato) {
+            // Bachillerato: muestra solo especialidades
+            option.hidden = !especialidades.includes(option.value);
+        } else {
+            // 1ro a 10mo: muestra solo letras
+            option.hidden = !letras.includes(option.value);
         }
     });
 }
