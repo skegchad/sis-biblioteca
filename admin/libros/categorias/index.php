@@ -213,7 +213,7 @@ table.dataTable {
 
                                 foreach($categorias as $categoria){
 
-                                    $id = $categoria['id'];
+                                    $id_categoria = $categoria['id'];
                                     $nombre = $categoria['nombre'];
                                     $foto = $categoria['foto'];
 
@@ -221,7 +221,7 @@ table.dataTable {
                                 ?>
                                     <tr>
                                         <td><?php echo $contador;?></td>
-                                        <td><?php echo $id;?></td>
+                                        <td><?php echo $id_categoria;?></td>
                                         <td><?php echo $nombre;?></td>
                                         <td>
                                             <?php if (trim($foto) == 'public/uploads/img/libros/categorias/default.jpg'): ?>
@@ -259,10 +259,10 @@ table.dataTable {
                                         </td>
                                         <td>
                                             <center>
-                                                <a href="edit.php?id=<?php echo $id;?>" class="btn btn-success btn-sm">
+                                                <a href="edit.php?id=<?php echo $id_categoria;?>" class="btn btn-success btn-sm">
                                                     <i class="ti ti-edit"></i> Editar
                                                 </a>
-                                                <a href="erase.php?id=<?php echo $id;?>" class="btn btn-danger btn-sm">
+                                                <a href="erase.php?id=<?php echo $id_categoria;?>" class="btn btn-danger btn-sm">
                                                     <i class="ti ti-trash"></i> Borrar
                                                 </a>
                                             </center>

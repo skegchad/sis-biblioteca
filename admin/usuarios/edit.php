@@ -74,37 +74,37 @@ foreach($usuarios as $usuario){
                                         <br>
                                         <label for="Curso" class="form-label">Curso</label>
                                         <select name="Curso" id="Curso" class="form-select" onchange="filtrarParalelo(this)">
-                                            <option value="<?php echo $curso;?>"><?php echo $curso;?></option>
-                                            <option value="1ro">1ro</option>
-                                            <option value="2do">2do</option>
-                                            <option value="3ro">3ro</option>
-                                            <option value="4to">4to</option>
-                                            <option value="5to">5to</option>
-                                            <option value="6to">6to</option>
-                                            <option value="7mo">7mo</option>
-                                            <option value="8vo">8vo</option>
-                                            <option value="9no">9no</option>
-                                            <option value="10mo">10mo</option>
-                                            <option value="1roB">1ro de bachillerato</option>
-                                            <option value="2doB">2do de bachillerato</option>
-                                            <option value="3roB">3ro de bachillerato</option>
+                                            <option value="">-- Selecciona --</option>
+                                            <option value="1ro"  <?php echo $curso === '1ro'  ? 'selected' : ''; ?>>1ro</option>
+                                            <option value="2do"  <?php echo $curso === '2do'  ? 'selected' : ''; ?>>2do</option>
+                                            <option value="3ro"  <?php echo $curso === '3ro'  ? 'selected' : ''; ?>>3ro</option>
+                                            <option value="4to"  <?php echo $curso === '4to'  ? 'selected' : ''; ?>>4to</option>
+                                            <option value="5to"  <?php echo $curso === '5to'  ? 'selected' : ''; ?>>5to</option>
+                                            <option value="6to"  <?php echo $curso === '6to'  ? 'selected' : ''; ?>>6to</option>
+                                            <option value="7mo"  <?php echo $curso === '7mo'  ? 'selected' : ''; ?>>7mo</option>
+                                            <option value="8vo"  <?php echo $curso === '8vo'  ? 'selected' : ''; ?>>8vo</option>
+                                            <option value="9no"  <?php echo $curso === '9no'  ? 'selected' : ''; ?>>9no</option>
+                                            <option value="10mo" <?php echo $curso === '10mo' ? 'selected' : ''; ?>>10mo</option>
+                                            <option value="1ro Bachillerato" <?php echo $curso === '1ro Bachillerato' ? 'selected' : ''; ?>>1ro Bachillerato</option>
+                                            <option value="2do Bachillerato" <?php echo $curso === '2do Bachillerato' ? 'selected' : ''; ?>>2do Bachillerato</option>
+                                            <option value="3ro Bachillerato" <?php echo $curso === '3ro Bachillerato' ? 'selected' : ''; ?>>3ro Bachillerato</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
                                         <br>
                                         <label for="Paralelo" class="form-label">Paralelo/Especialidad</label>
                                         <select name="Paralelo" id="Paralelo" class="form-select">
-                                            <option value="<?php echo $paralelo;?>"><?php echo $paralelo;?></option>
-                                            <option value="A">A</option>
-                                            <option value="B">B</option>
-                                            <option value="C">C</option>
-                                            <option value="D">D</option>
-                                            <option value="E">E</option>
-                                            <option value="instalaciones">INSTALACIONES</option>
-                                            <option value="informatica">INFORMÁTICA</option>
-                                            <option value="mecanizado">MECANIZADO</option>
-                                            <option value="electromecanica">ELECTROMECANICA</option>
-                                            <option value="contabilidad">CONTABILIDAD</option>
+                                            <option value="">-- Selecciona --</option>
+                                            <option value="A" <?php echo $paralelo === 'A' ? 'selected' : ''; ?>>A</option>
+                                            <option value="B" <?php echo $paralelo === 'B' ? 'selected' : ''; ?>>B</option>
+                                            <option value="C" <?php echo $paralelo === 'C' ? 'selected' : ''; ?>>C</option>
+                                            <option value="D" <?php echo $paralelo === 'D' ? 'selected' : ''; ?>>D</option>
+                                            <option value="E" <?php echo $paralelo === 'E' ? 'selected' : ''; ?>>E</option>
+                                            <option value="INSTALACIONES"  <?php echo $paralelo === 'INSTALACIONES'  ? 'selected' : ''; ?>>INSTALACIONES</option>
+                                            <option value="INFORMÁTICA"    <?php echo $paralelo === 'INFORMÁTICA'    ? 'selected' : ''; ?>>INFORMÁTICA</option>
+                                            <option value="MECANIZADO"     <?php echo $paralelo === 'MECANIZADO'     ? 'selected' : ''; ?>>MECANIZADO</option>
+                                            <option value="ELECTROMECANICA"<?php echo $paralelo === 'ELECTROMECANICA'? 'selected' : ''; ?>>ELECTROMECANICA</option>
+                                            <option value="CONTABILIDAD"   <?php echo $paralelo === 'CONTABILIDAD'   ? 'selected' : ''; ?>>CONTABILIDAD</option>
                                         </select>
                                     </div>
                                 </div>
@@ -192,28 +192,48 @@ function mostrarCurso(select) {
     }
 }
 function filtrarParalelo(select) {
-    const esBachillerato = ['1roB', '2doB', '3roB'].includes(select.value);
+    const cursoSeleccionado = select.value;
     const paralelo = document.getElementById('Paralelo');
+
+    // Resetea selección
+    paralelo.value = '';
+
+    // Identifica si es bachillerato comparando con los valores exactos del HTML
+    const cursosBachillerato = ['1ro Bachillerato', '2do Bachillerato', '3ro Bachillerato'];
+    const esBachillerato = cursosBachillerato.includes(cursoSeleccionado);
+
+    // Listas de valores exactos según el tipo
+    const letras = ['A', 'B', 'C', 'D', 'E'];
+    const especialidades = ['INSTALACIONES', 'INFORMÁTICA', 'MECANIZADO', 'ELECTROMECANICA', 'CONTABILIDAD'];
 
     // Muestra u oculta cada opción según el curso
     paralelo.querySelectorAll('option').forEach(option => {
-        const esEspecialidad = ['instalaciones', 'informatica', 'mecanizado', 'electromecanica', 'contabilidad'].includes(option.value);
-        const esLetra = ['A', 'B', 'C', 'D', 'E'].includes(option.value);
+        if (option.value === '') return; // No tocar la opción "-- Selecciona --"
 
-        if (esEspecialidad) {
-            option.hidden = !esBachillerato;  // solo bachillerato ve especialidades
-        }
-        if (esLetra) {
-            option.hidden = esBachillerato;   // bachillerato no ve A, B, C, D, E
+        if (esBachillerato) {
+            // Bachillerato: muestra solo especialidades
+            option.hidden = !especialidades.includes(option.value);
+        } else {
+            // 1ro a 10mo: muestra solo letras
+            option.hidden = !letras.includes(option.value);
         }
     });
 }
 window.onload = function() {
     const cargo = document.getElementById('Cargo');
+    const cursoSelect = document.getElementById('Curso');
+
     if (cargo.value === 'Estudiante') {
         document.getElementById('seccion-curso').style.display = 'flex';
         document.getElementById('Curso').setAttribute('required', 'required');
         document.getElementById('Paralelo').setAttribute('required', 'required');
+
+        // Aplica el filtro de paralelos según el curso guardado en la BD
+        if (cursoSelect.value !== '') {
+            filtrarParalelo(cursoSelect);
+            // Restaura el paralelo guardado porque filtrarParalelo lo resetea
+            document.getElementById('Paralelo').value = '<?php echo $paralelo; ?>';
+        }
     }
 }
 </script>
