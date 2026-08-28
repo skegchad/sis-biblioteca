@@ -15,10 +15,5 @@ if ($cargo == "Administrador") {
 include ("../layout/user/part1.php");
 ?>
 
-<iframe
-    src="<?php echo $URL; ?>/layout/user/catalogo.php"
-    style="width:100%; height:100vh; border:none;"
-    loading="lazy">
-</iframe>
 
 <?php include("../ai/chat_widget.php"); ?>
