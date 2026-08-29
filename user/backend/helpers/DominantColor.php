@@ -9,6 +9,10 @@
  */
 function colorDominante(string $rutaImagen): ?string
 {
+    if (!extension_loaded('gd')) {
+        return null;
+    }
+
     if (!file_exists($rutaImagen)) {
         return null;
     }

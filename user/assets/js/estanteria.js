@@ -1,25 +1,21 @@
-
-console.log("ESTANTERIA.JS CARGADO");
-console.log("APP_URL:", window.APP_URL);
 (function () {
-
+  // window.APP_URL se define desde catalogo.php con tu constante $URL
   const BASE = (window.APP_URL || '').replace(/\/$/, '');
   const API_BUSCAR = `${BASE}/user/backend/api/buscar_libros.php`;
   const API_FILTROS = `${BASE}/user/backend/api/filtros.php`;
 
-  console.log("BASE:", BASE);
-  console.log("API_BUSCAR:", API_BUSCAR);
-  console.log("API_FILTROS:", API_FILTROS);
-
-  const cont = document.getElementById('estante');
+  const wrap = document.querySelector('.estante-wrap');
+  const fila = document.getElementById('estante');
   const selCat = document.getElementById('f-categoria');
   const selTema = document.getElementById('f-tema');
   const inputBuscar = document.getElementById('f-buscar');
 
+  let libroAbierto = null; // referencia al elemento .libro actualmente centrado
+
   /* Ancho del lomo según número de páginas (volumen del modelo 3D) */
   function anchoPorPaginas(paginas) {
-    const MIN_PAG = 100, MAX_PAG = 800;
-    const MIN_ANCHO = 20, MAX_ANCHO = 52;
+    const MIN_PAG = 80, MAX_PAG = 900;
+    const MIN_ANCHO = 14, MAX_ANCHO = 88;
     const p = Math.max(MIN_PAG, Math.min(MAX_PAG, paginas));
     const t = (p - MIN_PAG) / (MAX_PAG - MIN_PAG);
     return Math.round(MIN_ANCHO + t * (MAX_ANCHO - MIN_ANCHO));
@@ -43,6 +39,39 @@ console.log("APP_URL:", window.APP_URL);
     return `rgb(${r},${g},${b})`;
   }
 
+  /* Cierra el libro actualmente centrado y regresa la fila a su lugar */
+  function cerrarLibroActual() {
+    if (!libroAbierto) return;
+    libroAbierto.classList.remove('abierto');
+    libroAbierto.querySelector('.libro-inner').style.width = '';
+    libroAbierto = null;
+    fila.classList.remove('estante-enfocado');
+    fila.style.transform = 'translateX(0px)';
+  }
+
+  /* Centra el libro clickeado: la fila entera se desplaza para que
+     ese libro (ya agrandado y girado hacia la portada) quede en medio
+     del contenedor, dando la sensación de que los demás "se abren". */
+  function centrarLibro(el, anchoOriginal) {
+    // 1. Agranda el libro clickeado (esto empuja a los vecinos, generando el hueco)
+    el.classList.add('abierto');
+    el.querySelector('.libro-inner').style.width = Math.max(anchoOriginal, 150) + 'px';
+    fila.classList.add('estante-enfocado');
+
+    // 2. Espera a que el navegador aplique el nuevo ancho antes de medir posiciones
+    requestAnimationFrame(() => {
+      const contRect = wrap.getBoundingClientRect();
+      const libroRect = el.getBoundingClientRect();
+      const centroContenedor = contRect.left + contRect.width / 2;
+      const centroLibro = libroRect.left + libroRect.width / 2;
+      const offsetActual = parseFloat(fila.dataset.offset || '0');
+      const nuevoOffset = offsetActual + (centroContenedor - centroLibro);
+
+      fila.style.transform = `translateX(${nuevoOffset}px)`;
+      fila.dataset.offset = nuevoOffset;
+    });
+  }
+
   function crearLibroDOM(libro) {
     const ancho = anchoPorPaginas(libro.paginas);
     const texto = colorTexto(libro.color);
@@ -63,6 +92,7 @@ console.log("APP_URL:", window.APP_URL);
         <div class="cara lomo" style="background:${libro.color}; color:${texto};">
           <span class="titulo-lomo">${libro.titulo}</span>
         </div>
+        <div class="cara canto"></div>
         <div class="cara portada" style="background-image:${fondoPortada};">
           <span class="paginas-tag">${libro.paginas} pág.</span>
           <div class="etiqueta">
@@ -73,15 +103,15 @@ console.log("APP_URL:", window.APP_URL);
       </div>
     `;
 
-    el.addEventListener('click', () => {
-      const yaAbierto = el.classList.contains('abierto');
-      document.querySelectorAll('.libro.abierto').forEach(l => {
-        l.classList.remove('abierto');
-        l.querySelector('.libro-inner').style.width = '';
-      });
-      if (!yaAbierto) {
-        el.classList.add('abierto');
-        el.querySelector('.libro-inner').style.width = Math.max(ancho, 150) + 'px';
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const yaEraEsteAbierto = el === libroAbierto;
+
+      cerrarLibroActual();
+
+      if (!yaEraEsteAbierto) {
+        libroAbierto = el;
+        centrarLibro(el, ancho);
       }
     });
 
@@ -89,13 +119,19 @@ console.log("APP_URL:", window.APP_URL);
   }
 
   function pintarEstante(libros) {
-    cont.innerHTML = '';
+    fila.innerHTML = '';
+    fila.style.transform = 'translateX(0px)';
+    fila.dataset.offset = '0';
+    libroAbierto = null;
     if (!libros.length) {
-      cont.innerHTML = '<p class="sin-resultados">No se encontraron libros con esos filtros.</p>';
+      fila.innerHTML = '<p class="sin-resultados">No se encontraron libros con esos filtros.</p>';
       return;
     }
-    libros.forEach(l => cont.appendChild(crearLibroDOM(l)));
+    libros.forEach(l => fila.appendChild(crearLibroDOM(l)));
   }
+
+  // Click fuera de cualquier libro (pero dentro del estante) cierra el libro centrado
+  wrap.addEventListener('click', () => cerrarLibroActual());
 
   async function cargarFiltros() {
     try {
@@ -117,13 +153,13 @@ console.log("APP_URL:", window.APP_URL);
       buscar: inputBuscar.value.trim() || '',
     });
     try {
-      cont.innerHTML = '<p class="sin-resultados">Cargando…</p>';
+      fila.innerHTML = '<p class="sin-resultados">Cargando…</p>';
       const res = await fetch(`${API_BUSCAR}?${params.toString()}`);
       const libros = await res.json();
       pintarEstante(libros);
     } catch (err) {
       console.error('Error buscando libros', err);
-      cont.innerHTML = '<p class="sin-resultados">Ocurrió un error cargando los libros.</p>';
+      fila.innerHTML = '<p class="sin-resultados">Ocurrió un error cargando los libros.</p>';
     }
   }
 

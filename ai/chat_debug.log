@@ -1074,3 +1074,17 @@ Array
 [2026-07-24 00:08:01] OllamaException en respuestaGeneral:
 No se pudo conectar con Ollama: Failed to connect to 127.0.0.1 port 11434 after 2004 ms: Couldn't connect to server
 
+[2026-08-23 23:50:10] analisis:
+Array
+(
+    [intencion] => general
+    [seguimiento] => 
+    [accion] => ninguna
+    [indice] => 0
+    [filtros] => Array
+        (
+        )
+
+)
+
+
