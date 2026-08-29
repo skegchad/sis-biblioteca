@@ -457,3 +457,725 @@
   }
 
 }
+/* ============================================================
+   FILTROS
+   ============================================================ */
+
+.estanteria-app .filtros {
+  max-width: 1100px;
+  margin: 0 auto 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+
+/* ------------------------------------------------------------
+   Búsqueda
+   ------------------------------------------------------------ */
+
+.estanteria-app .filtro-busqueda {
+  display: flex;
+  justify-content: center;
+}
+
+.estanteria-app .filtro-busqueda input {
+  width: min(600px, 100%);
+}
+
+
+/* ------------------------------------------------------------
+   Selectores
+   ------------------------------------------------------------ */
+
+.estanteria-app .filtros-selectores {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+
+.estanteria-app .filtros-selectores select,
+.estanteria-app .filtro-busqueda input {
+
+  font-family: 'Inter', sans-serif;
+
+  font-size: 13px;
+
+  padding: 10px 15px;
+
+  border-radius: 999px;
+
+  border: 1px solid var(--linea);
+
+  background: var(--panel);
+
+  color: var(--tinta);
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.estanteria-app .filtros-selectores select:focus,
+.estanteria-app .filtro-busqueda input:focus {
+
+  border-color: var(--tinta-suave);
+
+  box-shadow:
+    0 0 0 3px rgba(34, 32, 27, 0.06);
+}
+
+
+.estanteria-app .filtros-selectores select:disabled {
+
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+
+/* ------------------------------------------------------------
+   Temas
+   ------------------------------------------------------------ */
+
+.estanteria-app .filtro-temas {
+
+  max-width: 900px;
+
+  margin: 4px auto 0;
+
+  padding: 16px;
+
+  border:
+    1px solid var(--linea);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,0.25);
+}
+
+
+.estanteria-app .filtro-temas-titulo {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+
+  font-family: 'Fraunces', serif;
+
+  font-size: 18px;
+}
+
+
+.estanteria-app #limpiar-temas {
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--tinta-suave);
+
+  font-family: 'Inter', sans-serif;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  padding: 4px 8px;
+
+  border-radius: 6px;
+}
+
+
+.estanteria-app #limpiar-temas:hover {
+
+  background:
+    rgba(34,32,27,0.07);
+
+  color: var(--tinta);
+}
+
+
+/* ------------------------------------------------------------
+   Chips
+   ------------------------------------------------------------ */
+
+.estanteria-app .lista-temas {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+
+.estanteria-app .tema-chip {
+
+  border:
+    1px solid var(--linea);
+
+  border-radius: 999px;
+
+  padding: 7px 12px;
+
+  background:
+    var(--panel);
+
+  color: var(--tinta-suave);
+
+  font-family: 'Inter', sans-serif;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+.estanteria-app .tema-chip:hover {
+
+  transform: translateY(-1px);
+
+  border-color:
+    var(--tinta-suave);
+
+  color:
+    var(--tinta);
+}
+
+
+.estanteria-app .tema-chip.seleccionado {
+
+  background:
+    var(--tinta);
+
+  color:
+    var(--panel);
+
+  border-color:
+    var(--tinta);
+}
+
+/* ============================================================
+   BARRA DE BÚSQUEDA
+   ============================================================ */
+
+.estanteria-app .barra-busqueda {
+
+  max-width: 1100px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 14px;
+}
+
+
+.estanteria-app .boton-filtros {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  border: 1px solid var(--linea);
+
+  border-radius: 999px;
+
+  background: var(--panel);
+
+  color: var(--tinta);
+
+  font-family: 'Inter', sans-serif;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+
+.estanteria-app .busqueda {
+
+  width: min(480px, 100%);
+
+  position: relative;
+}
+
+
+.estanteria-app .busqueda input {
+
+  width: 100%;
+
+  padding: 11px 16px 11px 38px;
+
+  border: 1px solid var(--linea);
+
+  border-radius: 999px;
+
+  background: var(--panel);
+
+  color: var(--tinta);
+
+  font-family: 'Inter', sans-serif;
+
+  outline: none;
+}
+
+
+.estanteria-app .icono-busqueda {
+
+  position: absolute;
+
+  left: 15px;
+
+  top: 20%;
+
+  color: var(--tinta-suave);
+}
+
+
+/* ============================================================
+   PANEL DE FILTROS
+   ============================================================ */
+
+.estanteria-app .panel-filtros {
+  position: fixed !important;
+
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+
+  width: min(380px, 90vw);
+
+  height: 100vh !important;
+
+  background: var(--panel);
+
+  z-index: 99999 !important;
+
+  box-shadow: 10px 0 40px rgba(0,0,0,.18);
+
+  transform: translateX(-105%);
+  transition: transform .3s ease;
+
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.estanteria-app .panel-filtros.abierto {
+  transform: translateX(0);
+}
+
+
+.estanteria-app .panel-filtros-cabecera {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 22px;
+
+  border-bottom:
+    1px solid var(--linea);
+}
+
+
+.estanteria-app .panel-filtros-cabecera h3 {
+
+  margin: 0;
+
+  font-family: 'Fraunces', serif;
+
+  font-size: 25px;
+}
+
+
+.estanteria-app .panel-filtros-cabecera button {
+
+  border: none;
+
+  background: transparent;
+
+  font-size: 28px;
+
+  cursor: pointer;
+
+  color: var(--tinta);
+}
+
+
+.estanteria-app .panel-filtros-contenido {
+
+  padding: 22px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.estanteria-app .panel-filtros-contenido label {
+
+  margin-top: 10px;
+
+  font-size: 12px;
+
+  color: var(--tinta-suave);
+}
+
+
+.estanteria-app .panel-filtros-contenido select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+
+  border-radius: 10px;
+  border: 1px solid var(--linea);
+
+  background: white;
+  color: var(--tinta);
+
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 44px;
+
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   TEMAS
+   ============================================================ */
+
+.estanteria-app .filtro-temas-principal {
+
+  margin-top: 14px;
+
+  padding: 14px;
+
+  border: 1px solid var(--linea);
+
+  border-radius: 12px;
+}
+
+
+.estanteria-app .titulo-filtro-temas {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+}
+
+
+.estanteria-app .titulo-filtro-temas span {
+
+  font-family: 'Fraunces', serif;
+
+  font-size: 18px;
+}
+
+
+.estanteria-app .titulo-filtro-temas button {
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--tinta-suave);
+
+  cursor: pointer;
+
+  font-size: 12px;
+}
+
+
+.estanteria-app .temas-seleccionados {
+
+  margin-top: 10px;
+
+  color: var(--tinta-suave);
+
+  font-size: 12px;
+}
+
+
+.estanteria-app .tema-mini {
+
+  display: inline-block;
+
+  padding: 5px 9px;
+
+  margin: 3px;
+
+  border-radius: 999px;
+
+  background: var(--tinta);
+
+  color: var(--panel);
+}
+
+
+.estanteria-app .limpiar-filtros {
+
+  margin-top: 18px;
+
+  padding: 11px;
+
+  border: 1px solid var(--linea);
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-family: 'Inter', sans-serif;
+}
+
+
+/* ============================================================
+   PANEL DE TEMAS
+   ============================================================ */
+
+.estanteria-app .panel-temas {
+  position: fixed;
+
+  top: 50%;
+  left: 50%;
+
+  width: min(500px, 90vw);
+  max-height: 80vh;
+
+  background: var(--panel);
+
+  z-index: 1000000 !important;
+
+  overflow: hidden;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -45%) scale(.95);
+
+  transition:
+    opacity .2s ease,
+    visibility .2s ease,
+    transform .2s ease;
+}
+
+.estanteria-app .panel-temas.abierto {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+
+.estanteria-app .panel-temas-cabecera {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 18px 20px;
+
+  border-bottom: 1px solid var(--linea);
+}
+
+
+.estanteria-app .panel-temas-cabecera h3 {
+
+  margin: 0;
+
+  font-family: 'Fraunces', serif;
+
+  font-size: 22px;
+}
+
+
+.estanteria-app .panel-temas-cabecera button {
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: 20px;
+
+  color: var(--tinta);
+}
+
+
+/* ============================================================
+   BUSCAR TEMA
+   ============================================================ */
+
+.estanteria-app .busqueda-temas {
+
+  margin: 16px 20px;
+
+  position: relative;
+}
+
+
+.estanteria-app .panel-filtros-contenido input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+
+  border-radius: 10px;
+  border: 1px solid var(--linea);
+
+  background: white;
+  color: var(--tinta);
+
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: normal;
+
+  box-sizing: border-box;
+}
+
+.estanteria-app .panel-temas input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+
+  border-radius: 10px;
+  border: 1px solid var(--linea);
+
+  background: white;
+  color: var(--tinta);
+
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+
+  box-sizing: border-box;
+}
+
+
+.estanteria-app .busqueda-temas span {
+
+  position: absolute;
+
+  left: 14px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--tinta-suave);
+}
+
+
+/* ============================================================
+   LISTA DE TEMAS
+   ============================================================ */
+
+.estanteria-app .lista-temas {
+
+  padding: 0 20px 22px;
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  max-height: 55vh;
+
+  overflow-y: auto;
+}
+
+
+.estanteria-app .tema-chip {
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  border: 1px solid var(--linea);
+
+  background: var(--panel);
+
+  color: var(--tinta-suave);
+
+  cursor: pointer;
+
+  font-family: 'Inter', sans-serif;
+
+  font-size: 12px;
+}
+
+
+.estanteria-app .tema-chip:hover {
+
+  border-color: var(--tinta);
+}
+
+
+.estanteria-app .tema-chip.seleccionado {
+
+  background: var(--tinta);
+
+  color: var(--panel);
+
+  border-color: var(--tinta);
+}
+
+.tema-chip {
+    border: 1px solid var(--linea);
+    background: white;
+    color: var(--tinta);
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.tema-chip:hover {
+    transform: translateY(-1px);
+}
+
+.tema-chip.seleccionado {
+    background: var(--tinta);
+    color: white;
+    font-weight: 600;
+}

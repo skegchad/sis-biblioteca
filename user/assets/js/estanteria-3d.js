@@ -8,12 +8,80 @@ import * as THREE from 'three';
   const API_BUSCAR = `${BASE}/user/backend/api/buscar_libros.php`;
   const API_FILTROS = `${BASE}/user/backend/api/filtros.php`;
 
-    const contenedor = document.getElementById('estante-3d');
-    const selCat = document.getElementById('f-categoria');
-    const selTema = document.getElementById('f-tema');
-    const inputBuscar = document.getElementById('f-buscar');
-    const sinResultados = document.getElementById('sin-resultados');
+  const contenedor = document.getElementById('estante-3d');
+  const selCat =
+  document.getElementById('f-categoria');
 
+  const selSubcat =
+    document.getElementById('f-subcategoria');
+
+  const selTipo =
+    document.getElementById('f-tipo');
+
+  const selIdioma =
+    document.getElementById('f-idioma');
+
+  const selDisponibilidad =
+    document.getElementById('f-disponibilidad');
+
+  const inputBuscar =
+    document.getElementById('f-buscar');
+
+  const botonFiltros =
+    document.getElementById('boton-filtros');
+
+  const panelFiltros =
+    document.getElementById('panel-filtros');
+
+  const cerrarFiltros =
+    document.getElementById('cerrar-filtros');
+
+  const abrirTemas =
+    document.getElementById('abrir-temas');
+
+  const panelTemas =
+    document.getElementById('panel-temas');
+
+  const cerrarTemas =
+    document.getElementById('cerrar-temas');
+
+  const aceptarTemas =
+    document.getElementById('aceptar-temas');
+
+  const buscarTema =
+    document.getElementById('buscar-tema');
+
+  const listaTemas =
+    document.getElementById('lista-temas');
+
+  const temasSeleccionadosVisual =
+    document.getElementById('temas-seleccionados');
+
+
+  const temasSeleccionadosDiv =
+    document.getElementById('temas-seleccionados');
+
+  const btnLimpiarFiltros =
+    document.getElementById('limpiar-filtros');
+
+  const sinResultados =
+    document.getElementById('sin-resultados');
+
+
+  let datosFiltros = {
+
+    categorias: [],
+    subcategorias: [],
+    tipos: [],
+    idiomas: [],
+    temas: []
+
+  };
+
+
+  let temasSeleccionados = [];
+
+  let temasTemporales = [];
     const botonInfo = document.getElementById('boton-info-libro');
 
     const infoLibro = document.getElementById('info-libro');
@@ -396,6 +464,23 @@ import * as THREE from 'three';
   const raycaster = new THREE.Raycaster();
   const puntero = new THREE.Vector2();
 
+  renderer.domElement.addEventListener('mousemove', (ev) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+
+  puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+  puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(puntero, camara);
+
+  const intersecciones = raycaster.intersectObjects(librosEnEscena);
+
+  if (intersecciones.length > 0) {
+      renderer.domElement.style.cursor = 'pointer';
+    } else {
+      renderer.domElement.style.cursor = 'default';
+    }
+  });
+
   function alClick(ev) {
     const rect = renderer.domElement.getBoundingClientRect();
     puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
@@ -418,6 +503,9 @@ import * as THREE from 'three';
     cerrarSeleccionado();
 
     libroSeleccionado = malla;
+
+  botonInfo.textContent = '˅';
+  botonInfo.setAttribute('aria-label', 'Ver información');
     malla.userData.abierto = true;
 
     const indice = librosEnEscena.indexOf(malla);
@@ -535,6 +623,9 @@ import * as THREE from 'three';
         }
     });
 
+    botonInfo.textContent = '˅';
+    botonInfo.setAttribute('aria-label', 'Ver información');
+
     libroSeleccionado = null;
     }
 
@@ -582,34 +673,265 @@ import * as THREE from 'three';
   // Filtros y búsqueda (igual comportamiento que la versión anterior)
   // ============================================================
   async function cargarFiltros() {
-    try {
-      const res = await fetch(API_FILTROS);
-      const data = await res.json();
-      selCat.innerHTML =
-        '<option value="">Todas las categorías</option>' +
-        data.categorias.map((c) => `<option value="${c}">${c}</option>`).join('');
-      selTema.innerHTML =
-        '<option value="">Todos los temas</option>' +
-        data.temas.map((t) => `<option value="${t}">${t}</option>`).join('');
-    } catch (err) {
-      console.error('No se pudieron cargar los filtros', err);
-    }
+
+  try {
+
+    const res =
+      await fetch(API_FILTROS);
+
+    const data =
+      await res.json();
+
+    datosFiltros = data;
+
+
+    // Categorías
+
+    selCat.innerHTML =
+      '<option value="">Todas las categorías</option>' +
+
+      data.categorias.map(c => `
+        <option value="${c.nombre}">
+          ${c.nombre}
+        </option>
+      `).join('');
+
+
+    // Tipos
+
+    selTipo.innerHTML =
+      '<option value="">Todos los tipos</option>' +
+
+      data.tipos.map(t => `
+        <option value="${t.nombre}">
+          ${t.nombre}
+        </option>
+      `).join('');
+
+
+    // Idiomas
+
+    selIdioma.innerHTML =
+      '<option value="">Todos los idiomas</option>' +
+
+      data.idiomas.map(i => `
+        <option value="${i}">
+          ${i}
+        </option>
+      `).join('');
+
+
+    actualizarSubcategorias();
+
+    dibujarTemas();
+
+  } catch (err) {
+
+    console.error(
+      'No se pudieron cargar los filtros',
+      err
+    );
+
+  }
+}
+  function actualizarSubcategorias() {
+
+  const categoriaNombre = selCat.value;
+
+
+  // Si no hay categoría seleccionada
+  if (!categoriaNombre) {
+
+    selSubcat.innerHTML =
+      '<option value="">Todas las subcategorías</option>';
+
+    selSubcat.disabled = true;
+
+    return;
   }
 
-  async function buscarLibros() {
-    const params = new URLSearchParams({
-      categoria: selCat.value || '',
-      tema: selTema.value || '',
-      buscar: inputBuscar.value.trim() || '',
-    });
-    try {
-      const res = await fetch(`${API_BUSCAR}?${params.toString()}`);
-      const libros = await res.json();
-      await pintarEstante(libros);
-    } catch (err) {
-      console.error('Error buscando libros', err);
-    }
+
+  // Buscar la categoría seleccionada
+  const categoria = datosFiltros.categorias.find(
+    c => c.nombre === categoriaNombre
+  );
+
+
+  if (!categoria) {
+
+    selSubcat.innerHTML =
+      '<option value="">Todas las subcategorías</option>';
+
+    selSubcat.disabled = true;
+
+    return;
   }
+
+
+  // Subcategorías pertenecientes a esa categoría
+  const subcategorias =
+    datosFiltros.subcategorias.filter(
+      s => Number(s.categoria_id) === Number(categoria.id)
+    );
+
+
+  selSubcat.disabled = subcategorias.length === 0;
+
+
+  selSubcat.innerHTML =
+    '<option value="">Todas las subcategorías</option>' +
+
+    subcategorias.map(s => `
+      <option value="${s.nombre}">
+        ${s.nombre}
+      </option>
+    `).join('');
+}
+function dibujarTemas() {
+
+  const texto = buscarTema.value
+    .trim()
+    .toLowerCase();
+
+  const temasFiltrados = datosFiltros.temas.filter(tema =>
+    tema.nombre.toLowerCase().includes(texto)
+  );
+
+  listaTemas.innerHTML = '';
+
+  temasFiltrados.forEach(tema => {
+
+    const boton = document.createElement('button');
+
+    boton.type = 'button';
+    boton.className = 'tema-chip';
+
+    // MOSTRAR EL NOMBRE
+    boton.textContent = tema.nombre;
+
+    // PERO GUARDAR/COMPARAR EL ID
+    if (temasTemporales.includes(Number(tema.id))) {
+      boton.classList.add('seleccionado');
+    }
+
+    boton.addEventListener('click', () => {
+
+      const id = Number(tema.id);
+
+      if (temasTemporales.includes(id)) {
+
+        temasTemporales = temasTemporales.filter(
+          t => t !== id
+        );
+
+      } else {
+
+        temasTemporales.push(id);
+
+      }
+
+      dibujarTemas();
+
+    });
+
+    listaTemas.appendChild(boton);
+
+  });
+}
+
+  async function buscarLibros() {
+
+  const params = new URLSearchParams();
+
+  if (selCat.value) {
+      params.append('categoria', selCat.value);
+  }
+
+  if (selSubcat.value) {
+      params.append('subcategoria', selSubcat.value);
+  }
+
+  if (selTipo.value) {
+      params.append('tipo', selTipo.value);
+  }
+
+  if (selIdioma.value) {
+      params.append('idioma', selIdioma.value);
+  }
+
+  if (selDisponibilidad.value) {
+      params.append('disponibilidad', selDisponibilidad.value);
+  }
+
+  if (inputBuscar.value.trim()) {
+      params.append('buscar', inputBuscar.value.trim());
+  }
+
+
+  temasSeleccionados.forEach(id => {
+      params.append('temas[]', id);
+  });
+
+  console.log('Temas seleccionados:', temasSeleccionados);
+  console.log('URL:', `${API_BUSCAR}?${params.toString()}`);
+  try {
+
+    const res =
+      await fetch(
+        `${API_BUSCAR}?${params.toString()}`
+      );
+
+
+    if (!res.ok) {
+      throw new Error(
+        `HTTP ${res.status}`
+      );
+    }
+
+
+    const textoRespuesta = await res.text();
+
+    console.log('RESPUESTA PHP:', textoRespuesta);
+
+    const libros = JSON.parse(textoRespuesta);
+    await pintarEstante(libros);
+
+
+  } catch (err) {
+
+    console.error(
+      'Error buscando libros:',
+      err
+    );
+
+  }
+}
+
+function limpiarTemas() {
+    temasSeleccionados = [];
+
+    document.querySelectorAll('.tema-chip').forEach(chip => {
+        chip.classList.remove('activo');
+    });
+
+    actualizarTextoTemas();
+}
+
+function limpiarFiltros() {
+    selCat.value = '';
+    selSubcat.value = '';
+    selTipo.value = '';
+    selIdioma.value = '';
+    selDisponibilidad.value = '';
+
+    inputBuscar.value = '';
+
+    limpiarTemas();
+
+    buscarLibros();
+}
+
+btnLimpiarFiltros.addEventListener('click', limpiarFiltros);
 
   let temporizador;
   function buscarConDebounce() {
@@ -617,9 +939,44 @@ import * as THREE from 'three';
     temporizador = setTimeout(buscarLibros, 300);
   }
 
-  selCat.addEventListener('change', buscarLibros);
-  selTema.addEventListener('change', buscarLibros);
-  inputBuscar.addEventListener('input', buscarConDebounce);
+  selCat.addEventListener('change', () => {
+
+    actualizarSubcategorias();
+
+    buscarLibros();
+
+  });
+
+
+  selSubcat.addEventListener(
+    'change',
+    buscarLibros
+  );
+
+
+  selTipo.addEventListener(
+    'change',
+    buscarLibros
+  );
+
+
+  selIdioma.addEventListener(
+    'change',
+    buscarLibros
+  );
+
+
+  selDisponibilidad.addEventListener(
+    'change',
+    buscarLibros
+  );
+
+
+  inputBuscar.addEventListener(
+    'input',
+    buscarConDebounce
+  );
+
 
   cargarFiltros();
   buscarLibros();
@@ -686,11 +1043,138 @@ import * as THREE from 'three';
   infoLibro.classList.add('visible');
 }
 botonInfo.addEventListener('click', (ev) => {
+
   ev.stopPropagation();
 
   if (!libroSeleccionado) return;
 
-  mostrarInformacionLibro(libroSeleccionado.userData.libro);
+  // Si la tarjeta está abierta, cerrarla
+  if (infoLibro.classList.contains('visible')) {
+
+    infoLibro.classList.remove('visible');
+
+    botonInfo.textContent = '˅';
+    botonInfo.setAttribute('aria-label', 'Ver información');
+
+  } 
+  // Si está cerrada, abrirla
+  else {
+
+    mostrarInformacionLibro(libroSeleccionado.userData.libro);
+
+    botonInfo.textContent = '⌃';
+    botonInfo.setAttribute('aria-label', 'Cerrar información');
+
+  }
+
 });
+buscarTema.addEventListener(
+  'input',
+  dibujarTemas
+);
+botonFiltros.addEventListener(
+  'click',
+  () => {
+
+    panelFiltros.classList.add(
+      'abierto'
+    );
+
+  }
+);
+
+
+cerrarFiltros.addEventListener(
+  'click',
+  () => {
+
+    panelFiltros.classList.remove(
+      'abierto'
+    );
+
+  }
+);
+abrirTemas.addEventListener(
+  'click',
+  () => {
+
+    temasTemporales = [
+      ...temasSeleccionados
+    ];
+
+    buscarTema.value = '';
+
+    dibujarTemas();
+
+    panelTemas.classList.add(
+      'abierto'
+    );
+
+  }
+);
+aceptarTemas.addEventListener(
+  'click',
+  () => {
+
+    temasSeleccionados = [
+      ...temasTemporales
+    ];
+
+    actualizarTextoTemas();
+
+    panelTemas.classList.remove('abierto');
+
+    buscarLibros();
+
+  }
+);
+cerrarTemas.addEventListener(
+  'click',
+  () => {
+
+    panelTemas.classList.remove(
+      'abierto'
+    );
+
+  }
+);
+function actualizarTextoTemas() {
+
+    const contenedor =
+        document.getElementById('temas-seleccionados');
+
+    if (!contenedor) return;
+
+    contenedor.innerHTML = '';
+
+    if (temasSeleccionados.length === 0) {
+
+        contenedor.textContent =
+            'Ningún tema seleccionado';
+
+        return;
+    }
+
+    temasSeleccionados.forEach(id => {
+
+        const tema =
+            datosFiltros.temas.find(
+                t => Number(t.id) === Number(id)
+            );
+
+        if (!tema) return;
+
+        const chip =
+            document.createElement('span');
+
+        chip.className =
+            'tema-chip seleccionado';
+
+        chip.textContent =
+            tema.nombre;
+
+        contenedor.appendChild(chip);
+    });
+}
 })();
 
