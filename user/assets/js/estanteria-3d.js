@@ -7,8 +7,19 @@ import * as THREE from 'three';
   const BASE = (window.APP_URL || '').replace(/\/$/, '');
   const API_BUSCAR = `${BASE}/user/backend/api/buscar_libros.php`;
   const API_FILTROS = `${BASE}/user/backend/api/filtros.php`;
+  const cargando = document.getElementById('cargando-estantes');
 
-  const contenedor = document.getElementById('estante-3d');
+  const contenedorCategorias =
+      document.getElementById('estantes-categorias');
+
+  const contenedor =
+    document.getElementById('estantes-categorias');
+
+  const vistaBusqueda =
+      document.getElementById('vista-busqueda');
+
+  const contenedorResultados =
+      document.getElementById('estante-resultados');
   const selCat =
   document.getElementById('f-categoria');
 
@@ -83,7 +94,9 @@ import * as THREE from 'three';
 
   let temasTemporales = [];
     const botonInfo = document.getElementById('boton-info-libro');
-
+    const controlesLibro = document.getElementById('controles-libro');
+    const botonAnterior = document.getElementById('libro-anterior');
+    const botonSiguiente = document.getElementById('libro-siguiente');
     const infoLibro = document.getElementById('info-libro');
     const infoPortada = document.getElementById('info-portada');
     const infoTitulo = document.getElementById('info-titulo');
@@ -102,20 +115,100 @@ import * as THREE from 'three';
     const infoDisponibilidad = document.getElementById('info-disponibilidad');
 
     const botonLeerLibro = document.getElementById('boton-leer-libro');
+    let estantes = [];
+
+    let estanteActivo = null;
+
     let librosEnEscena = [];
+
     let libroSeleccionado = null;
     let anchoFilaActual = 1;
+    let desplazamientoX = 0;
+    let desplazamientoVisualX = 0;
+
+    const SUAVIDAD_DESPLAZAMIENTO = 0.12;
+    let arrastrando = false;
+    let inicioArrastreX = 0;
+    let desplazamientoInicioX = 0;
+    let huboArrastre = false;
+    let velocidadDesplazamiento = 0;
+    let ultimoX = 0;
+    let ultimoTiempo = 0;
+    let animandoDesplazamiento = false;
+    const animacionesLibros = new WeakMap();
     const SEPARACION = 0.02;
+    function detenerAnimacionLibro(malla) {
+        const animacion = animacionesLibros.get(malla);
+
+        if (animacion) {
+            animacion.cancelado = true;
+            animacionesLibros.delete(malla);
+        }
+    }
+    
 
   // ============================================================
   // Escena base
   // ============================================================
   const escena = new THREE.Scene();
+  
   escena.background = new THREE.Color(0xede7da);
-
   const ALTO_LIBRO = 1.55;
   const PROFUNDIDAD_LIBRO = 1.0; // tamaño de la portada, constante entre libros
+  function crearEstante(categoria) {
 
+    const grupo = new THREE.Group();
+
+    grupo.userData = {
+        categoriaId: categoria.id,
+        categoriaNombre: categoria.nombre
+    };
+
+    escena.add(grupo);
+
+    const estante = {
+        grupo: grupo,
+        libros: [],
+        libroSeleccionado: null,
+        desplazamientoX: 0,
+        desplazamientoVisualX: 0,
+        anchoFila: 1
+    };
+
+    estantes.push(estante);
+
+    return estante;
+}
+function crearEstantesCategorias(categorias) {
+
+    // Limpiar estantes anteriores
+    estantes.forEach(estante => {
+        escena.remove(estante.grupo);
+    });
+
+    estantes.length = 0;
+
+    const SEPARACION_ESTANTES = 2.2;
+
+    categorias.forEach((categoria, indice) => {
+
+        const estante = crearEstante(categoria);
+
+        // Cada categoría queda debajo de la anterior
+        estante.grupo.position.set(
+            0,
+            -indice * SEPARACION_ESTANTES,
+            0
+        );
+
+        console.log(
+            'Estante creado:',
+            categoria.nombre,
+            estante
+        );
+
+    });
+}
   // Cámara ORTOGRÁFICA: a diferencia de una de perspectiva, el tamaño en
   // pantalla no depende de la distancia a la cámara, así los libros se ven
   // "flotando" a un tamaño consistente en vez de empequeñecerse por fuga
@@ -128,23 +221,31 @@ import * as THREE from 'three';
      Al estar la cámara centrada en Y sobre el centro vertical de los libros
      (arriba), top/bottom son simétricos: así no quedan pegados arriba. */
   function ajustarCamara(anchoFila) {
-    const aspecto = contenedor.clientWidth / contenedor.clientHeight;
-    const margen = 1.05; // aire extra alrededor de los libros
 
-    let alturaFrustum = ALTO_LIBRO * margen;
-    let anchoFrustum = alturaFrustum * aspecto;
-    const anchoNecesario = anchoFila * margen;
-    if (anchoFrustum < anchoNecesario) {
-      anchoFrustum = anchoNecesario;
-      alturaFrustum = anchoFrustum / aspecto;
-    }
+    const aspecto =
+        contenedor.clientWidth / contenedor.clientHeight;
+
+    const esMovil =
+        window.matchMedia('(max-width: 768px)').matches;
+
+    // PC: libro grande.
+    // Móvil: pequeño zoom out.
+    const margen = esMovil ? 1.15 : 1.02;
+
+    const alturaFrustum =
+        ALTO_LIBRO * margen;
+
+    const anchoFrustum =
+        alturaFrustum * aspecto;
 
     camara.left = -anchoFrustum / 2;
     camara.right = anchoFrustum / 2;
+
     camara.top = alturaFrustum / 2;
     camara.bottom = -alturaFrustum / 2;
+
     camara.updateProjectionMatrix();
-  }
+}
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -440,23 +541,172 @@ import * as THREE from 'three';
 
     ajustarCamara(anchoFilaActual);
     }
+  function acomodarLibrosEstante(estante) {
 
-  async function pintarEstante(libros) {
-    librosEnEscena.forEach((m) => escena.remove(m));
-    librosEnEscena = [];
-    libroSeleccionado = null;
-    sinResultados.style.display = libros.length ? 'none' : 'block';
+    const anchoTotal = estante.libros.reduce(
+        (acc, malla) =>
+            acc +
+            malla.userData.grosor +
+            SEPARACION,
+        0
+    );
+
+    estante.anchoFila =
+        anchoTotal || 1;
+
+
+    let x =
+        -anchoTotal / 2;
+
+
+    estante.libros.forEach(malla => {
+
+        const grosor =
+            malla.userData.grosor;
+
+
+        const posX =
+            x + grosor / 2;
+
+
+        malla.userData.posXBase =
+            posX;
+
+        malla.userData.posZBase =
+            0;
+
+
+        malla.position.x =
+            posX;
+
+        malla.position.z =
+            0;
+
+
+        x +=
+            grosor +
+            SEPARACION;
+
+    });
+
+}
+  
+  function obtenerLimiteDesplazamiento() {
+
+    const anchoVisible =
+        camara.right - camara.left;
+
+    const exceso =
+        anchoFilaActual - anchoVisible;
+
+    return Math.max(0, exceso / 2);
+}
+
+
+function aplicarDesplazamiento() {
+
+    // Si hay un libro seleccionado, NO aplicamos
+    // el desplazamiento horizontal general.
+    // Los libros están siendo controlados por las animaciones
+    // de seleccionarLibro().
+    if (libroSeleccionado) return;
+
+    librosEnEscena.forEach((malla) => {
+
+        malla.position.x =
+            malla.userData.posXBase + desplazamientoVisualX;
+    });
+}
+
+  async function pintarEstante(estante, libros) {
+
+    // Eliminar libros anteriores de este estante
+    estante.libros.forEach(malla => {
+        estante.grupo.remove(malla);
+
+        // Liberar recursos de Three.js
+        if (malla.geometry) {
+            malla.geometry.dispose();
+        }
+
+        if (malla.material) {
+            malla.material.forEach(mat => {
+
+                if (mat.map) {
+                    mat.map.dispose();
+                }
+
+                mat.dispose();
+
+            });
+        }
+    });
+
+    estante.libros = [];
+
+    estante.libroSeleccionado = null;
+    estante.desplazamientoX = 0;
+    estante.desplazamientoVisualX = 0;
+
 
     for (const libro of libros) {
-      const rutaFotoAbsoluta = libro.ruta_foto
-        ? `${BASE}/${libro.ruta_foto}`.replace(/([^:]\/)\/+/g, '$1')
-        : null;
-      const malla = await crearLibro3D({ ...libro, rutaFotoAbsoluta });
-      escena.add(malla);
-      librosEnEscena.push(malla);
+
+        const rutaFotoAbsoluta = libro.ruta_foto
+            ? `${BASE}/${libro.ruta_foto}`
+                .replace(/([^:]\/)\/+/g, '$1')
+            : null;
+
+
+        const malla = await crearLibro3D({
+            ...libro,
+            rutaFotoAbsoluta
+        });
+
+
+        // IMPORTANTE:
+        // El libro pertenece al grupo de su categoría
+        estante.grupo.add(malla);
+
+        estante.libros.push(malla);
     }
-    acomodarEnFila();
-  }
+
+
+    acomodarLibrosEstante(estante);
+        if (estante === estanteActivo) {
+            librosEnEscena = estante.libros;
+            anchoFilaActual = estante.anchoFila;
+        }
+}
+function activarEstante(estante) {
+
+    estanteActivo = estante;
+
+    librosEnEscena = estante.libros;
+
+    anchoFilaActual = estante.anchoFila;
+
+    desplazamientoX =
+        estante.desplazamientoX;
+
+    desplazamientoVisualX =
+        estante.desplazamientoVisualX;
+
+    libroSeleccionado = null;
+
+    actualizarControlesLibro();
+}
+function obtenerEstanteDeLibro(malla) {
+
+    for (const estante of estantes) {
+
+        if (estante.libros.includes(malla)) {
+            return estante;
+        }
+
+    }
+
+    return null;
+}
 
   // ============================================================
   // Interacción: click con raycasting para centrar/girar un libro
@@ -465,181 +715,477 @@ import * as THREE from 'three';
   const puntero = new THREE.Vector2();
 
   renderer.domElement.addEventListener('mousemove', (ev) => {
-  const rect = renderer.domElement.getBoundingClientRect();
 
-  puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-  puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
-
-  raycaster.setFromCamera(puntero, camara);
-
-  const intersecciones = raycaster.intersectObjects(librosEnEscena);
-
-  if (intersecciones.length > 0) {
-      renderer.domElement.style.cursor = 'pointer';
-    } else {
-      renderer.domElement.style.cursor = 'default';
+    // Mientras se está arrastrando, el cursor de arrastre
+    // tiene prioridad absoluta.
+    if (arrastrando) {
+        renderer.domElement.style.cursor = 'grabbing';
+        return;
     }
-  });
 
-  function alClick(ev) {
-    const rect = renderer.domElement.getBoundingClientRect();
-    puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-    puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+    const rect =
+        renderer.domElement.getBoundingClientRect();
+
+    puntero.x =
+        ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+
+    puntero.y =
+        -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+
     raycaster.setFromCamera(puntero, camara);
-    const intersecciones = raycaster.intersectObjects(librosEnEscena);
+
+    const todosLosLibros =
+    estantes.flatMap(estante => estante.libros);
+
+    const intersecciones =
+        raycaster.intersectObjects(todosLosLibros);
+
+    if (intersecciones.length > 0) {
+
+        renderer.domElement.style.cursor =
+            'pointer';
+
+    } else {
+
+        renderer.domElement.style.cursor =
+            'default';
+    }
+});
+  renderer.domElement.addEventListener('pointerdown', (ev) => {
+
+    if (libroSeleccionado) return;
+
+    arrastrando = true;
+    huboArrastre = false;
+
+    inicioArrastreX = ev.clientX;
+    desplazamientoInicioX = desplazamientoX;
+
+    ultimoX = ev.clientX;
+    ultimoTiempo = performance.now();
+
+    velocidadDesplazamiento = 0;
+
+    renderer.domElement.setPointerCapture(ev.pointerId);
+
+    renderer.domElement.style.cursor = 'grabbing';
+});
+
+
+renderer.domElement.addEventListener('pointermove', (ev) => {
+
+    if (!arrastrando) return;
+
+    const diferencia = ev.clientX - inicioArrastreX;
+
+    if (Math.abs(diferencia) > 5) {
+        huboArrastre = true;
+    }
+
+    const limite = obtenerLimiteDesplazamiento();
+
+    desplazamientoX =
+        desplazamientoInicioX + diferencia;
+
+    desplazamientoX = Math.max(
+        -limite,
+        Math.min(limite, desplazamientoX)
+    );
+
+    aplicarDesplazamiento();
+});
+
+
+  renderer.domElement.addEventListener('pointerup', (ev) => {
+
+    if (!arrastrando) return;
+
+    arrastrando = false;
+
+    renderer.domElement.releasePointerCapture(ev.pointerId);
+
+    renderer.domElement.style.cursor = 'default';
+
+    // La bandera solo debe durar hasta el siguiente click
+});
+  function iniciarInercia() {
+
+    if (Math.abs(velocidadDesplazamiento) < 0.01) {
+        return;
+    }
+
+    if (animandoDesplazamiento) return;
+
+    animandoDesplazamiento = true;
+
+    const limite =
+        obtenerLimiteDesplazamiento();
+
+    function animar() {
+
+        if (arrastrando) {
+            animandoDesplazamiento = false;
+            return;
+        }
+
+        desplazamientoX +=
+            velocidadDesplazamiento * 16;
+
+        // Frenado progresivo
+        velocidadDesplazamiento *= 0.92;
+
+        // Límites
+        if (desplazamientoX > limite) {
+
+            desplazamientoX = limite;
+
+            velocidadDesplazamiento *= 0.5;
+        }
+
+        if (desplazamientoX < -limite) {
+
+            desplazamientoX = -limite;
+
+            velocidadDesplazamiento *= 0.5;
+        }
+
+        aplicarDesplazamiento();
+
+        if (Math.abs(velocidadDesplazamiento) > 0.01) {
+
+            requestAnimationFrame(animar);
+
+        } else {
+
+            animandoDesplazamiento = false;
+
+        }
+    }
+
+    requestAnimationFrame(animar);
+}
+  function alClick(ev) {
+
+    if (huboArrastre) {
+        huboArrastre = false;
+        return;
+    }
+
+    const rect =
+        renderer.domElement.getBoundingClientRect();
+
+    puntero.x =
+        ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+
+    puntero.y =
+        -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(puntero, camara);
+
+    const todosLosLibros =
+    estantes.flatMap(estante => estante.libros);
+
+const intersecciones =
+    raycaster.intersectObjects(todosLosLibros);
 
     if (!intersecciones.length) {
-      cerrarSeleccionado();
-      return;
+        cerrarSeleccionado();
+        return;
     }
-    const malla = intersecciones[0].object;
-    malla === libroSeleccionado ? cerrarSeleccionado() : seleccionarLibro(malla);
-  }
+
+    const malla =
+        intersecciones[0].object;
+
+    const estante =
+    obtenerEstanteDeLibro(malla);
+
+    if (estante && estante !== estanteActivo) {
+        activarEstante(estante);
+    }
+
+    malla === libroSeleccionado
+        ? cerrarSeleccionado()
+        : seleccionarLibro(malla);
+}
   renderer.domElement.addEventListener('click', alClick);
 
   const Z_SELECCIONADO = 2;
 
-    function seleccionarLibro(malla) {
-    cerrarSeleccionado();
+  function seleccionarLibro(malla) {
+
+    if (malla === libroSeleccionado) return;
+
+    // Si había otro libro abierto, cerrarlo visualmente
+    // antes de establecer el nuevo estado.
+    if (libroSeleccionado) {
+
+        librosEnEscena.forEach(libro => {
+
+            animarLibro(libro, {
+                x: libro.userData.posXBase,
+                z: libro.userData.posZBase,
+                rotY: 0,
+                opacidad: 1
+            }, 500);
+
+        });
+    }
+
+    desplazamientoX = 0;
+    desplazamientoVisualX = 0;
 
     libroSeleccionado = malla;
 
-  botonInfo.textContent = '˅';
-  botonInfo.setAttribute('aria-label', 'Ver información');
+    botonInfo.textContent = '˅';
+    botonInfo.setAttribute(
+        'aria-label',
+        'Ver información'
+    );
+
     malla.userData.abierto = true;
 
-    const indice = librosEnEscena.indexOf(malla);
+    const indice =
+        librosEnEscena.indexOf(malla);
+
     const MARGEN = 1.25;
 
     // ============================================================
     // LIBRO SELECCIONADO
     // ============================================================
 
-    animarValor(malla.position, 'x', 0, 600);
-    animarValor(malla.position, 'z', 1.0, 600);
-    animarValor(malla.rotation, 'y', -Math.PI / 2, 600);
+    animarLibro(malla, {
+        x: 0,
+        z: Z_SELECCIONADO,
+        rotY: -Math.PI / 2,
+        opacidad: 1
+    }, 600);
+
 
     // ============================================================
-    // LIBRO INMEDIATAMENTE A LA IZQUIERDA
+    // LIBROS DE LA IZQUIERDA
     // ============================================================
 
     if (indice > 0) {
-        const izquierda = librosEnEscena[indice - 1];
+
+        const izquierda =
+            librosEnEscena[indice - 1];
 
         const nuevoX =
-        -(malla.userData.grosor / 2) -
-        MARGEN -
-        (izquierda.userData.grosor / 2);
+            -(malla.userData.grosor / 2) -
+            MARGEN -
+            (izquierda.userData.grosor / 2);
 
         const desplazamiento =
-        nuevoX - izquierda.userData.posXBase;
+            nuevoX -
+            izquierda.userData.posXBase;
 
         for (let i = 0; i < indice; i++) {
-        const libro = librosEnEscena[i];
 
-        animarValor(
-            libro.position,
-            'x',
-            libro.userData.posXBase + desplazamiento,
-            600
-        );
+            const libro =
+                librosEnEscena[i];
 
-        animarOpacidad(libro, 0.35, 400);
+            animarLibro(libro, {
+                x:
+                    libro.userData.posXBase +
+                    desplazamiento,
+
+                z:
+                    libro.userData.posZBase,
+
+                rotY: 0,
+
+                opacidad: 0.35
+
+            }, 600);
         }
     }
 
+
     // ============================================================
-    // LIBRO INMEDIATAMENTE A LA DERECHA
+    // LIBROS DE LA DERECHA
     // ============================================================
 
-    if (indice < librosEnEscena.length - 1) {
-        const derecha = librosEnEscena[indice + 1];
+    if (
+        indice <
+        librosEnEscena.length - 1
+    ) {
+
+        const derecha =
+            librosEnEscena[indice + 1];
 
         const nuevoX =
-        (malla.userData.grosor / 2) +
-        MARGEN +
-        (derecha.userData.grosor / 2);
+            (malla.userData.grosor / 2) +
+            MARGEN +
+            (derecha.userData.grosor / 2);
 
         const desplazamiento =
-        nuevoX - derecha.userData.posXBase;
+            nuevoX -
+            derecha.userData.posXBase;
 
-        for (let i = indice + 1; i < librosEnEscena.length; i++) {
-        const libro = librosEnEscena[i];
+        for (
+            let i = indice + 1;
+            i < librosEnEscena.length;
+            i++
+        ) {
 
-        animarValor(
-            libro.position,
-            'x',
-            libro.userData.posXBase + desplazamiento,
-            600
-        );
+            const libro =
+                librosEnEscena[i];
 
-        animarOpacidad(libro, 0.35, 400);
+            animarLibro(libro, {
+                x:
+                    libro.userData.posXBase +
+                    desplazamiento,
+
+                z:
+                    libro.userData.posZBase,
+
+                rotY: 0,
+
+                opacidad: 0.35
+
+            }, 600);
         }
     }
-    }
+
+    actualizarControlesLibro();
+}
 
   function cerrarSeleccionado() {
+
     if (!libroSeleccionado) return;
 
     infoLibro.classList.remove('visible');
 
-    const mallaSeleccionada = libroSeleccionado;
+    const mallaSeleccionada =
+        libroSeleccionado;
 
     mallaSeleccionada.userData.abierto = false;
 
-    // Volver el libro seleccionado a su posición original
-    animarValor(
-        mallaSeleccionada.position,
-        'x',
-        mallaSeleccionada.userData.posXBase,
-        600
-    );
 
-    animarValor(
-        mallaSeleccionada.position,
-        'z',
-        mallaSeleccionada.userData.posZBase,
-        600
-    );
+    // ============================================================
+    // TODOS LOS LIBROS REGRESAN JUNTOS
+    // ============================================================
 
-    animarValor(
-        mallaSeleccionada.rotation,
-        'y',
-        0,
-        600
-    );
+    librosEnEscena.forEach(malla => {
 
-    // Volver todos los demás a su posición original
-    librosEnEscena.forEach((m) => {
-        if (m !== mallaSeleccionada) {
-        animarValor(
-            m.position,
-            'x',
-            m.userData.posXBase,
-            600
-        );
+        animarLibro(malla, {
 
-        animarOpacidad(m, 1, 400);
-        }
+            x:
+                malla.userData.posXBase,
+
+            z:
+                malla.userData.posZBase,
+
+            rotY: 0,
+
+            opacidad: 1
+
+        }, 600);
+
     });
+
 
     botonInfo.textContent = '˅';
-    botonInfo.setAttribute('aria-label', 'Ver información');
 
-    libroSeleccionado = null;
-    }
+    botonInfo.setAttribute(
+        'aria-label',
+        'Ver información'
+    );
+
+    desplazamientoX = 0;
+    desplazamientoVisualX = 0;
+
+
+    // MUY IMPORTANTE:
+    // No borrar libroSeleccionado inmediatamente.
+    // Esperamos a que termine la animación.
+    setTimeout(() => {
+
+        // Solo limpiar si sigue siendo el mismo libro.
+        if (libroSeleccionado === mallaSeleccionada) {
+
+            libroSeleccionado = null;
+
+            actualizarControlesLibro();
+        }
+
+    }, 620);
+}
 
   // Tween genérico (ease-out cúbico) sin depender de librerías externas
-  function animarValor(objeto, propiedad, destino, duracionMs) {
-    const inicio = objeto[propiedad];
+  function animarLibro(malla, destino, duracion = 600, alFinal = null) {
+
+    detenerAnimacionLibro(malla);
+
+    const inicio = {
+        x: malla.position.x,
+        z: malla.position.z,
+        rotY: malla.rotation.y,
+        opacidad: malla.material[0].opacity ?? 1
+    };
+
+    const animacion = {
+        cancelado: false
+    };
+
+    animacionesLibros.set(malla, animacion);
+
     const t0 = performance.now();
-    requestAnimationFrame(function tick(ahora) {
-      const t = Math.min(1, (ahora - t0) / duracionMs);
-      const suavizado = 1 - Math.pow(1 - t, 3);
-      objeto[propiedad] = inicio + (destino - inicio) * suavizado;
-      if (t < 1) requestAnimationFrame(tick);
-    });
-  }
+
+    function tick(ahora) {
+
+        if (animacion.cancelado) return;
+
+        const t = Math.min(
+            1,
+            (ahora - t0) / duracion
+        );
+
+        // Ease-out cúbico
+        const suavizado =
+            1 - Math.pow(1 - t, 3);
+
+        malla.position.x =
+            inicio.x +
+            (destino.x - inicio.x) *
+            suavizado;
+
+        malla.position.z =
+            inicio.z +
+            (destino.z - inicio.z) *
+            suavizado;
+
+        malla.rotation.y =
+            inicio.rotY +
+            (destino.rotY - inicio.rotY) *
+            suavizado;
+
+        const opacidad =
+            inicio.opacidad +
+            (destino.opacidad - inicio.opacidad) *
+            suavizado;
+
+        malla.material.forEach(mat => {
+            mat.transparent = true;
+            mat.opacity = opacidad;
+        });
+
+        if (t < 1) {
+
+            requestAnimationFrame(tick);
+
+        } else {
+
+            animacionesLibros.delete(malla);
+
+            if (alFinal) {
+                alFinal();
+            }
+        }
+    }
+
+    requestAnimationFrame(tick);
+}
 
   function animarOpacidad(malla, destino, duracionMs) {
     malla.material.forEach((mat) => (mat.transparent = true));
@@ -656,6 +1202,22 @@ import * as THREE from 'three';
   // ============================================================
   // Render loop y resize
   // ============================================================
+  function animarDesplazamientoSuave() {
+
+    if (!libroSeleccionado) {
+
+        desplazamientoVisualX +=
+            (desplazamientoX - desplazamientoVisualX) *
+            SUAVIDAD_DESPLAZAMIENTO;
+
+        aplicarDesplazamiento();
+    }
+
+    requestAnimationFrame(animarDesplazamientoSuave);
+}
+
+  animarDesplazamientoSuave();
+
   (function animar() {
     requestAnimationFrame(animar);
 
@@ -666,7 +1228,7 @@ import * as THREE from 'three';
 
   window.addEventListener('resize', () => {
     renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
-    ajustarCamara(anchoFilaActual);
+    ajustarCamara();
   });
 
   // ============================================================
@@ -684,7 +1246,7 @@ import * as THREE from 'three';
 
     datosFiltros = data;
 
-
+    crearEstantesCategorias(data.categorias);
     // Categorías
 
     selCat.innerHTML =
@@ -841,70 +1403,106 @@ function dibujarTemas() {
 
   async function buscarLibros() {
 
-  const params = new URLSearchParams();
+    mostrarCarga();
 
-  if (selCat.value) {
-      params.append('categoria', selCat.value);
-  }
+    const params = new URLSearchParams({
+        categoria: selCat.value || '',
+        subcategoria: selSubcat.value || '',
+        tipo: selTipo.value || '',
+        idioma: selIdioma.value || '',
+        disponibilidad: selDisponibilidad.value || '',
+        buscar: inputBuscar.value.trim() || ''
+    });
 
-  if (selSubcat.value) {
-      params.append('subcategoria', selSubcat.value);
-  }
+    temasSeleccionados.forEach(id => {
+        params.append('temas[]', id);
+    });
 
-  if (selTipo.value) {
-      params.append('tipo', selTipo.value);
-  }
+    try {
 
-  if (selIdioma.value) {
-      params.append('idioma', selIdioma.value);
-  }
+        const res = await fetch(
+            `${API_BUSCAR}?${params.toString()}`
+        );
 
-  if (selDisponibilidad.value) {
-      params.append('disponibilidad', selDisponibilidad.value);
-  }
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
 
-  if (inputBuscar.value.trim()) {
-      params.append('buscar', inputBuscar.value.trim());
-  }
+        const libros = await res.json();
 
+        console.log('Libros recibidos:', libros);
 
-  temasSeleccionados.forEach(id => {
-      params.append('temas[]', id);
-  });
+        // ========================================================
+        // LIMPIAR ESTADO ANTERIOR
+        // ========================================================
 
-  console.log('Temas seleccionados:', temasSeleccionados);
-  console.log('URL:', `${API_BUSCAR}?${params.toString()}`);
-  try {
-
-    const res =
-      await fetch(
-        `${API_BUSCAR}?${params.toString()}`
-      );
+        libroSeleccionado = null;
+        librosEnEscena = [];
 
 
-    if (!res.ok) {
-      throw new Error(
-        `HTTP ${res.status}`
-      );
+        // ========================================================
+        // DISTRIBUIR LIBROS EN SUS CATEGORÍAS
+        // ========================================================
+
+        for (const estante of estantes) {
+
+            const categoriaNombre =
+                estante.grupo.userData.categoriaNombre;
+
+            const librosCategoria =
+                libros.filter(libro =>
+                    libro.categoria === categoriaNombre
+                );
+
+            await pintarEstante(
+                estante,
+                librosCategoria
+            );
+        }
+        if (estantes.length > 0) {
+
+            activarEstante(estantes[0]);
+
+        }
+
+        // ========================================================
+        // LISTA GLOBAL PARA LA INTERACCIÓN
+        // ========================================================
+
+
+        // ========================================================
+        // SIN RESULTADOS
+        // ========================================================
+
+        if (libros.length === 0) {
+
+            sinResultados.style.display =
+                'block';
+
+        } else {
+
+            sinResultados.style.display =
+                'none';
+        }
+
+
+        ocultarCarga();
+
+    } catch (err) {
+
+        console.error(
+            'Error buscando libros',
+            err
+        );
+
+        sinResultados.textContent =
+            'Ocurrió un error cargando los libros.';
+
+        sinResultados.style.display =
+            'block';
+
+        ocultarCarga();
     }
-
-
-    const textoRespuesta = await res.text();
-
-    console.log('RESPUESTA PHP:', textoRespuesta);
-
-    const libros = JSON.parse(textoRespuesta);
-    await pintarEstante(libros);
-
-
-  } catch (err) {
-
-    console.error(
-      'Error buscando libros:',
-      err
-    );
-
-  }
 }
 
 function limpiarTemas() {
@@ -1176,5 +1774,82 @@ function actualizarTextoTemas() {
         contenedor.appendChild(chip);
     });
 }
+function mostrarCarga() {
+    cargando.classList.remove('oculto');
+}
+
+function ocultarCarga() {
+    cargando.classList.add('oculto');
+}
+function actualizarControlesLibro() {
+
+    if (!libroSeleccionado) {
+        controlesLibro.style.display = 'none';
+        return;
+    }
+
+    controlesLibro.style.display = 'flex';
+
+    const indice = librosEnEscena.indexOf(libroSeleccionado);
+
+    botonAnterior.disabled = indice <= 0;
+    botonSiguiente.disabled = indice >= librosEnEscena.length - 1;
+}
+function seleccionarLibroAdyacente(direccion) {
+
+    if (!libroSeleccionado) return;
+
+    const indice = librosEnEscena.indexOf(libroSeleccionado);
+
+    if (indice === -1) return;
+
+    const nuevoIndice = indice + direccion;
+
+    if (
+        nuevoIndice < 0 ||
+        nuevoIndice >= librosEnEscena.length
+    ) {
+        return;
+    }
+
+    seleccionarLibro(librosEnEscena[nuevoIndice]);
+}
+botonAnterior.addEventListener('click', (ev) => {
+
+    ev.stopPropagation();
+
+    seleccionarLibroAdyacente(-1);
+});
+
+botonSiguiente.addEventListener('click', (ev) => {
+
+    ev.stopPropagation();
+
+    seleccionarLibroAdyacente(1);
+});
+document.addEventListener('keydown', (ev) => {
+
+    if (!libroSeleccionado) return;
+
+    // No interferir con el buscador
+    if (
+        ev.target.tagName === 'INPUT' ||
+        ev.target.tagName === 'TEXTAREA' ||
+        ev.target.tagName === 'SELECT'
+    ) {
+        return;
+    }
+
+    if (ev.key === 'ArrowLeft') {
+
+        ev.preventDefault();
+        seleccionarLibroAdyacente(-1);
+
+    } else if (ev.key === 'ArrowRight') {
+
+        ev.preventDefault();
+        seleccionarLibroAdyacente(1);
+    }
+});
 })();
 

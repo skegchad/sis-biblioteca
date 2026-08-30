@@ -1179,3 +1179,117 @@
     color: white;
     font-weight: 600;
 }
+
+.cargando-estante {
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    font-family: Inter, sans-serif;
+    font-size: 15px;
+    color: #20201C;
+
+    transition: opacity 0.25s ease;
+}
+
+.cargando-estante.oculto {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+
+    border: 3px solid #ddd;
+    border-top-color: #20201C;
+    border-radius: 50%;
+
+    animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.controles-libro {
+    position: absolute;
+    left: 50%;
+    bottom: 25px;
+    transform: translateX(-50%);
+
+    display: none;
+    gap: 8px;
+
+    z-index: 20;
+}
+
+.control-libro {
+    width: 44px;
+    height: 44px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(32, 32, 28, 0.85);
+    color: #f7f4ec;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease,
+        background 0.15s ease;
+}
+
+.control-libro:hover:not(:disabled) {
+    transform: scale(1.08);
+    background: rgba(32, 32, 28, 1);
+}
+
+.control-libro:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.control-libro:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+.cargando-catalogo {
+    width: 100%;
+    min-height: 180px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    position: relative;
+    z-index: 1;
+
+    color: #5f5a50;
+    font-family: 'Inter', sans-serif;
+}
+
+.cargando-catalogo.oculto {
+    display: none;
+}

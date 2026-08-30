@@ -335,7 +335,7 @@ document.getElementById('pdf').addEventListener('change', function() {
         return;
     }
 
-    const maxMB = 20;
+    const maxMB = 1024;
     if (file.size > maxMB * 1024 * 1024) {
         alert(`El archivo supera el tamaño máximo permitido (${maxMB} MB)`);
         this.value = '';
