@@ -131,40 +131,7 @@
    TARJETA
    ============================================================ */
 
-.estanteria-app .info-libro {
-  position: absolute;
 
-  left: 50%;
-  bottom: 18px;
-
-  width: min(850px, calc(100% - 40px));
-
-  height: min(400px, calc(100% - 30px));
-  max-height: calc(100% - 30px);
-
-  transform: translate(-50%, 30px);
-
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-
-  background: rgba(247, 244, 236, 0.98);
-
-  border: 1px solid var(--linea);
-  border-radius: 18px;
-
-  box-shadow:
-    0 15px 45px rgba(0, 0, 0, 0.18);
-
-  z-index: 25;
-
-  overflow: hidden;
-
-  transition:
-    opacity 0.35s ease,
-    transform 0.35s ease,
-    visibility 0.35s ease;
-}
 
 .estanteria-app .info-libro.visible {
   opacity: 1;
@@ -329,14 +296,6 @@
 
 @media (max-width: 600px) {
 
-  .estanteria-app .info-libro {
-    width: calc(100% - 20px);
-
-    height: calc(100% - 30px);
-    max-height: calc(100% - 30px);
-
-    bottom: 10px;
-  }
 
   .estanteria-app .info-libro-contenido {
     flex-direction: column;
@@ -1222,17 +1181,6 @@
     }
 }
 
-.controles-libro {
-    position: absolute;
-    left: 50%;
-    bottom: 25px;
-    transform: translateX(-50%);
-
-    display: none;
-    gap: 8px;
-
-    z-index: 20;
-}
 
 .control-libro {
     width: 44px;
@@ -1292,4 +1240,325 @@
 
 .cargando-catalogo.oculto {
     display: none;
+}
+/* ============================================================
+   SCROLL VERTICAL ENTRE CATEGORÍAS
+   El espaciador crece con JS según el número de categorías;
+   el contenido de adentro se queda fijo en pantalla mientras
+   tanto (sticky), y la cámara 3D avanza en sincronía con el scroll.
+   ============================================================ */
+
+/* Altura explícita: así el canvas de Three.js siempre tiene un tamaño
+   real para medir, sin depender de que el resto de tu CSS le dé flex/altura */
+
+
+.tabs-categorias {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  scrollbar-width: thin;
+}
+
+.tab-categoria {
+  flex: 0 0 auto;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--linea, #D8D0BE);
+  background: var(--panel, #F7F4EC);
+  color: var(--tinta, #22201B);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, color .2s, border-color .2s;
+}
+
+.tab-categoria:hover {
+  border-color: var(--tinta, #22201B);
+}
+
+.tab-categoria.activo {
+  background: var(--tinta, #22201B);
+  color: var(--panel, #F7F4EC);
+  border-color: var(--tinta, #22201B);
+}
+
+
+/* ============================================================
+   UN CANVAS POR CATEGORÍA
+   ============================================================ */
+
+.estantes-categorias {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.estante-categoria {
+  background: var(--panel, #F7F4EC);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 0 var(--linea, #D8D0BE) inset;
+}
+
+.titulo-estante {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(18px, 2.2vw, 24px);
+  margin: 4px 8px 12px;
+  color: var(--tinta, #22201B);
+}
+
+.lienzo-estante {
+  position: relative;
+  width: 100%;
+  height: 380px; /* alto de cada estante individual */
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.canvas-estante {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.estante-vacio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--tinta-suave, #6B6558);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 600px) {
+  .lienzo-estante { height: 300px; }
+}
+
+/* ============================================================
+   BOTÓN DE INFO Y CONTROLES — ahora relativos a CADA .lienzo-estante
+   ============================================================ */
+
+.lienzo-estante .boton-info-libro {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(34, 32, 27, 0.12);
+  border-radius: 50%;
+  background: rgba(247, 244, 236, 0.96);
+  color: var(--tinta);
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  line-height: 40px;
+  cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.lienzo-estante .boton-info-libro:hover { transform: scale(1.08); background: #fff; }
+
+.lienzo-estante .controles-libro {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  gap: 8px;
+  z-index: 20;
+}
+
+/* ============================================================
+   PANEL DE INFO — ahora GLOBAL, fijo a la ventana (no al canvas)
+   ============================================================ */
+
+.info-libro {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  width: min(750px, calc(100% - 40px));
+  height: min(350px, calc(100vh - 60px));
+  max-height: calc(100vh - 60px);
+  transform: translate(-50%, 30px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: rgba(247, 244, 236, 0.98);
+  border: 1px solid var(--linea);
+  border-radius: 18px;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.18);
+  z-index: 500;
+  overflow: hidden;
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+}
+
+.info-libro.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.estanteria-app .controles-catalogo {
+  max-width: 1100px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.estanteria-app .busqueda-catalogo {
+  display: flex;
+  gap: 10px;
+  width: min(600px, 100%);
+}
+
+.estanteria-app #f-buscar {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--tinta);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+
+.estanteria-app #f-buscar:focus {
+  border-color: var(--tinta-suave);
+  box-shadow: 0 0 0 3px rgba(34, 32, 27, 0.06);
+}
+
+.estanteria-app #boton-filtros {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--tinta);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.estanteria-app #boton-filtros:hover {
+  border-color: var(--tinta-suave);
+}
+
+.estanteria-app #panel-filtros {
+  padding: 22px;
+}
+
+.estanteria-app #panel-filtros h3 {
+  margin: 0 0 18px;
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+}
+
+.estanteria-app #panel-filtros label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--tinta-suave);
+}
+
+.estanteria-app #panel-filtros select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 10px;
+  border: 1px solid var(--linea);
+  background: white;
+  color: var(--tinta);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.estanteria-app #cerrar-filtros {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+  color: var(--tinta);
+}
+
+.estanteria-app #limpiar-filtros {
+  width: 100%;
+  margin-top: 20px;
+  padding: 11px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.estanteria-app .filtro-temas {
+  margin-top: 18px;
+}
+.tabs-categorias::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-categorias::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabs-categorias::-webkit-scrollbar-thumb {
+  background: var(--linea, #D8D0BE);
+  border-radius: 999px;
+}
+
+.tabs-categorias::-webkit-scrollbar-thumb:hover {
+  background: var(--tinta-suave, #6B6558);
+}
+.tabs-categorias {
+  scrollbar-width: none; /* Firefox */
+}
+.tabs-categorias::-webkit-scrollbar {
+  display: none; /* Chrome/Edge/Safari */
+}
+
+.cargando-catalogo {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+
+  flex-direction: row;
+  width: auto;
+  min-height: unset;
+
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(247, 244, 236, 0.96);
+  border: 1px solid var(--linea, #D8D0BE);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.cargando-catalogo .spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
 }

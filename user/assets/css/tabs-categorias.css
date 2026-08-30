@@ -1,0 +1,54 @@
+/* ============================================================
+   SCROLL VERTICAL ENTRE CATEGORÍAS
+   El espaciador crece con JS según el número de categorías;
+   el contenido de adentro se queda fijo en pantalla mientras
+   tanto (sticky), y la cámara 3D avanza en sincronía con el scroll.
+   ============================================================ */
+
+.scroll-estantes {
+  position: relative;
+  /* JS pone la altura real (num. categorías × 480px) */
+  min-height: 100vh;
+}
+
+.estantes-categorias-sticky {
+  position: sticky;
+  top: 90px;         /* ajusta según la altura de tu header fijo */
+  z-index: 1;
+}
+
+
+.tabs-categorias {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  scrollbar-width: thin;
+}
+
+.tab-categoria {
+  flex: 0 0 auto;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--linea, #D8D0BE);
+  background: var(--panel, #F7F4EC);
+  color: var(--tinta, #22201B);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, color .2s, border-color .2s;
+}
+
+.tab-categoria:hover {
+  border-color: var(--tinta, #22201B);
+}
+
+.tab-categoria.activo {
+  background: var(--tinta, #22201B);
+  color: var(--panel, #F7F4EC);
+  border-color: var(--tinta, #22201B);
+}

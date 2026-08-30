@@ -17,7 +17,7 @@ include ("../layout/user/part1.php");
 ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria.css">
 
@@ -216,20 +216,28 @@ include ("../layout/user/part1.php");
 
 
     <!-- ============================================================
-         CONTENEDOR DE TODOS LOS ESTANTES
+         ESTANTES POR CATEGORÍA — scroll vertical
+         El div de abajo crece según cuántas categorías haya (JS le pone
+         la altura). El contenido de adentro queda "pegado" (sticky) a la
+         pantalla mientras se scrollea, y la cámara 3D avanza por las
+         categorías en sincronía con ese scroll.
          ============================================================ -->
 
+    <div id="tabs-categorias" class="tabs-categorias"></div>
+
     <main id="estantes-categorias" class="estantes-categorias">
-
-        <div
-            id="cargando-estantes"
-            class="cargando-catalogo"
-        >
-            <div class="spinner"></div>
-            <span>Cargando catálogo...</span>
-        </div>
-
+        <!-- Acá el JS crea dinámicamente:
+            <section class="estante-categoria">
+            <h3 class="titulo-estante">Nombre (n)</h3>
+            <div class="lienzo-estante">...</div>
+            </section>
+            una por cada categoría -->
     </main>
+
+    <div id="cargando-estantes" class="cargando-catalogo">
+        <div class="spinner"></div>
+        <span>Cargando catálogo...</span>
+    </div>
 
 
     <!-- ============================================================
@@ -260,153 +268,7 @@ include ("../layout/user/part1.php");
          INFORMACIÓN DEL LIBRO
          ============================================================ -->
 
-    <button
-        id="boton-info-libro"
-        class="boton-info-libro"
-        aria-label="Ver información"
-    >
-        ˅
-    </button>
-
-
-    <div
-        id="controles-libro"
-        class="controles-libro"
-    >
-
-        <button
-            id="libro-anterior"
-            class="control-libro"
-            aria-label="Libro anterior"
-        >
-            ◀
-        </button>
-
-        <button
-            id="libro-siguiente"
-            class="control-libro"
-            aria-label="Libro siguiente"
-        >
-            ▶
-        </button>
-
-    </div>
-
-
-    <!-- ============================================================
-         TARJETA DE INFORMACIÓN
-         ============================================================ -->
-
-    <div
-        id="info-libro"
-        class="info-libro"
-    >
-
-        <a
-            id="boton-leer-libro"
-            class="boton-leer-libro"
-            href="#"
-            target="_blank"
-            rel="noopener"
-        >
-            <span>LEER</span>
-        </a>
-
-
-        <div class="info-libro-contenido">
-
-            <!-- Portada -->
-
-            <div class="info-portada-container">
-
-                <img
-                    id="info-portada"
-                    src=""
-                    alt="Portada del libro"
-                >
-
-            </div>
-
-
-            <!-- Datos -->
-
-            <div class="info-datos">
-
-                <h2 id="info-titulo"></h2>
-
-                <p
-                    class="info-autor"
-                    id="info-autor"
-                ></p>
-
-
-                <!-- Descripción -->
-
-                <div class="info-descripcion-container">
-
-                    <h3>Descripción</h3>
-
-                    <p id="info-descripcion"></p>
-
-                </div>
-
-
-                <!-- Metadatos -->
-
-                <div class="info-metadatos">
-
-                    <div>
-                        <span>Páginas</span>
-                        <strong id="info-paginas">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Categoría</span>
-                        <strong id="info-categoria">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Tema</span>
-                        <strong id="info-tema">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Tipo</span>
-                        <strong id="info-tipo">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Idioma</span>
-                        <strong id="info-idioma">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Edición</span>
-                        <strong id="info-edicion">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Ejemplares</span>
-                        <strong id="info-ejemplares">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Prestados</span>
-                        <strong id="info-prestados">—</strong>
-                    </div>
-
-                    <div>
-                        <span>Disponibilidad</span>
-                        <strong id="info-disponibilidad">—</strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
+    
 
 
     <!-- ============================================================
@@ -421,6 +283,30 @@ include ("../layout/user/part1.php");
         No se encontraron libros.
     </p>
 
+    <div id="info-libro" class="info-libro">
+        <a id="boton-leer-libro" class="boton-leer-libro" href="#" target="_blank" rel="noopener">
+            <span>LEER</span>
+        </a>
+        <div class="info-libro-contenido">
+            <div class="info-portada-container"><img id="info-portada" src="" alt="Portada del libro"></div>
+            <div class="info-datos">
+                <h2 id="info-titulo"></h2>
+                <p class="info-autor" id="info-autor"></p>
+                <div class="info-descripcion-container"><h3>Descripción</h3><p id="info-descripcion"></p></div>
+                <div class="info-metadatos">
+                    <div><span>Páginas</span><strong id="info-paginas">—</strong></div>
+                    <div><span>Categoría</span><strong id="info-categoria">—</strong></div>
+                    <div><span>Tema</span><strong id="info-tema">—</strong></div>
+                    <div><span>Tipo</span><strong id="info-tipo">—</strong></div>
+                    <div><span>Idioma</span><strong id="info-idioma">—</strong></div>
+                    <div><span>Edición</span><strong id="info-edicion">—</strong></div>
+                    <div><span>Ejemplares</span><strong id="info-ejemplares">—</strong></div>
+                    <div><span>Prestados</span><strong id="info-prestados">—</strong></div>
+                    <div><span>Disponibilidad</span><strong id="info-disponibilidad">—</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -449,4 +335,3 @@ include ("../layout/user/part1.php");
 
 
 <?php include("../ai/chat_widget.php"); ?>
-```
