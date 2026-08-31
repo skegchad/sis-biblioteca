@@ -1,2 +1,5 @@
 INSTALAR COMPOSER PARA QUE CORRA EL SCRIPT DE LOS REPORTES
 y en C:/xampp/php/php.ini, cambiar    ;extension=zip a    extension=zip
+
+upload_max_filesize=1G
+post_max_size=1G

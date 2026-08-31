@@ -650,6 +650,20 @@ function cerrarLector() {
   });
 
   async function crearLibro3D(libro) {
+
+    let colorReal = libro.color;
+
+    if (libro.rutaFotoAbsoluta) {
+      try {
+        const img = await cargarImagen(libro.rutaFotoAbsoluta);
+        colorReal = extraerColorDominante(img);
+      } catch (e) {
+        // si falla la carga (CORS, 404, etc.), se queda con libro.color
+      }
+    }
+
+    const libroConColor = { ...libro, color: colorReal };
+
     const grosor = grosorPorPaginas(libro.paginas);
     const geometria = new THREE.BoxGeometry(grosor, ALTO_LIBRO, PROFUNDIDAD_LIBRO);
 
@@ -1918,5 +1932,46 @@ function proyectarCajaAPantalla(malla, camara, renderer) {
     height: Math.abs(y2 - y1),
   };
 }
+
+
+function extraerColorDominante(img) {
+  const canvas = document.createElement('canvas');
+  // Reducimos la imagen para que el muestreo sea rápido
+  const w = canvas.width = 32;
+  const h = canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+
+  let r = 0, g = 0, b = 0, total = 0;
+  const { data } = ctx.getImageData(0, 0, w, h);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha < 200) continue; // ignorar píxeles muy transparentes
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+    total++;
+  }
+
+  if (total === 0) return '#8C7355'; // fallback
+  r = Math.round(r / total);
+  g = Math.round(g / total);
+  b = Math.round(b / total);
+
+  return `rgb(${r},${g},${b})`;
+}
+
+function cargarImagen(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // OJO: el servidor debe mandar CORS habilitado
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+
 })();
 

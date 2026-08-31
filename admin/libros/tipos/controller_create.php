@@ -2,8 +2,8 @@
 include ("../../../app/config/config.php");
 include ("../../../app/config/conexion.php");
 include ("../../../layout/admin/login.php");
+include ("../../../layout/admin/datos_usuario.php");
 include ("../../../layout/admin/comprueba_admin.php");
-
 // ===== 1. Validar y recoger datos del formulario =====
 $nombre = trim($_POST['Nombre'] ?? '');
 
