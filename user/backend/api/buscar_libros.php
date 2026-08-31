@@ -155,58 +155,29 @@ elseif ($disponibilidad === 'no_disponible') {
 
 
 // ============================================================
-// TEMAS
+// TEMAS (tabla de relación muchos-a-muchos: libro_tema)
 // ============================================================
 
 if (!empty($temas)) {
 
+    // Genera :tema0, :tema1, :tema2... para el IN (...)
+    $placeholders = [];
+
     foreach ($temas as $i => $temaId) {
-
-        $temaId = (int) $temaId;
-
-        if ($temaId <= 0) {
-            continue;
-        }
-
-        // Obtener el nombre del tema mediante su ID
-        $stmtTema = $pdo->prepare("
-            SELECT nombre
-            FROM temas
-            WHERE id = :id
-            LIMIT 1
-        ");
-
-        $stmtTema->execute([
-            ':id' => $temaId
-        ]);
-
-        $nombreTema = $stmtTema->fetchColumn();
-
-        if ($nombreTema === false) {
-            continue;
-        }
-
         $placeholder = ":tema{$i}";
-
-        /*
-         * l.temas contiene los nombres separados por coma.
-         *
-         * Ejemplo:
-         * "Programación,C,Computadoras,Informática"
-         *
-         * Si seleccionamos el ID 19 y el ID 19 corresponde
-         * a "Programación", buscamos "Programación".
-         */
-
-        $sql .= "
-            AND FIND_IN_SET(
-                {$placeholder},
-                REPLACE(l.temas, ', ', ',')
-            ) > 0
-        ";
-
-        $params[$placeholder] = trim($nombreTema);
+        $placeholders[] = $placeholder;
+        $params[$placeholder] = $temaId;
     }
+
+    $listaPlaceholders = implode(', ', $placeholders);
+
+    $sql .= "
+        AND l.id_libro IN (
+            SELECT lt.id_libro
+            FROM libro_tema AS lt
+            WHERE lt.tema_id IN ({$listaPlaceholders})
+        )
+    ";
 }
 
 

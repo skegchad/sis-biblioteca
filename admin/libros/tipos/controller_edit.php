@@ -2,6 +2,7 @@
 include ("../../../app/config/config.php");
 include ("../../../app/config/conexion.php");
 include ("../../../layout/admin/login.php");
+include ("../../../layout/admin/datos_usuario.php");
 include ("../../../layout/admin/comprueba_admin.php");
 
 // ===== 1. Validar datos básicos =====
@@ -58,10 +59,15 @@ try {
     if (!empty($aInsertar)) {
         $stmtInsert = $pdo->prepare("INSERT INTO temas (tipo_id, nombre, fyh_creacion) VALUES (:tipo_id, :nombre, NOW())");
         foreach ($aInsertar as $nombreTema) {
-            $stmtInsert->execute([
+            $ok = $stmtInsert->execute([
                 ':tipo_id' => $id,
                 ':nombre'  => $nombreTema
             ]);
+
+            // TEMPORAL para depurar — puedes dejar este por ahora, es útil:
+            if (!$ok) {
+                die('INSERT FALLÓ para "' . $nombreTema . '": ' . print_r($stmtInsert->errorInfo(), true));
+            }
         }
     }
 

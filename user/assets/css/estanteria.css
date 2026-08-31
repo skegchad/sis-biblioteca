@@ -333,11 +333,6 @@
    ============================================================ */
 
 .estanteria-app .boton-leer-libro {
-  position: absolute;
-
-  top: 16px;
-  right: 16px;
-
   display: flex;
   align-items: center;
   gap: 7px;
@@ -401,20 +396,13 @@
 /* En móvil */
 
 @media (max-width: 600px) {
-
   .estanteria-app .boton-leer-libro {
-    top: 10px;
-    right: 10px;
-
     padding: 7px 10px;
-
     font-size: 11px;
   }
-
   .estanteria-app .icono-libro {
     font-size: 15px;
   }
-
 }
 /* ============================================================
    FILTROS
@@ -1561,4 +1549,295 @@
   width: 20px;
   height: 20px;
   border-width: 2px;
+}
+/* ============================================================
+   LECTOR DE PDF — overlay global + animación tipo libro
+   ============================================================ */
+
+.lector-pdf {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: none; /* se activa con .visible */
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(20, 18, 14, 0);
+  transition: background 0.4s ease;
+}
+
+.lector-pdf.visible {
+  display: flex;
+  background: rgba(20, 18, 14, 0.75);
+}
+
+.cerrar-lector {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(247, 244, 236, 0.9);
+  color: var(--tinta, #22201B);
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.2s;
+}
+.lector-pdf.visible .cerrar-lector { opacity: 1; }
+
+/* Toggle "1 página" / "2 páginas" -> debajo del botón de cerrar, a la derecha */
+.lector-controles-vista {
+  position: absolute;
+  top: 76px;      /* debajo de .cerrar-lector, que está en top: 20px */
+  right: 24px;
+  left: auto;
+  transform: none;
+
+  flex-direction: column;
+  gap: 6px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.2s;
+}
+.lector-pdf.visible .lector-controles-vista { opacity: 1; }
+
+.toggle-vista {
+  padding: 8px 16px;
+  border: 1px solid rgba(247, 244, 236, 0.3);
+  border-radius: 999px;
+  background: rgba(247, 244, 236, 0.12);
+  color: #f7f4ec;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+.toggle-vista.activo {
+  background: #f7f4ec;
+  color: var(--tinta, #22201B);
+}
+
+/* --------------------------------------------------------
+   El "libro" que se anima desde la posición del libro 3D
+   hasta el centro de la pantalla, y luego se abre.
+   -------------------------------------------------------- */
+
+
+
+
+
+
+/* Navegación de páginas (◀ n/n ▶) -> vuelve a abajo, centrada */
+.lector-navegacion {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  right: auto;
+  top: auto;
+  transform: translateX(-50%);
+
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.3s;
+}
+.lector-pdf.visible .lector-navegacion { opacity: 1; }
+.nav-pagina {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(247, 244, 236, 0.9);
+  color: var(--tinta, #22201B);
+  font-size: 16px;
+  cursor: pointer;
+}
+.nav-pagina:disabled { opacity: 0.3; cursor: default; }
+
+.lector-indicador {
+  color: #f7f4ec;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------
+   MÓVIL: forzar una sola página siempre y ocultar el toggle
+   -------------------------------------------------------- */
+@media (max-width: 768px) {
+  .lector-controles-vista { display: none; }
+
+  .libro-abierto .hoja-der { display: none; }
+  .libro-abierto .hoja-izq { width: 100%; }
+}
+.estanteria-app .botones-lectura {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 35;
+}
+
+.estanteria-app .boton-leer-libro {
+  /* sacá "position: absolute; top: ...; right: ...;" de aquí si ya las tenía */
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--tinta);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.estanteria-app .boton-leer-libro:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 600px) {
+  .estanteria-app .botones-lectura {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+  .estanteria-app .boton-leer-libro {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+}
+
+
+
+.hoja {
+  flex: 1;
+  height: 100%;
+  background: #f4efe0;
+  overflow: hidden;
+}
+.hoja canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+/* ============================================================
+   LECTOR DE PDF — animación de portada girando para revelar
+   las páginas interiores (respeta el grosor del lomo calculado
+   por número de páginas, igual que los libros de la estantería).
+   ============================================================ */
+/* ============================================================
+   LECTOR DE PDF — animación de portada + bloque de páginas
+   ============================================================ */
+
+#libro-abierto {
+  position: fixed;
+  background: #fff;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  perspective: 1800px;
+  transform-style: preserve-3d;
+  transition:
+    top 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.paginas-interior {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: #fff;
+  z-index: 1;
+}
+.paginas-interior .hoja {
+  flex: 1 1 50%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fdfcf8;
+}
+.paginas-interior .hoja canvas {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+.paginas-interior.modo-una-pagina .hoja-der { display: none; }
+.paginas-interior.modo-una-pagina .hoja-izq { flex: 1 1 100%; }
+
+.portada-flip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transform: rotateY(0deg);
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 3;
+}
+
+.portada-flip-cara {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: #2b2b2b;
+}
+.portada-flip-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.portada-flip-fallback {
+  width: 100%; height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 28px; color: #fff;
+}
+.portada-flip-titulo { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; margin-bottom: 6px; }
+.portada-flip-autor { font-family: 'Inter', sans-serif; font-size: 14px; opacity: 0.85; }
+
+.lomo-flip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  backface-visibility: hidden;
+  background: repeating-linear-gradient(
+    90deg,
+    #f4efe0, #f4efe0 2px,
+    #e4dcc4 2px, #e4dcc4 3px
+  );
+  box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.18);
+  z-index: 2;
+}
+.lomo-flip::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 14px;
+  height: 100%;
+  background: var(--color-lomo, #8C7355);
+  box-shadow: 1px 0 4px rgba(0, 0, 0, 0.3);
 }

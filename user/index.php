@@ -124,9 +124,10 @@ include ("../layout/user/part1.php");
           $query_categorias->execute();
           $categorias = $query_categorias->fetchAll(PDO::FETCH_ASSOC);
           foreach ($categorias as $categoria):
+            $nombre_categoriaa = $categoria['nombre'];
             $foto = $categoria['foto'];
           ?>  
-            <a href="persona.html"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/<?php echo trim($foto); ?>');"></div></a>
+            <a href="catalogo.php?categoria=<?php echo trim($nombre_categoriaa);?>"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/<?php echo trim($foto); ?>');"></div></a>
           <?php endforeach;?>
           <?php if($cargo=="Administrador"):?>
             <a href="<?php echo $URL?>/admin/libros/categorias/create.php"><div class="catalogo-tarjeta" style="background-image: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/add_new.jpg');"></div></a>

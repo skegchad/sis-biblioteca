@@ -44,7 +44,428 @@ import * as THREE from 'three';
   const infoEjemplares = document.getElementById('info-ejemplares');
   const infoPrestados = document.getElementById('info-prestados');
   const infoDisponibilidad = document.getElementById('info-disponibilidad');
-  const botonLeerLibro = document.getElementById('boton-leer-libro');
+  const botonLeerPdf = document.getElementById('boton-leer-pdf');
+  const botonLeerAnimado = document.getElementById('boton-leer-animado');
+
+  // ============================================================
+  // LECTOR DE PDF
+  // ============================================================
+
+  let pdfjsListo = (async () => {
+    const modulo = await import(
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs'
+    );
+
+    modulo.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+
+    window.pdfjsLib = modulo; // por si algo más del código lo referencia como global
+    return modulo;
+  })();
+
+const lectorPdf = document.getElementById('lector-pdf');
+const cerrarLectorBtn = document.getElementById('cerrar-lector');
+const libroAbiertoEl = document.getElementById('libro-abierto');
+const canvasIzq = document.getElementById('canvas-pagina-izq');
+const canvasDer = document.getElementById('canvas-pagina-der');
+const btnPaginaAnterior = document.getElementById('pagina-anterior');
+const btnPaginaSiguiente = document.getElementById('pagina-siguiente');
+const lectorIndicador = document.getElementById('lector-indicador');
+const btnVerUna = document.getElementById('ver-una-pagina');
+const btnVerDos = document.getElementById('ver-dos-paginas');
+const libroGiroEl = document.getElementById('libro-giro');
+const paginasInteriorEl = document.getElementById('paginas-interior');
+const portadaFlipEl = document.getElementById('portada-flip');
+const lomoFlipEl = document.getElementById('lomo-flip');
+const portadaFlipImg = document.getElementById('portada-flip-img');
+const portadaFlipFallback = document.getElementById('portada-flip-fallback');
+const portadaFlipTitulo = document.getElementById('portada-flip-titulo');
+const portadaFlipAutor = document.getElementById('portada-flip-autor');
+const vueloContenedor = document.getElementById('vuelo-3d-contenedor');
+
+let escenaVuelo = null;
+let camaraVuelo = null;
+let rendererVuelo = null;
+let mallaVuelo = null;
+
+let pdfActual = null;
+let totalPaginasPdf = 0;
+let paginaIzqActual = 1;
+let modoUnaPagina = window.matchMedia('(max-width: 768px)').matches;
+let mallaOrigenLectura = null; // la malla 3D que se ocultó al abrir el lector
+
+function esMovilLector() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
+  const pdfjsLib = await pdfjsListo;
+
+  mallaOrigenLectura = malla;
+  const libro = malla ? malla.userData.libro : null;
+  const rect = rectYaGrande || (malla ? obtenerRectPantalla(malla) : null);
+
+  lectorPdf.classList.add('visible');
+  if (libro) construirPortadaHTML(libro);
+
+  const anchoUnaPagina = rect ? rect.width : window.innerWidth * 0.3;
+  const altoLibro = rect ? rect.height : anchoUnaPagina * 1.3;
+
+  // --- Estado inicial: portada cerrada, SIN transición (instantáneo) ---
+  libroAbiertoEl.style.transition = 'none';
+  portadaFlipEl.style.transition = 'none';
+
+  if (rect) {
+    libroAbiertoEl.style.top = `${rect.top}px`;
+    libroAbiertoEl.style.left = `${rect.left}px`;
+    libroAbiertoEl.style.width = `${rect.width}px`;
+    libroAbiertoEl.style.height = `${rect.height}px`;
+  }
+  portadaFlipEl.style.width = `${anchoUnaPagina}px`;
+  lomoFlipEl.style.width = `${anchoUnaPagina}px`;
+  portadaFlipEl.style.transform = 'rotateY(0deg)';
+
+  // Forzar reflow ANTES de reactivar transiciones (clave para que el
+  // navegador "vea" el estado inicial y anime desde ahí, no de golpe)
+  libroAbiertoEl.offsetHeight;
+  portadaFlipEl.offsetHeight;
+
+  libroAbiertoEl.style.transition = '';
+  portadaFlipEl.style.transition = '';
+
+  if (malla) malla.visible = false;
+
+  modoUnaPagina = esMovilLector();
+  actualizarModoVista();
+
+  try {
+    pdfActual = await pdfjsLib.getDocument(rutaPdf).promise;
+    totalPaginasPdf = pdfActual.numPages;
+    paginaIzqActual = 1;
+
+    // ---------- PASO 2: la portada gira, revela el bloque de páginas ----------
+    await esperar(30); // dar un frame para que el reset anterior "asiente"
+    portadaFlipEl.style.transform = 'rotateY(-160deg)';
+    await esperar(950);
+
+    // ---------- Calcular tamaño final según aspecto real del PDF ----------
+    const paginaRef = await pdfActual.getPage(1);
+    const vpRef = paginaRef.getViewport({ scale: 1 });
+    const aspectoPagina = vpRef.width / vpRef.height;
+    const altoDestino = altoLibro;
+    const anchoCubierta = altoDestino * aspectoPagina;
+    const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
+
+    libroAbiertoEl.style.left = `${(window.innerWidth - anchoFinalInterior) / 2}px`;
+    libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
+    libroAbiertoEl.style.top = `${(window.innerHeight - altoDestino) / 2}px`;
+    libroAbiertoEl.style.height = `${altoDestino}px`;
+    await esperar(750);
+
+    // ---------- Renderizar el PDF ya en tamaño final ----------
+    await renderizarPaginasActuales();
+
+    // ---------- PASO 3: la portada termina de girar, revela el PDF ----------
+    portadaFlipEl.style.transform = 'rotateY(-200deg)';
+    await esperar(500);
+  } catch (err) {
+    console.error('No se pudo cargar el PDF', err);
+    cerrarLector();
+  }
+
+  }
+
+function calcularTamanoCubierta(aspectoPagina) {
+  const margenVertical = 140;
+  const altoMax = window.innerHeight - margenVertical;
+  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
+
+  let alto = altoMax;
+  let ancho = alto * aspectoPagina;
+  if (ancho > anchoMax) {
+    ancho = anchoMax;
+    alto = ancho / aspectoPagina;
+  }
+  return { anchoCubierta: ancho, altoDestino: alto };
+}
+
+function construirPortadaHTML(libro) {
+  if (libro.rutaFotoAbsoluta) {
+    portadaFlipImg.src = libro.rutaFotoAbsoluta;
+    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
+    portadaFlipImg.style.display = 'block';
+    portadaFlipFallback.style.display = 'none';
+  } else {
+    portadaFlipImg.style.display = 'none';
+    portadaFlipFallback.style.display = 'flex';
+    portadaFlipFallback.style.background =
+      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
+    portadaFlipTitulo.textContent = libro.titulo || '';
+    portadaFlipAutor.textContent = libro.autor || '';
+  }
+  lomoFlipEl.style.setProperty('--color-lomo', libro.color || '#8C7355');
+}
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+
+function sincronizarAnchoPortada(anchoUnaPagina) {
+  portadaFlipEl.style.width = `${anchoUnaPagina}px`;
+  lomoFlipEl.style.width = `${anchoUnaPagina}px`; // mismo ancho: revela el bloque de páginas completo
+}
+
+function calcularTamanoCubierta(aspectoPagina) {
+  const margenVertical = 140;
+  const altoMax = window.innerHeight - margenVertical;
+  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
+
+  let alto = altoMax;
+  let ancho = alto * aspectoPagina;
+  if (ancho > anchoMax) {
+    ancho = anchoMax;
+    alto = ancho / aspectoPagina;
+  }
+  return { anchoCubierta: ancho, altoDestino: alto };
+}
+
+function construirPortadaHTML(libro) {
+  if (libro.rutaFotoAbsoluta) {
+    portadaFlipImg.src = libro.rutaFotoAbsoluta;
+    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
+    portadaFlipImg.style.display = 'block';
+    portadaFlipFallback.style.display = 'none';
+  } else {
+    portadaFlipImg.style.display = 'none';
+    portadaFlipFallback.style.display = 'flex';
+    portadaFlipFallback.style.background =
+      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
+    portadaFlipTitulo.textContent = libro.titulo || '';
+    portadaFlipAutor.textContent = libro.autor || '';
+  }
+}
+
+function calcularTamanoDestino(aspectoPagina) {
+  const margenVertical = 140; // deja espacio para controles arriba/abajo
+  const altoMax = window.innerHeight - margenVertical;
+  const anchoMax = window.innerWidth * 0.9;
+
+  if (modoUnaPagina) {
+    let alto = altoMax;
+    let ancho = alto * aspectoPagina;
+    if (ancho > anchoMax) {
+      ancho = anchoMax;
+      alto = ancho / aspectoPagina;
+    }
+    return { anchoDestino: ancho, altoDestino: alto };
+  } else {
+    // dos hojas lado a lado: el ancho total es el doble del de una página
+    let alto = altoMax;
+    let ancho = alto * aspectoPagina * 2;
+    if (ancho > anchoMax) {
+      ancho = anchoMax;
+      alto = ancho / (aspectoPagina * 2);
+    }
+    return { anchoDestino: ancho, altoDestino: alto };
+  }
+}
+
+function obtenerRectPantalla(malla) {
+  // Reutiliza la lógica de proyección que ya usás en actualizarBotonInfoPosicion,
+  // pero tomando las 4 esquinas de la portada para un rect completo.
+  const estante = obtenerEstanteDeMallaGlobal(malla);
+  if (!estante || !estante.renderer) return null;
+
+  const caja = new THREE.Box3().setFromObject(malla);
+  const esquinaSupIzq = new THREE.Vector3(caja.min.x, caja.max.y, caja.max.z).project(estante.camara);
+  const esquinaInfDer = new THREE.Vector3(caja.max.x, caja.min.y, caja.max.z).project(estante.camara);
+
+  const rectCanvas = estante.renderer.domElement.getBoundingClientRect();
+
+  const x1 = ((esquinaSupIzq.x + 1) / 2) * rectCanvas.width + rectCanvas.left;
+  const y1 = ((-esquinaSupIzq.y + 1) / 2) * rectCanvas.height + rectCanvas.top;
+  const x2 = ((esquinaInfDer.x + 1) / 2) * rectCanvas.width + rectCanvas.left;
+  const y2 = ((-esquinaInfDer.y + 1) / 2) * rectCanvas.height + rectCanvas.top;
+
+  return {
+    top: Math.min(y1, y2),
+    left: Math.min(x1, x2),
+    width: Math.abs(x2 - x1),
+    height: Math.abs(y2 - y1),
+  };
+}
+
+// Necesitamos poder encontrar a qué estante pertenece una malla desde
+// fuera de la clase Estante — usamos el mismo array global "estantes"
+// (y estanteResultados si existe).
+function obtenerEstanteDeMallaGlobal(malla) {
+  const todos = estanteResultados ? [...estantes, estanteResultados] : estantes;
+  return todos.find((e) => e.libros.includes(malla)) || null;
+}
+
+async function renderizarPaginasActuales() {
+  if (!pdfActual) return;
+
+  await renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
+
+  if (!modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf) {
+    canvasDer.style.visibility = 'visible';
+    await renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer);
+  } else {
+    canvasDer.style.visibility = 'hidden';
+  }
+
+  actualizarIndicadorYBotones();
+}
+
+async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
+  if (numeroPagina < 1 || numeroPagina > totalPaginasPdf) return;
+
+  const pagina = await pdfActual.getPage(numeroPagina);
+
+  const contenedor = canvas.parentElement;
+
+  // Tamaño original de la página a escala 1
+  const escalaBase = pagina.getViewport({ scale: 1 });
+
+  const rectContenedor = contenedor.getBoundingClientRect();
+
+  const anchoDisponible =
+    contenedor.clientWidth || rectContenedor.width;
+
+  const altoDisponible =
+    contenedor.clientHeight || rectContenedor.height;
+
+  if (!anchoDisponible || !altoDisponible) return;
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // Calculamos cuánto debe escalarse el PDF para entrar
+  // dentro del espacio disponible.
+  const escala = Math.min(
+    anchoDisponible / escalaBase.width,
+    altoDisponible / escalaBase.height
+  ) * dpr;
+
+  if (!isFinite(escala) || escala <= 0) return;
+
+  // IMPORTANTE:
+  // La propiedad de PDF.js se llama "scale",
+  // pero nuestra variable se llama "escala".
+  const viewport = pagina.getViewport({
+    scale: escala
+  });
+
+  // Resolución real del canvas
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
+
+  // Tamaño visual en CSS
+  canvas.style.width = `${viewport.width / dpr}px`;
+  canvas.style.height = `${viewport.height / dpr}px`;
+
+  const ctx = canvas.getContext('2d');
+
+  // Limpiamos el canvas anterior
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  await pagina.render({
+    canvasContext: ctx,
+    viewport: viewport
+  }).promise;
+}
+
+
+
+function actualizarIndicadorYBotones() {
+  if (modoUnaPagina) {
+    lectorIndicador.textContent = `${paginaIzqActual} / ${totalPaginasPdf}`;
+    btnPaginaAnterior.disabled = paginaIzqActual <= 1;
+    btnPaginaSiguiente.disabled = paginaIzqActual >= totalPaginasPdf;
+  } else {
+    const finRango = Math.min(paginaIzqActual + 1, totalPaginasPdf);
+    lectorIndicador.textContent = `${paginaIzqActual}-${finRango} / ${totalPaginasPdf}`;
+    btnPaginaAnterior.disabled = paginaIzqActual <= 1;
+    btnPaginaSiguiente.disabled = paginaIzqActual + 1 >= totalPaginasPdf;
+  }
+}
+
+function actualizarModoVista() {
+  paginasInteriorEl.classList.toggle('modo-una-pagina', modoUnaPagina);
+  btnVerUna.classList.toggle('activo', modoUnaPagina);
+  btnVerDos.classList.toggle('activo', !modoUnaPagina);
+}
+
+btnPaginaAnterior.addEventListener('click', async () => {
+  const salto = modoUnaPagina ? 1 : 2;
+  paginaIzqActual = Math.max(1, paginaIzqActual - salto);
+  await renderizarPaginasActuales();
+});
+
+btnPaginaSiguiente.addEventListener('click', async () => {
+  const salto = modoUnaPagina ? 1 : 2;
+  paginaIzqActual = Math.min(totalPaginasPdf, paginaIzqActual + salto);
+  await renderizarPaginasActuales();
+});
+
+btnVerUna.addEventListener('click', async () => {
+  if (esMovilLector()) return;
+  modoUnaPagina = true;
+  actualizarModoVista();
+  await recalcularTamanoYRenderizar();
+});
+
+btnVerDos.addEventListener('click', async () => {
+  if (esMovilLector()) return;
+  modoUnaPagina = false;
+  actualizarModoVista();
+  await recalcularTamanoYRenderizar();
+});
+
+async function recalcularTamanoYRenderizar() {
+  if (!pdfActual) return;
+
+  const pagina = await pdfActual.getPage(1);
+  const vp = pagina.getViewport({ scale: 1 });
+  const aspecto = vp.width / vp.height;
+
+  const altoDestino = parseFloat(libroAbiertoEl.style.height) || window.innerHeight * 0.6;
+  const anchoCubierta = altoDestino * aspecto;
+  const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
+
+  libroAbiertoEl.style.top = `${(window.innerHeight - altoDestino) / 2}px`;
+  libroAbiertoEl.style.left = `${(window.innerWidth - anchoFinalInterior) / 2}px`;
+  libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
+  libroAbiertoEl.style.height = `${altoDestino}px`;
+
+  await renderizarPaginasActuales();
+}
+
+function cerrarLector() {
+  portadaFlipEl.style.transition = 'none';
+  portadaFlipEl.style.transform = 'rotateY(0deg)';
+  portadaFlipEl.offsetHeight;
+  portadaFlipEl.style.transition = '';
+
+  lectorPdf.classList.remove('visible');
+
+  if (mallaOrigenLectura) {
+    mallaOrigenLectura.visible = true;
+    mallaOrigenLectura = null;
+  }
+
+  pdfActual = null;
+  totalPaginasPdf = 0;
+}
+
+  cerrarLectorBtn.addEventListener('click', cerrarLector);
+
+  document.addEventListener('keydown', (ev) => {
+    if (!lectorPdf.classList.contains('visible')) return;
+    if (ev.key === 'Escape') cerrarLector();
+    if (ev.key === 'ArrowLeft') btnPaginaAnterior.click();
+    if (ev.key === 'ArrowRight') btnPaginaSiguiente.click();
+  });
 
   let datosFiltros = { categorias: [], subcategorias: [], tipos: [], idiomas: [], temas: [] };
   let temasSeleccionados = [];
@@ -299,6 +720,7 @@ import * as THREE from 'three';
   class Estante {
     constructor(categoria) {
       this._tokenSeleccion = 0;
+      this._tokenPintura = 0;
       this.id = categoria.id;
       this.nombre = categoria.nombre;
       this.datosLibros = [];
@@ -434,6 +856,7 @@ import * as THREE from 'three';
       }
 
       this._tokenSeleccion++;
+      this._tokenPintura++; // <-- AGREGAR: invalida cualquier _pintar() en curso
 
       this.libros.forEach((malla) => {
         detenerAnimacionLibro(malla);
@@ -489,10 +912,12 @@ import * as THREE from 'three';
     }
 
     async _pintar(libros) {
+      const miToken = ++this._tokenPintura;
+
       // Mostrar spinner ANTES de tocar nada
       this.cargandoEl.classList.remove('oculto');
 
-      // Limpiar libros anteriores
+      // Limpiar libros anteriores (esto es síncrono, siempre seguro de hacer)
       this.libros.forEach((malla) => {
         this.escena.remove(malla);
         malla.geometry.dispose();
@@ -506,23 +931,31 @@ import * as THREE from 'three';
       if (libros.length === 0) {
         this.mensajeVacioEl.style.display = 'flex';
         this.anchoFila = 1;
-        this.cargandoEl.classList.add('oculto'); // <- ocultar también en caso vacío
+        this.cargandoEl.classList.add('oculto');
         return;
       }
       this.mensajeVacioEl.style.display = 'none';
 
       for (const libro of libros) {
+        // Si mientras esperábamos la textura llegó una búsqueda más nueva
+        // para este mismo estante, abandonamos — no seguimos agregando
+        // libros de una lista que ya quedó obsoleta.
+        if (miToken !== this._tokenPintura) return;
+
         const rutaFotoAbsoluta = libro.ruta_foto
           ? `${BASE}/${libro.ruta_foto}`.replace(/([^:]\/)\/+/g, '$1')
           : null;
         const malla = await crearLibro3D({ ...libro, rutaFotoAbsoluta });
+
+        if (miToken !== this._tokenPintura) return; // se volvió obsoleta mientras cargaba la textura
+
         this.escena.add(malla);
         this.libros.push(malla);
       }
 
-      this._acomodarEnFila();
+      if (miToken !== this._tokenPintura) return;
 
-      // Todo listo: ocultar spinner
+      this._acomodarEnFila();
       this.cargandoEl.classList.add('oculto');
     }
 
@@ -739,8 +1172,9 @@ import * as THREE from 'three';
   // Gestión global de estantes + lazy loading con IntersectionObserver
   // ============================================================
   let estantes = [];          // estantes de categoría (como ya tenías)
-let estanteResultados = null; // estante especial para modo búsqueda/filtro
-let modoActual = 'categorias'; // 'categorias' | 'resultados'
+  let estanteResultados = null; // estante especial para modo búsqueda/filtro
+  let modoActual = 'categorias'; // 'categorias' | 'resultados'
+  let tokenBusqueda = 0;
 
   const observadorVisibilidad = new IntersectionObserver(
     (entradas) => {
@@ -799,13 +1233,17 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
   requestAnimationFrame(animar);
 
   const activos = estanteResultados ? [...estantes, estanteResultados] : estantes;
-
   activos.forEach((estante) => {
     if (!estante.renderer) return;
     estante.animarDesplazamientoSuave();
     estante.actualizarBotonInfoPosicion();
     estante.renderer.render(estante.escena, estante.camara);
   });
+
+  // ← agregar esto:
+  if (rendererVuelo && vueloContenedor.classList.contains('visible')) {
+    rendererVuelo.render(escenaVuelo, camaraVuelo);
+  }
 })();
 
   // ============================================================
@@ -849,11 +1287,25 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
     }
 
     if (libro.ruta_pdf) {
-      botonLeerLibro.href = `${BASE}/${libro.ruta_pdf}`.replace(/([^:]\/)\/+/g, '$1');
-      botonLeerLibro.style.display = 'flex';
+      const rutaPdfAbsoluta = `${BASE}/${libro.ruta_pdf}`.replace(/([^:]\/)\/+/g, '$1');
+
+      // Botón "LEER PDF" → abre el archivo directo en pestaña nueva
+      botonLeerPdf.href = rutaPdfAbsoluta;
+      botonLeerPdf.style.display = 'flex';
+
+      // Botón "LEER" → dispara la animación del lector 3D
+      botonLeerAnimado.style.display = 'flex';
+      botonLeerAnimado.onclick = () => {
+        const malla = seleccionGlobal ? seleccionGlobal.malla : null;
+        infoLibro.classList.remove('visible');
+        volarLibroYAbrir(rutaPdfAbsoluta, malla);   // ← antes decía abrirLector(rutaPdfAbsoluta, malla)
+      };
     } else {
-      botonLeerLibro.removeAttribute('href');
-      botonLeerLibro.style.display = 'none';
+      botonLeerPdf.removeAttribute('href');
+      botonLeerPdf.style.display = 'none';
+
+      botonLeerAnimado.onclick = null;
+      botonLeerAnimado.style.display = 'none';
     }
 
     infoLibro.classList.add('visible');
@@ -955,6 +1407,7 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
   }
 
   async function buscarLibros() {
+    const miToken = ++tokenBusqueda;
     mostrarCarga();
 
     const params = new URLSearchParams({
@@ -972,13 +1425,15 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const libros = await res.json();
 
-      // Si aún no existen los estantes de categoría (primera carga), crearlos
+      if (miToken !== tokenBusqueda) return; // ya hay una búsqueda más nueva en curso
+
       if (estantes.length === 0) {
         crearEstantesCategorias(datosFiltros.categorias);
       }
 
       if (hayFiltrosActivos()) {
         await mostrarModoResultados();
+        if (miToken !== tokenBusqueda) return;
         await estanteResultados.establecerLibros(libros);
       } else {
         mostrarModoCategorias();
@@ -991,6 +1446,7 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
         });
 
         for (const estante of estantes) {
+          if (miToken !== tokenBusqueda) return; // obsoleta a mitad de recorrer las categorías
           const librosCategoria = grupos[estante.nombre] || [];
           await estante.establecerLibros(librosCategoria);
         }
@@ -998,11 +1454,15 @@ let modoActual = 'categorias'; // 'categorias' | 'resultados'
         construirTabsCategorias();
       }
 
+      if (miToken !== tokenBusqueda) return;
+
       sinResultados.style.display = libros.length === 0 ? 'block' : 'none';
       sinResultados.textContent = 'No se encontraron libros.';
 
       ocultarCarga();
     } catch (err) {
+      if (miToken !== tokenBusqueda) return; // error de una búsqueda ya obsoleta, ignorar
+
       console.error('Error buscando libros', err);
       sinResultados.textContent = 'Ocurrió un error cargando los libros.';
       sinResultados.style.display = 'block';
@@ -1080,6 +1540,7 @@ function ocultarCarga() {
   // ============================================================
   await cargarFiltros();
   crearEstantesCategorias(datosFiltros.categorias);
+  aplicarFiltrosDesdeURL(); // <-- NUEVO: lee ?categoria=...&tema=... antes de buscar
   await buscarLibros();
 
   function hayFiltrosActivos() {
@@ -1140,4 +1601,322 @@ async function mostrarModoResultados() {
     estanteResultados.seccionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
+
+function aplicarFiltrosDesdeURL() {
+    const params = new URLSearchParams(window.location.search);
+
+    const categoriaURL = params.get('categoria');
+    const subcategoriaURL = params.get('subcategoria');
+    const tipoURL = params.get('tipo');
+    const idiomaURL = params.get('idioma');
+    const disponibilidadURL = params.get('disponibilidad');
+    const buscarURL = params.get('buscar');
+    const temaURL = params.get('tema'); // nombre de un solo tema
+
+    let huboCambios = false;
+
+    if (categoriaURL) {
+      // Verificamos que exista esa categoría entre las opciones cargadas
+      const existe = datosFiltros.categorias.some((c) => c.nombre === categoriaURL);
+      if (existe) {
+        selCat.value = categoriaURL;
+        actualizarSubcategorias(); // porque cambiar categoría repuebla el select de subcategoría
+        huboCambios = true;
+      }
+    }
+
+    if (subcategoriaURL) {
+      // Solo tiene sentido si ya se aplicó la categoría (el <select> ya está poblado)
+      const opcionExiste = [...selSubcat.options].some((o) => o.value === subcategoriaURL);
+      if (opcionExiste) {
+        selSubcat.value = subcategoriaURL;
+        huboCambios = true;
+      }
+    }
+
+    if (tipoURL) {
+      const existe = datosFiltros.tipos.some((t) => t.nombre === tipoURL);
+      if (existe) { selTipo.value = tipoURL; huboCambios = true; }
+    }
+
+    if (idiomaURL) {
+      const existe = datosFiltros.idiomas.includes(idiomaURL);
+      if (existe) { selIdioma.value = idiomaURL; huboCambios = true; }
+    }
+
+    if (disponibilidadURL === '1' || disponibilidadURL === '0') {
+      selDisponibilidad.value = disponibilidadURL;
+      huboCambios = true;
+    }
+
+    if (buscarURL) {
+      inputBuscar.value = buscarURL;
+      huboCambios = true;
+    }
+
+    if (temaURL) {
+      const tema = datosFiltros.temas.find((t) => t.nombre === temaURL);
+      if (tema) {
+        temasSeleccionados = [Number(tema.id)];
+        actualizarTextoTemas();
+        huboCambios = true;
+      }
+    }
+
+    return huboCambios;
+  }
+function asegurarRendererVuelo() {
+  if (rendererVuelo) return;
+  escenaVuelo = new THREE.Scene();
+  camaraVuelo = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+  camaraVuelo.position.set(0, 0, 5);
+  rendererVuelo = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  vueloContenedor.appendChild(rendererVuelo.domElement);
+}
+
+function volarLibroYAbrir(rutaPdf, malla) {
+  if (!malla) {
+    abrirLector(rutaPdf, null);
+    return;
+  }
+
+  asegurarRendererVuelo();
+
+  const rect = obtenerRectPantalla(malla);
+
+  if (!rect) {
+    abrirLector(rutaPdf, malla);
+    return;
+  }
+
+  // ============================================================
+  // CONFIGURACIÓN DE LA ANIMACIÓN
+  // ============================================================
+
+  const DURACION = 1100;
+
+  // Tamaño final respecto al tamaño original del libro.
+  // 1.0 = mismo tamaño
+  // 1.5 = 50% más grande
+  // 2.0 = doble
+  const ESCALA_FINAL = 1.65;
+
+  // ============================================================
+  // CÁMARA DEL VUELO
+  // ============================================================
+
+  const pxPorUnidad = rect.height / ALTO_LIBRO;
+
+  const anchoMundo = window.innerWidth / pxPorUnidad;
+  const altoMundo = window.innerHeight / pxPorUnidad;
+
+  camaraVuelo.left = -anchoMundo / 2;
+  camaraVuelo.right = anchoMundo / 2;
+  camaraVuelo.top = altoMundo / 2;
+  camaraVuelo.bottom = -altoMundo / 2;
+  camaraVuelo.updateProjectionMatrix();
+
+  rendererVuelo.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+  );
+
+  rendererVuelo.setSize(
+    window.innerWidth,
+    window.innerHeight,
+    false
+  );
+
+  // ============================================================
+  // POSICIÓN INICIAL
+  // ============================================================
+
+  const centroPxX = rect.left + rect.width / 2;
+  const centroPxY = rect.top + rect.height / 2;
+
+  const mundoX =
+    (centroPxX - window.innerWidth / 2) / pxPorUnidad;
+
+  const mundoY =
+    -(centroPxY - window.innerHeight / 2) / pxPorUnidad;
+
+  // ============================================================
+  // CREAR CLON
+  // ============================================================
+
+  mallaVuelo = new THREE.Mesh(
+    malla.geometry,
+    malla.material
+  );
+
+  mallaVuelo.position.set(
+    mundoX,
+    mundoY,
+    0
+  );
+
+  mallaVuelo.rotation.copy(malla.rotation);
+
+  // Empieza con el mismo tamaño visual que el original
+  mallaVuelo.scale.set(1, 1, 1);
+
+  escenaVuelo.add(mallaVuelo);
+
+  // Ocultamos el libro original
+  malla.visible = false;
+
+  vueloContenedor.classList.add('visible');
+
+  // ============================================================
+  // ANIMACIÓN
+  // ============================================================
+
+  const rotacionInicial = malla.rotation.y;
+
+  // El libro primero queda ligeramente inclinado,
+  // como si lo estuviéramos sacando del estante.
+  const rotacionIntermedia =
+    rotacionInicial + Math.PI * 0.18;
+
+  const rotacionFinal = -Math.PI / 2;
+
+  const t0 = performance.now();
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function paso(ahora) {
+    const t = Math.min(
+      1,
+      (ahora - t0) / DURACION
+    );
+
+    // ----------------------------------------------------------
+    // FASE 1
+    // 0% - 35%
+    // El libro sale del estante
+    // ----------------------------------------------------------
+
+    const tSalida = Math.min(t / 0.35, 1);
+    const eSalida = easeOutCubic(tSalida);
+
+    // Se acerca ligeramente hacia nosotros
+    mallaVuelo.position.z =
+      0.15 * eSalida;
+
+    // Empieza a girar
+    mallaVuelo.rotation.y =
+      rotacionInicial +
+      (rotacionIntermedia - rotacionInicial) * eSalida;
+
+    // ----------------------------------------------------------
+    // FASE 2
+    // 25% - 100%
+    // Crece y se dirige al centro
+    // ----------------------------------------------------------
+
+    const tCentro = Math.max(
+      0,
+      Math.min(1, (t - 0.25) / 0.75)
+    );
+
+    const eCentro = easeInOutCubic(tCentro);
+
+    mallaVuelo.position.x =
+      mundoX +
+      (0 - mundoX) * eCentro;
+
+    mallaVuelo.position.y =
+      mundoY +
+      (0 - mundoY) * eCentro;
+
+    const escala =
+      1 +
+      (ESCALA_FINAL - 1) * eCentro;
+
+    mallaVuelo.scale.setScalar(escala);
+
+    // ----------------------------------------------------------
+    // FASE 3
+    // El libro termina de girar hacia nosotros
+    // ----------------------------------------------------------
+
+    const tGiro = Math.max(
+      0,
+      Math.min(1, (t - 0.35) / 0.65)
+    );
+
+    const eGiro = easeInOutCubic(tGiro);
+
+    mallaVuelo.rotation.y =
+      rotacionIntermedia +
+      (rotacionFinal - rotacionIntermedia) * eGiro;
+
+    // ----------------------------------------------------------
+
+        
+        if (t < 1) {
+      requestAnimationFrame(paso);
+      return;
+    }
+
+    // ==========================================================
+    // ANIMACIÓN TERMINADA
+    // ==========================================================
+
+    mallaVuelo.position.x = 0;
+    mallaVuelo.position.y = 0;
+    mallaVuelo.position.z = 0.15;
+
+    mallaVuelo.scale.setScalar(ESCALA_FINAL);
+    mallaVuelo.rotation.y = rotacionFinal;
+
+    // Obtener el rectángulo EXACTO del libro ya grande
+    const rectFinal = proyectarCajaAPantalla(
+      mallaVuelo,
+      camaraVuelo,
+      rendererVuelo
+    );
+
+    // Quitamos el clon 3D
+    escenaVuelo.remove(mallaVuelo);
+    mallaVuelo = null;
+
+    vueloContenedor.classList.remove('visible');
+
+    // El lector aparece exactamente donde terminó
+    abrirLector(
+      rutaPdf,
+      malla,
+      rectFinal
+    );
+  }
+}
+
+function proyectarCajaAPantalla(malla, camara, renderer) {
+  const caja = new THREE.Box3().setFromObject(malla);
+  const esqSupIzq = new THREE.Vector3(caja.min.x, caja.max.y, caja.max.z).project(camara);
+  const esqInfDer = new THREE.Vector3(caja.max.x, caja.min.y, caja.max.z).project(camara);
+
+  const rectCanvas = renderer.domElement.getBoundingClientRect();
+
+  const x1 = ((esqSupIzq.x + 1) / 2) * rectCanvas.width + rectCanvas.left;
+  const y1 = ((-esqSupIzq.y + 1) / 2) * rectCanvas.height + rectCanvas.top;
+  const x2 = ((esqInfDer.x + 1) / 2) * rectCanvas.width + rectCanvas.left;
+  const y2 = ((-esqInfDer.y + 1) / 2) * rectCanvas.height + rectCanvas.top;
+
+  return {
+    top: Math.min(y1, y2),
+    left: Math.min(x1, x2),
+    width: Math.abs(x2 - x1),
+    height: Math.abs(y2 - y1),
+  };
+}
 })();
+

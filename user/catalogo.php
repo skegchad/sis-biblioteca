@@ -28,8 +28,8 @@ include ("../layout/user/part1.php");
          ============================================================ -->
 
     <div class="titulo-seccion">
-    <h2>Catálogo de Libros</h2>
-</div>
+        <h2>Catálogo de Libros</h2>
+    </div>
 
 
 <!-- ============================================================
@@ -283,10 +283,30 @@ include ("../layout/user/part1.php");
         No se encontraron libros.
     </p>
 
+    <!-- ============================================================
+     INFORMACIÓN DEL LIBRO
+     ============================================================ -->
+
     <div id="info-libro" class="info-libro">
-        <a id="boton-leer-libro" class="boton-leer-libro" href="#" target="_blank" rel="noopener">
-            <span>LEER</span>
-        </a>
+        <div class="botones-lectura">
+            <a
+                id="boton-leer-pdf"
+                class="boton-leer-libro"
+                href="#"
+                target="_blank"
+                rel="noopener"
+            >
+                <span>LEER PDF</span>
+            </a>
+
+            <button
+                type="button"
+                id="boton-leer-animado"
+                class="boton-leer-libro"
+            >
+                <span>LEER</span>
+            </button>
+        </div>
         <div class="info-libro-contenido">
             <div class="info-portada-container"><img id="info-portada" src="" alt="Portada del libro"></div>
             <div class="info-datos">
@@ -307,13 +327,55 @@ include ("../layout/user/part1.php");
             </div>
         </div>
     </div>
-</div>
 
+        <!-- ============================================================
+        LECTOR DE PDF
+        ============================================================ -->
+    <div id="vuelo-3d-contenedor" class="vuelo-3d-contenedor"></div>
+    <div id="lector-pdf" class="lector-pdf">
+        <button type="button" id="cerrar-lector" class="cerrar-lector" aria-label="Cerrar lector">×</button>
+
+        <div class="lector-controles-vista">
+            <button type="button" id="ver-una-pagina" class="toggle-vista">1 página</button>
+            <button type="button" id="ver-dos-paginas" class="toggle-vista activo">2 páginas</button>
+        </div>
+
+        <div id="libro-abierto" class="libro-abierto">
+            <!-- Interior: páginas del PDF, quedan reveladas al abrir la portada -->
+            <div id="paginas-interior" class="paginas-interior">
+                <div class="hoja hoja-izq">
+                    <canvas id="canvas-pagina-izq"></canvas>
+                </div>
+                <div class="hoja hoja-der">
+                    <canvas id="canvas-pagina-der"></canvas>
+                </div>
+            </div>
+
+            <!-- Portada: tapa el interior al inicio, se abre girando -->
+            <div id="portada-flip" class="portada-flip">
+                <div id="lomo-flip" class="lomo-flip"></div>
+                <div class="portada-flip-cara">
+                    <img id="portada-flip-img" class="portada-flip-img" src="" alt="" style="display:none;">
+                    <div id="portada-flip-fallback" class="portada-flip-fallback" style="display:none;">
+                        <div id="portada-flip-titulo" class="portada-flip-titulo"></div>
+                        <div id="portada-flip-autor" class="portada-flip-autor"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lector-navegacion">
+            <button type="button" id="pagina-anterior" class="nav-pagina" aria-label="Páginas anteriores">◀</button>
+            <span id="lector-indicador" class="lector-indicador">1 / 1</span>
+            <button type="button" id="pagina-siguiente" class="nav-pagina" aria-label="Páginas siguientes">▶</button>
+        </div>
+    </div>
+
+</div> <!-- ← ESTE cierra <div class="estanteria-app"> del principio del archivo -->
 
 <script>
     window.APP_URL = "<?= $URL ?>";
 </script>
-
 
 <!-- ================================================================
      THREE.JS
@@ -327,11 +389,9 @@ include ("../layout/user/part1.php");
 }
 </script>
 
-
 <script
     type="module"
     src="<?= $URL ?>/user/assets/js/estanteria-3d.js"
 ></script>
-
 
 <?php include("../ai/chat_widget.php"); ?>
