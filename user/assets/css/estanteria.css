@@ -1557,7 +1557,7 @@
 .lector-pdf {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 100000;
 
   display: none; /* se activa con .visible */
   align-items: center;
@@ -1811,7 +1811,7 @@
 #vuelo-3d-contenedor {
   position: fixed;
   inset: 0;
-  z-index: 900;         /* por debajo de .lector-pdf (1000) y de los paneles */
+  z-index: 99999;         /* por debajo de .lector-pdf (1000) y de los paneles */
   pointer-events: none; /* que no bloquee clicks mientras está oculto */
 
   opacity: 0;

@@ -113,89 +113,7 @@ function construirTapaHTML(libro) {
   }
 }
 
-async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
-  const pdfjsLib = await pdfjsListo;
 
-  mallaOrigenLectura = malla;
-  const libro = malla ? malla.userData.libro : null;
-  const rect = rectYaGrande || (malla ? obtenerRectPantalla(malla) : null);
-
-  lectorPdf.classList.add('visible');
-  if (libro) construirTapaHTML(libro);
-
-  // --- Estado inicial: tapa y libro en la misma posición/tamaño, sin transición ---
-  portadaFlipEl.classList.remove('oculta');
-  portadaFlipEl.style.transition = 'none';
-  libroAbiertoEl.style.transition = 'none';
-
-  if (rect) {
-    for (const el of [portadaFlipEl, libroAbiertoEl]) {
-      el.style.top = `${rect.top}px`;
-      el.style.left = `${rect.left}px`;
-      el.style.width = `${rect.width}px`;
-      el.style.height = `${rect.height}px`;
-    }
-  }
-  portadaFlipEl.style.transform = 'rotateY(0deg)';
-
-  portadaFlipEl.offsetHeight;
-  libroAbiertoEl.offsetHeight;
-
-  portadaFlipEl.style.transition = '';
-  libroAbiertoEl.style.transition = '';
-
-  if (malla) malla.visible = false;
-
-  modoUnaPagina = esMovilLector();
-  actualizarModoVista();
-
-  try {
-    pdfActual = await pdfjsLib.getDocument(rutaPdf).promise;
-    totalPaginasPdf = pdfActual.numPages;
-    paginaIzqActual = 1;
-
-    // PASO 1: la tapa empieza a girar
-    await esperar(30);
-    portadaFlipEl.style.transform = 'rotateY(-100deg)';
-    await esperar(500);
-
-    // PASO 2: calculamos el tamaño FINAL real (según aspecto del PDF)
-    // y se lo aplicamos tanto al libro real como a la tapa (misma posición
-    // en pantalla, para que el resto del giro se vea proporcional)
-    const paginaRef = await pdfActual.getPage(1);
-    const vpRef = paginaRef.getViewport({ scale: 1 });
-    const aspectoPagina = vpRef.width / vpRef.height;
-    const altoDestino = altoLibro;
-    const anchoCubierta = altoDestino * aspectoPagina;
-    const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
-
-    const leftFinal = (window.innerWidth - anchoFinalInterior) / 2;
-    const topFinal = (window.innerHeight - altoDestino) / 2;
-
-    libroAbiertoEl.style.left = `${leftFinal}px`;
-    libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
-    libroAbiertoEl.style.top = `${topFinal}px`;
-    libroAbiertoEl.style.height = `${altoDestino}px`;
-
-    portadaFlipEl.style.left = `${leftFinal}px`;
-    portadaFlipEl.style.width = `${anchoCubierta}px`;
-    portadaFlipEl.style.top = `${topFinal}px`;
-    portadaFlipEl.style.height = `${altoDestino}px`;
-
-    await esperar(750);
-
-    // PASO 3: layout ya asentado y correcto -> recién ahora renderizamos
-    await renderizarPaginasActuales();
-
-    // PASO 4: la tapa termina de girar y se desvanece, revelando el libro real
-    portadaFlipEl.style.transform = 'rotateY(-180deg)';
-    await esperar(500);
-    portadaFlipEl.classList.add('oculta');
-  } catch (err) {
-    console.error('No se pudo cargar el PDF', err);
-    cerrarLector();
-  }
-}
 
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -441,6 +359,7 @@ function cerrarLector() {
   let temasTemporales = [];
 
   const ALTO_LIBRO = 1.55;
+  const ALTO_LIBRO_DESTINO = 720;
   const PROFUNDIDAD_LIBRO = 1.0;
   const SEPARACION = 0.02;
   const Z_SELECCIONADO = 2;
@@ -882,6 +801,8 @@ function cerrarLector() {
       this.camara.top = alturaFrustum / 2;
       this.camara.bottom = -alturaFrustum / 2;
       this.camara.updateProjectionMatrix();
+
+
     }
 
     // -------------------- Contenido --------------------
@@ -1923,6 +1844,92 @@ function volarLibroYAbrir(rutaPdf, malla) {
 
   // ESTA LÍNEA ES LA QUE FALTABA EN TU CÓDIGO ORIGINAL:
   requestAnimationFrame(paso);
+}
+
+async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
+  const pdfjsLib = await pdfjsListo;
+
+  mallaOrigenLectura = malla;
+  const libro = malla ? malla.userData.libro : null;
+  const rect = rectYaGrande || (malla ? obtenerRectPantalla(malla) : null);
+
+  lectorPdf.classList.add('visible');
+  if (libro) construirTapaHTML(libro);
+
+  // --- Estado inicial: tapa y libro en la misma posición/tamaño, sin transición ---
+  portadaFlipEl.classList.remove('oculta');
+  portadaFlipEl.style.transition = 'none';
+  libroAbiertoEl.style.transition = 'none';
+
+  if (rect) {
+    for (const el of [portadaFlipEl, libroAbiertoEl]) {
+      el.style.top = `${rect.top}px`;
+      el.style.left = `${rect.left}px`;
+      el.style.width = `${rect.width}px`;
+      el.style.height = `${rect.height}px`;
+    }
+  }
+  portadaFlipEl.style.transform = 'rotateY(0deg)';
+
+  portadaFlipEl.offsetHeight;
+  libroAbiertoEl.offsetHeight;
+
+  portadaFlipEl.style.transition = '';
+  libroAbiertoEl.style.transition = '';
+
+  if (malla) malla.visible = false;
+
+  modoUnaPagina = esMovilLector();
+  actualizarModoVista();
+
+  try {
+    pdfActual = await pdfjsLib.getDocument(rutaPdf).promise;
+    totalPaginasPdf = pdfActual.numPages;
+    paginaIzqActual = 1;
+
+    // PASO 1: la tapa empieza a girar
+    await esperar(30);
+    portadaFlipEl.style.transform = 'rotateY(-100deg)';
+    await esperar(500);
+
+    // PASO 2: calculamos el tamaño FINAL real (según aspecto del PDF)
+    // y se lo aplicamos tanto al libro real como a la tapa (misma posición
+    // en pantalla, para que el resto del giro se vea proporcional)
+    const esMovil = window.matchMedia('(max-width: 768px)').matches;
+    const alturaFrustum = esMovil ? 1.6 : 1.58;
+    const paginaRef = await pdfActual.getPage(1);
+    const vpRef = paginaRef.getViewport({ scale: 1 });
+    const aspectoPagina = vpRef.width / vpRef.height;
+    const altoDestino = alturaFrustum*350;
+    const anchoCubierta = altoDestino * aspectoPagina;
+    const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
+
+    const leftFinal = (window.innerWidth - anchoFinalInterior) / 2;
+    const topFinal = (window.innerHeight - altoDestino) / 2;
+
+    libroAbiertoEl.style.left = `${leftFinal}px`;
+    libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
+    libroAbiertoEl.style.top = `${topFinal}px`;
+    libroAbiertoEl.style.height = `${altoDestino}px`;
+
+    portadaFlipEl.style.left = `${leftFinal}px`;
+    portadaFlipEl.style.width = `${anchoCubierta}px`;
+    portadaFlipEl.style.top = `${topFinal}px`;
+    portadaFlipEl.style.height = `${altoDestino}px`;
+
+    await esperar(750);
+
+    // PASO 3: layout ya asentado y correcto -> recién ahora renderizamos
+    await renderizarPaginasActuales();
+
+    // PASO 4: la tapa termina de girar y se desvanece, revelando el libro real
+    portadaFlipEl.style.transform = 'rotateY(-180deg)';
+    await esperar(500);
+    portadaFlipEl.classList.add('oculta');
+  } catch (err) {
+    console.error('No se pudo cargar el PDF', err);
+    cerrarLector();
+  }
 }
 
 })();
