@@ -1788,17 +1788,6 @@
 .paginas-interior.modo-una-pagina .hoja-der { display: none; }
 .paginas-interior.modo-una-pagina .hoja-izq { flex: 1 1 100%; }
 
-.portada-flip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  transform-style: preserve-3d;
-  transform-origin: left center;
-  transform: rotateY(0deg);
-  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 3;
-}
 
 .portada-flip-cara {
   position: absolute;
@@ -1816,28 +1805,79 @@
 .portada-flip-titulo { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; margin-bottom: 6px; }
 .portada-flip-autor { font-family: 'Inter', sans-serif; font-size: 14px; opacity: 0.85; }
 
-.lomo-flip {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  transform-origin: left center;
-  transform: rotateY(90deg);
-  backface-visibility: hidden;
-  background: repeating-linear-gradient(
-    90deg,
-    #f4efe0, #f4efe0 2px,
-    #e4dcc4 2px, #e4dcc4 3px
-  );
-  box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.18);
-  z-index: 2;
+
+
+.estanteria-app #vuelo-3d-contenedor,
+#vuelo-3d-contenedor {
+  position: fixed;
+  inset: 0;
+  z-index: 900;         /* por debajo de .lector-pdf (1000) y de los paneles */
+  pointer-events: none; /* que no bloquee clicks mientras está oculto */
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
 }
-.lomo-flip::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0;
-  width: 14px;
+
+#vuelo-3d-contenedor.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+#vuelo-3d-contenedor canvas {
+  display: block;
+  width: 100%;
   height: 100%;
-  background: var(--color-lomo, #8C7355);
-  box-shadow: 1px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Una vez que la apertura terminó, ocultamos toda la portada
+   (frente y reverso) para que no le quede tapando la página real */
+.portada-flip.oculta {
+  visibility: hidden;
+}
+
+.paginas-interior .hoja-izq {
+  justify-content: flex-end;   /* pega la página al lomo */
+}
+.paginas-interior .hoja-der {
+  justify-content: flex-start; /* pega la página al lomo */
+}
+.libro-abierto {
+  position: fixed;
+  background: #fff;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  overflow: hidden;
+  transition:
+    top 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.portada-flip {
+  position: fixed;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transform: rotateY(0deg);
+  z-index: 5;
+  pointer-events: none;
+  transition:
+    top 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease;
+}
+.portada-flip.oculta {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.portada-flip-cara {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: #2b2b2b;
 }

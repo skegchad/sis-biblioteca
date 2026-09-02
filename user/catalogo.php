@@ -341,7 +341,6 @@ include ("../layout/user/part1.php");
         </div>
 
         <div id="libro-abierto" class="libro-abierto">
-            <!-- Interior: páginas del PDF, quedan reveladas al abrir la portada -->
             <div id="paginas-interior" class="paginas-interior">
                 <div class="hoja hoja-izq">
                     <canvas id="canvas-pagina-izq"></canvas>
@@ -350,16 +349,15 @@ include ("../layout/user/part1.php");
                     <canvas id="canvas-pagina-der"></canvas>
                 </div>
             </div>
+        </div>
 
             <!-- Portada: tapa el interior al inicio, se abre girando -->
-            <div id="portada-flip" class="portada-flip">
-                <div id="lomo-flip" class="lomo-flip"></div>
-                <div class="portada-flip-cara">
-                    <img id="portada-flip-img" class="portada-flip-img" src="" alt="" style="display:none;">
-                    <div id="portada-flip-fallback" class="portada-flip-fallback" style="display:none;">
-                        <div id="portada-flip-titulo" class="portada-flip-titulo"></div>
-                        <div id="portada-flip-autor" class="portada-flip-autor"></div>
-                    </div>
+        <div id="portada-flip" class="portada-flip">
+            <div class="portada-flip-cara">
+                <img id="portada-flip-img" class="portada-flip-img" src="" alt="" style="display:none;">
+                <div id="portada-flip-fallback" class="portada-flip-fallback" style="display:none;">
+                    <div id="portada-flip-titulo" class="portada-flip-titulo"></div>
+                    <div id="portada-flip-autor" class="portada-flip-autor"></div>
                 </div>
             </div>
         </div>

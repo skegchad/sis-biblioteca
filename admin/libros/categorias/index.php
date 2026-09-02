@@ -236,7 +236,7 @@ table.dataTable {
                                             </a>
                                         </td>
                                         <td>
-                                            <?php if (!empty($subcategoriasPorCategoria[$id])): ?>
+                                            <?php if (!empty($subcategoriasPorCategoria[$id_categoria])): ?>
                                                 <table class="table table-sm table-bordered mb-0 celda-subcategorias">
                                                     <thead>
                                                         <tr>
@@ -245,7 +245,7 @@ table.dataTable {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <?php foreach ($subcategoriasPorCategoria[$id] as $sub): ?>
+                                                        <?php foreach ($subcategoriasPorCategoria[$id_categoria] as $sub): ?>
                                                             <tr>
                                                                 <td><?php echo $sub['id'];?></td>
                                                                 <td><?php echo $sub['nombre'];?></td>

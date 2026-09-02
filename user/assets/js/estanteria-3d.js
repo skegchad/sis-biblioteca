@@ -73,7 +73,6 @@ const btnPaginaSiguiente = document.getElementById('pagina-siguiente');
 const lectorIndicador = document.getElementById('lector-indicador');
 const btnVerUna = document.getElementById('ver-una-pagina');
 const btnVerDos = document.getElementById('ver-dos-paginas');
-const libroGiroEl = document.getElementById('libro-giro');
 const paginasInteriorEl = document.getElementById('paginas-interior');
 const portadaFlipEl = document.getElementById('portada-flip');
 const lomoFlipEl = document.getElementById('lomo-flip');
@@ -98,6 +97,22 @@ function esMovilLector() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
 
+function construirTapaHTML(libro) {
+  if (libro.rutaFotoAbsoluta) {
+    portadaFlipImg.src = libro.rutaFotoAbsoluta;
+    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
+    portadaFlipImg.style.display = 'block';
+    portadaFlipFallback.style.display = 'none';
+  } else {
+    portadaFlipImg.style.display = 'none';
+    portadaFlipFallback.style.display = 'flex';
+    portadaFlipFallback.style.background =
+      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
+    portadaFlipTitulo.textContent = libro.titulo || '';
+    portadaFlipAutor.textContent = libro.autor || '';
+  }
+}
+
 async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
   const pdfjsLib = await pdfjsListo;
 
@@ -106,32 +121,28 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
   const rect = rectYaGrande || (malla ? obtenerRectPantalla(malla) : null);
 
   lectorPdf.classList.add('visible');
-  if (libro) construirPortadaHTML(libro);
+  if (libro) construirTapaHTML(libro);
 
-  const anchoUnaPagina = rect ? rect.width : window.innerWidth * 0.3;
-  const altoLibro = rect ? rect.height : anchoUnaPagina * 1.3;
-
-  // --- Estado inicial: portada cerrada, SIN transición (instantáneo) ---
-  libroAbiertoEl.style.transition = 'none';
+  // --- Estado inicial: tapa y libro en la misma posición/tamaño, sin transición ---
+  portadaFlipEl.classList.remove('oculta');
   portadaFlipEl.style.transition = 'none';
+  libroAbiertoEl.style.transition = 'none';
 
   if (rect) {
-    libroAbiertoEl.style.top = `${rect.top}px`;
-    libroAbiertoEl.style.left = `${rect.left}px`;
-    libroAbiertoEl.style.width = `${rect.width}px`;
-    libroAbiertoEl.style.height = `${rect.height}px`;
+    for (const el of [portadaFlipEl, libroAbiertoEl]) {
+      el.style.top = `${rect.top}px`;
+      el.style.left = `${rect.left}px`;
+      el.style.width = `${rect.width}px`;
+      el.style.height = `${rect.height}px`;
+    }
   }
-  portadaFlipEl.style.width = `${anchoUnaPagina}px`;
-  lomoFlipEl.style.width = `${anchoUnaPagina}px`;
   portadaFlipEl.style.transform = 'rotateY(0deg)';
 
-  // Forzar reflow ANTES de reactivar transiciones (clave para que el
-  // navegador "vea" el estado inicial y anime desde ahí, no de golpe)
-  libroAbiertoEl.offsetHeight;
   portadaFlipEl.offsetHeight;
+  libroAbiertoEl.offsetHeight;
 
-  libroAbiertoEl.style.transition = '';
   portadaFlipEl.style.transition = '';
+  libroAbiertoEl.style.transition = '';
 
   if (malla) malla.visible = false;
 
@@ -143,12 +154,14 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     totalPaginasPdf = pdfActual.numPages;
     paginaIzqActual = 1;
 
-    // ---------- PASO 2: la portada gira, revela el bloque de páginas ----------
-    await esperar(30); // dar un frame para que el reset anterior "asiente"
-    portadaFlipEl.style.transform = 'rotateY(-160deg)';
-    await esperar(950);
+    // PASO 1: la tapa empieza a girar
+    await esperar(30);
+    portadaFlipEl.style.transform = 'rotateY(-100deg)';
+    await esperar(500);
 
-    // ---------- Calcular tamaño final según aspecto real del PDF ----------
+    // PASO 2: calculamos el tamaño FINAL real (según aspecto del PDF)
+    // y se lo aplicamos tanto al libro real como a la tapa (misma posición
+    // en pantalla, para que el resto del giro se vea proporcional)
     const paginaRef = await pdfActual.getPage(1);
     const vpRef = paginaRef.getViewport({ scale: 1 });
     const aspectoPagina = vpRef.width / vpRef.height;
@@ -156,55 +169,34 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     const anchoCubierta = altoDestino * aspectoPagina;
     const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
 
-    libroAbiertoEl.style.left = `${(window.innerWidth - anchoFinalInterior) / 2}px`;
+    const leftFinal = (window.innerWidth - anchoFinalInterior) / 2;
+    const topFinal = (window.innerHeight - altoDestino) / 2;
+
+    libroAbiertoEl.style.left = `${leftFinal}px`;
     libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
-    libroAbiertoEl.style.top = `${(window.innerHeight - altoDestino) / 2}px`;
+    libroAbiertoEl.style.top = `${topFinal}px`;
     libroAbiertoEl.style.height = `${altoDestino}px`;
+
+    portadaFlipEl.style.left = `${leftFinal}px`;
+    portadaFlipEl.style.width = `${anchoCubierta}px`;
+    portadaFlipEl.style.top = `${topFinal}px`;
+    portadaFlipEl.style.height = `${altoDestino}px`;
+
     await esperar(750);
 
-    // ---------- Renderizar el PDF ya en tamaño final ----------
+    // PASO 3: layout ya asentado y correcto -> recién ahora renderizamos
     await renderizarPaginasActuales();
 
-    // ---------- PASO 3: la portada termina de girar, revela el PDF ----------
-    portadaFlipEl.style.transform = 'rotateY(-200deg)';
+    // PASO 4: la tapa termina de girar y se desvanece, revelando el libro real
+    portadaFlipEl.style.transform = 'rotateY(-180deg)';
     await esperar(500);
+    portadaFlipEl.classList.add('oculta');
   } catch (err) {
     console.error('No se pudo cargar el PDF', err);
     cerrarLector();
   }
-
-  }
-
-function calcularTamanoCubierta(aspectoPagina) {
-  const margenVertical = 140;
-  const altoMax = window.innerHeight - margenVertical;
-  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
-
-  let alto = altoMax;
-  let ancho = alto * aspectoPagina;
-  if (ancho > anchoMax) {
-    ancho = anchoMax;
-    alto = ancho / aspectoPagina;
-  }
-  return { anchoCubierta: ancho, altoDestino: alto };
 }
 
-function construirPortadaHTML(libro) {
-  if (libro.rutaFotoAbsoluta) {
-    portadaFlipImg.src = libro.rutaFotoAbsoluta;
-    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
-    portadaFlipImg.style.display = 'block';
-    portadaFlipFallback.style.display = 'none';
-  } else {
-    portadaFlipImg.style.display = 'none';
-    portadaFlipFallback.style.display = 'flex';
-    portadaFlipFallback.style.background =
-      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
-    portadaFlipTitulo.textContent = libro.titulo || '';
-    portadaFlipAutor.textContent = libro.autor || '';
-  }
-  lomoFlipEl.style.setProperty('--color-lomo', libro.color || '#8C7355');
-}
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -215,35 +207,7 @@ function sincronizarAnchoPortada(anchoUnaPagina) {
   lomoFlipEl.style.width = `${anchoUnaPagina}px`; // mismo ancho: revela el bloque de páginas completo
 }
 
-function calcularTamanoCubierta(aspectoPagina) {
-  const margenVertical = 140;
-  const altoMax = window.innerHeight - margenVertical;
-  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
 
-  let alto = altoMax;
-  let ancho = alto * aspectoPagina;
-  if (ancho > anchoMax) {
-    ancho = anchoMax;
-    alto = ancho / aspectoPagina;
-  }
-  return { anchoCubierta: ancho, altoDestino: alto };
-}
-
-function construirPortadaHTML(libro) {
-  if (libro.rutaFotoAbsoluta) {
-    portadaFlipImg.src = libro.rutaFotoAbsoluta;
-    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
-    portadaFlipImg.style.display = 'block';
-    portadaFlipFallback.style.display = 'none';
-  } else {
-    portadaFlipImg.style.display = 'none';
-    portadaFlipFallback.style.display = 'flex';
-    portadaFlipFallback.style.background =
-      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
-    portadaFlipTitulo.textContent = libro.titulo || '';
-    portadaFlipAutor.textContent = libro.autor || '';
-  }
-}
 
 function calcularTamanoDestino(aspectoPagina) {
   const margenVertical = 140; // deja espacio para controles arriba/abajo
@@ -438,10 +402,15 @@ async function recalcularTamanoYRenderizar() {
   libroAbiertoEl.style.width = `${anchoFinalInterior}px`;
   libroAbiertoEl.style.height = `${altoDestino}px`;
 
+  // AGREGAR:
+  portadaFlipEl.style.width = `${anchoCubierta}px`;
+  lomoFlipEl.style.width = `${anchoCubierta}px`;
+
   await renderizarPaginasActuales();
 }
 
 function cerrarLector() {
+  portadaFlipEl.classList.remove('oculta');
   portadaFlipEl.style.transition = 'none';
   portadaFlipEl.style.transform = 'rotateY(0deg)';
   portadaFlipEl.offsetHeight;
@@ -1679,239 +1648,7 @@ function aplicarFiltrosDesdeURL() {
 
     return huboCambios;
   }
-function asegurarRendererVuelo() {
-  if (rendererVuelo) return;
-  escenaVuelo = new THREE.Scene();
-  camaraVuelo = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
-  camaraVuelo.position.set(0, 0, 5);
-  rendererVuelo = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  vueloContenedor.appendChild(rendererVuelo.domElement);
-}
 
-function volarLibroYAbrir(rutaPdf, malla) {
-  if (!malla) {
-    abrirLector(rutaPdf, null);
-    return;
-  }
-
-  asegurarRendererVuelo();
-
-  const rect = obtenerRectPantalla(malla);
-
-  if (!rect) {
-    abrirLector(rutaPdf, malla);
-    return;
-  }
-
-  // ============================================================
-  // CONFIGURACIÓN DE LA ANIMACIÓN
-  // ============================================================
-
-  const DURACION = 1100;
-
-  // Tamaño final respecto al tamaño original del libro.
-  // 1.0 = mismo tamaño
-  // 1.5 = 50% más grande
-  // 2.0 = doble
-  const ESCALA_FINAL = 1.65;
-
-  // ============================================================
-  // CÁMARA DEL VUELO
-  // ============================================================
-
-  const pxPorUnidad = rect.height / ALTO_LIBRO;
-
-  const anchoMundo = window.innerWidth / pxPorUnidad;
-  const altoMundo = window.innerHeight / pxPorUnidad;
-
-  camaraVuelo.left = -anchoMundo / 2;
-  camaraVuelo.right = anchoMundo / 2;
-  camaraVuelo.top = altoMundo / 2;
-  camaraVuelo.bottom = -altoMundo / 2;
-  camaraVuelo.updateProjectionMatrix();
-
-  rendererVuelo.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
-  );
-
-  rendererVuelo.setSize(
-    window.innerWidth,
-    window.innerHeight,
-    false
-  );
-
-  // ============================================================
-  // POSICIÓN INICIAL
-  // ============================================================
-
-  const centroPxX = rect.left + rect.width / 2;
-  const centroPxY = rect.top + rect.height / 2;
-
-  const mundoX =
-    (centroPxX - window.innerWidth / 2) / pxPorUnidad;
-
-  const mundoY =
-    -(centroPxY - window.innerHeight / 2) / pxPorUnidad;
-
-  // ============================================================
-  // CREAR CLON
-  // ============================================================
-
-  mallaVuelo = new THREE.Mesh(
-    malla.geometry,
-    malla.material
-  );
-
-  mallaVuelo.position.set(
-    mundoX,
-    mundoY,
-    0
-  );
-
-  mallaVuelo.rotation.copy(malla.rotation);
-
-  // Empieza con el mismo tamaño visual que el original
-  mallaVuelo.scale.set(1, 1, 1);
-
-  escenaVuelo.add(mallaVuelo);
-
-  // Ocultamos el libro original
-  malla.visible = false;
-
-  vueloContenedor.classList.add('visible');
-
-  // ============================================================
-  // ANIMACIÓN
-  // ============================================================
-
-  const rotacionInicial = malla.rotation.y;
-
-  // El libro primero queda ligeramente inclinado,
-  // como si lo estuviéramos sacando del estante.
-  const rotacionIntermedia =
-    rotacionInicial + Math.PI * 0.18;
-
-  const rotacionFinal = -Math.PI / 2;
-
-  const t0 = performance.now();
-
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-  }
-
-  function easeInOutCubic(t) {
-    return t < 0.5
-      ? 4 * t * t * t
-      : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  function paso(ahora) {
-    const t = Math.min(
-      1,
-      (ahora - t0) / DURACION
-    );
-
-    // ----------------------------------------------------------
-    // FASE 1
-    // 0% - 35%
-    // El libro sale del estante
-    // ----------------------------------------------------------
-
-    const tSalida = Math.min(t / 0.35, 1);
-    const eSalida = easeOutCubic(tSalida);
-
-    // Se acerca ligeramente hacia nosotros
-    mallaVuelo.position.z =
-      0.15 * eSalida;
-
-    // Empieza a girar
-    mallaVuelo.rotation.y =
-      rotacionInicial +
-      (rotacionIntermedia - rotacionInicial) * eSalida;
-
-    // ----------------------------------------------------------
-    // FASE 2
-    // 25% - 100%
-    // Crece y se dirige al centro
-    // ----------------------------------------------------------
-
-    const tCentro = Math.max(
-      0,
-      Math.min(1, (t - 0.25) / 0.75)
-    );
-
-    const eCentro = easeInOutCubic(tCentro);
-
-    mallaVuelo.position.x =
-      mundoX +
-      (0 - mundoX) * eCentro;
-
-    mallaVuelo.position.y =
-      mundoY +
-      (0 - mundoY) * eCentro;
-
-    const escala =
-      1 +
-      (ESCALA_FINAL - 1) * eCentro;
-
-    mallaVuelo.scale.setScalar(escala);
-
-    // ----------------------------------------------------------
-    // FASE 3
-    // El libro termina de girar hacia nosotros
-    // ----------------------------------------------------------
-
-    const tGiro = Math.max(
-      0,
-      Math.min(1, (t - 0.35) / 0.65)
-    );
-
-    const eGiro = easeInOutCubic(tGiro);
-
-    mallaVuelo.rotation.y =
-      rotacionIntermedia +
-      (rotacionFinal - rotacionIntermedia) * eGiro;
-
-    // ----------------------------------------------------------
-
-        
-        if (t < 1) {
-      requestAnimationFrame(paso);
-      return;
-    }
-
-    // ==========================================================
-    // ANIMACIÓN TERMINADA
-    // ==========================================================
-
-    mallaVuelo.position.x = 0;
-    mallaVuelo.position.y = 0;
-    mallaVuelo.position.z = 0.15;
-
-    mallaVuelo.scale.setScalar(ESCALA_FINAL);
-    mallaVuelo.rotation.y = rotacionFinal;
-
-    // Obtener el rectángulo EXACTO del libro ya grande
-    const rectFinal = proyectarCajaAPantalla(
-      mallaVuelo,
-      camaraVuelo,
-      rendererVuelo
-    );
-
-    // Quitamos el clon 3D
-    escenaVuelo.remove(mallaVuelo);
-    mallaVuelo = null;
-
-    vueloContenedor.classList.remove('visible');
-
-    // El lector aparece exactamente donde terminó
-    abrirLector(
-      rutaPdf,
-      malla,
-      rectFinal
-    );
-  }
-}
 
 function proyectarCajaAPantalla(malla, camara, renderer) {
   const caja = new THREE.Box3().setFromObject(malla);
@@ -1972,6 +1709,221 @@ function cargarImagen(src) {
   });
 }
 
+/* ==================================================================
+   PARCHE — animación de vuelo del libro + apertura del lector
+   ==================================================================
+   Instrucciones:
+
+   1) BORRÁ del archivo original las declaraciones duplicadas de:
+        - calcularTamanoCubierta (aparece 2 veces)
+        - construirPortadaHTML   (aparece 2 veces)
+      Dejá solo UNA versión de cada una (usá las de más abajo,
+      que sí setean --color-lomo).
+
+   2) BORRÁ por completo la función asegurarRendererVuelo() original.
+      Reemplazala por crearRendererVuelo() / destruirRendererVuelo()
+      de acá abajo.
+
+   3) Reemplazá tu función volarLibroYAbrir() completa por la
+      versión de acá abajo.
+   ================================================================== */
+
+
+// ------------------------------------------------------------------
+// (1) Únicas versiones de estas dos funciones — reemplazan a las
+//     dos copias duplicadas que tenías en el archivo original.
+// ------------------------------------------------------------------
+
+function calcularTamanoCubierta(aspectoPagina) {
+  const margenVertical = 140;
+  const altoMax = window.innerHeight - margenVertical;
+  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
+
+  let alto = altoMax;
+  let ancho = alto * aspectoPagina;
+  if (ancho > anchoMax) {
+    ancho = anchoMax;
+    alto = ancho / aspectoPagina;
+  }
+  return { anchoCubierta: ancho, altoDestino: alto };
+}
+
+function construirPortadaHTML(libro) {
+  if (libro.rutaFotoAbsoluta) {
+    portadaFlipImg.src = libro.rutaFotoAbsoluta;
+    portadaFlipImg.alt = `Portada de ${libro.titulo || 'libro'}`;
+    portadaFlipImg.style.display = 'block';
+    portadaFlipFallback.style.display = 'none';
+  } else {
+    portadaFlipImg.style.display = 'none';
+    portadaFlipFallback.style.display = 'flex';
+    portadaFlipFallback.style.background =
+      `linear-gradient(160deg, ${libro.color}, ${sombrear(libro.color, -18)})`;
+    portadaFlipTitulo.textContent = libro.titulo || '';
+    portadaFlipAutor.textContent = libro.autor || '';
+  }
+  // Esta línea es la que faltaba en tu segunda copia duplicada:
+  // sin ella el lomo se quedaba con el color por defecto.
+}
+
+
+// ------------------------------------------------------------------
+// (2) Renderer de vuelo: se crea justo antes de animar y se destruye
+//     apenas termina la animación, tal como pediste — así no queda
+//     un WebGLRenderer + canvas vivos consumiendo recursos entre
+//     una lectura y la siguiente.
+// ------------------------------------------------------------------
+
+function crearRendererVuelo() {
+  // Por las dudas, si quedó uno vivo de una animación anterior
+  // que no se cerró bien, lo destruimos antes de crear el nuevo.
+  if (rendererVuelo) destruirRendererVuelo();
+
+  escenaVuelo = new THREE.Scene();
+  camaraVuelo = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+  camaraVuelo.position.set(0, 0, 5);
+
+  rendererVuelo = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  rendererVuelo.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  vueloContenedor.appendChild(rendererVuelo.domElement);
+}
+
+function destruirRendererVuelo() {
+  if (!rendererVuelo) return;
+
+  if (mallaVuelo) {
+    escenaVuelo.remove(mallaVuelo);
+    // OJO: acá solo destruimos los MATERIALES CLONADOS del vuelo.
+    // NO tocamos mat.map (las texturas), porque esas texturas son
+    // las mismas que sigue usando el libro original en la estantería.
+    mallaVuelo.material.forEach((mat) => mat.dispose());
+    mallaVuelo = null;
+  }
+
+  rendererVuelo.dispose();
+  rendererVuelo.domElement.remove();
+  rendererVuelo = null;
+  escenaVuelo = null;
+  camaraVuelo = null;
+}
+
+
+// ------------------------------------------------------------------
+// (3) volarLibroYAbrir corregida:
+//     - crea el renderer de vuelo (en vez de reutilizar uno global)
+//     - clona los materiales del libro (no comparte el array con
+//       el mesh original, así no le pisa opacidad/estado)
+//     - ARRANCA el loop de animación con requestAnimationFrame(paso)
+//       (esto es lo que faltaba y hacía que nunca pasara nada)
+//     - al terminar el vuelo, destruye el renderer de vuelo antes
+//       de abrir el lector 2D
+// ------------------------------------------------------------------
+
+function volarLibroYAbrir(rutaPdf, malla) {
+  if (!malla) {
+    abrirLector(rutaPdf, null);
+    return;
+  }
+
+  crearRendererVuelo();
+
+  const rect = obtenerRectPantalla(malla);
+  if (!rect) {
+    destruirRendererVuelo();
+    abrirLector(rutaPdf, malla);
+    return;
+  }
+
+  const DURACION = 1100;
+  const ESCALA_FINAL = 1.65;
+
+  const pxPorUnidad = rect.height / ALTO_LIBRO;
+  const anchoMundo = window.innerWidth / pxPorUnidad;
+  const altoMundo = window.innerHeight / pxPorUnidad;
+
+  camaraVuelo.left = -anchoMundo / 2;
+  camaraVuelo.right = anchoMundo / 2;
+  camaraVuelo.top = altoMundo / 2;
+  camaraVuelo.bottom = -altoMundo / 2;
+  camaraVuelo.updateProjectionMatrix();
+
+  rendererVuelo.setSize(window.innerWidth, window.innerHeight, false);
+
+  const centroPxX = rect.left + rect.width / 2;
+  const centroPxY = rect.top + rect.height / 2;
+  const mundoX = (centroPxX - window.innerWidth / 2) / pxPorUnidad;
+  const mundoY = -(centroPxY - window.innerHeight / 2) / pxPorUnidad;
+
+  // Clon con materiales propios: así la animación de vuelo (opacidad,
+  // transform) nunca contamina al libro original de la estantería.
+  mallaVuelo = new THREE.Mesh(
+    malla.geometry,
+    malla.material.map((mat) => mat.clone())
+  );
+  mallaVuelo.position.set(mundoX, mundoY, 0);
+  mallaVuelo.rotation.copy(malla.rotation);
+  mallaVuelo.scale.set(1, 1, 1);
+  escenaVuelo.add(mallaVuelo);
+
+  malla.visible = false;
+  vueloContenedor.classList.add('visible');
+
+  const rotacionInicial = malla.rotation.y;
+  const rotacionIntermedia = rotacionInicial + Math.PI * 0.18;
+  const rotacionFinal = -Math.PI / 2;
+
+  const t0 = performance.now();
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function paso(ahora) {
+    const t = Math.min(1, (ahora - t0) / DURACION);
+
+    // FASE 1 (0%-35%): el libro sale del estante
+    const tSalida = Math.min(t / 0.35, 1);
+    const eSalida = easeOutCubic(tSalida);
+    mallaVuelo.position.z = 0.15 * eSalida;
+    mallaVuelo.rotation.y = rotacionInicial + (rotacionIntermedia - rotacionInicial) * eSalida;
+
+    // FASE 2 (25%-100%): crece y viaja al centro
+    const tCentro = Math.max(0, Math.min(1, (t - 0.25) / 0.75));
+    const eCentro = easeInOutCubic(tCentro);
+    mallaVuelo.position.x = mundoX + (0 - mundoX) * eCentro;
+    mallaVuelo.position.y = mundoY + (0 - mundoY) * eCentro;
+    mallaVuelo.scale.setScalar(1 + (ESCALA_FINAL - 1) * eCentro);
+
+    // FASE 3 (35%-100%): termina de girar hacia la cámara
+    const tGiro = Math.max(0, Math.min(1, (t - 0.35) / 0.65));
+    const eGiro = easeInOutCubic(tGiro);
+    mallaVuelo.rotation.y = rotacionIntermedia + (rotacionFinal - rotacionIntermedia) * eGiro;
+
+    if (t < 1) {
+      requestAnimationFrame(paso);
+      return;
+    }
+
+    // ---- animación de vuelo terminada ----
+    mallaVuelo.position.set(0, 0, 0.15);
+    mallaVuelo.scale.setScalar(ESCALA_FINAL);
+    mallaVuelo.rotation.y = rotacionFinal;
+
+    // Tomamos el rectángulo EXACTO donde quedó el libro ya grande,
+    // en pantalla, para que abrirLector() arranque justo ahí y la
+    // apertura (portada girando + páginas del PDF) continúe sin salto.
+    const rectFinal = proyectarCajaAPantalla(mallaVuelo, camaraVuelo, rendererVuelo);
+
+    vueloContenedor.classList.remove('visible');
+    destruirRendererVuelo(); // <- se destruye acá, no se deja vivo
+
+    abrirLector(rutaPdf, malla, rectFinal);
+  }
+
+  // ESTA LÍNEA ES LA QUE FALTABA EN TU CÓDIGO ORIGINAL:
+  requestAnimationFrame(paso);
+}
 
 })();
 
