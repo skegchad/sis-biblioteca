@@ -1892,17 +1892,19 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     portadaFlipEl.style.transform = 'rotateY(-100deg)';
     await esperar(500);
 
-    // PASO 2: calculamos el tamaño FINAL real (según aspecto del PDF)
-    // y se lo aplicamos tanto al libro real como a la tapa (misma posición
-    // en pantalla, para que el resto del giro se vea proporcional)
-    const esMovil = window.matchMedia('(max-width: 768px)').matches;
-    const alturaFrustum = esMovil ? 1.6 : 1.58;
+        // PASO 2: calculamos el tamaño FINAL real (según aspecto del PDF y
+    // el tamaño ACTUAL de la ventana) y se lo aplicamos tanto al libro
+    // real como a la tapa (misma posición en pantalla, para que el
+    // resto del giro se vea proporcional).
     const paginaRef = await pdfActual.getPage(1);
     const vpRef = paginaRef.getViewport({ scale: 1 });
     const aspectoPagina = vpRef.width / vpRef.height;
-    const altoDestino = alturaFrustum*350;
-    const anchoCubierta = altoDestino * aspectoPagina;
-    const anchoFinalInterior = modoUnaPagina ? anchoCubierta : anchoCubierta * 2;
+
+    // Reutilizamos la misma función que ya usa recalcularTamanoYRenderizar(),
+    // así el tamaño inicial y los resizes posteriores son consistentes y
+    // ambos se adaptan al innerWidth/innerHeight actuales.
+    const { anchoDestino: anchoFinalInterior, altoDestino } = calcularTamanoDestino(aspectoPagina);
+    const anchoCubierta = modoUnaPagina ? anchoFinalInterior : anchoFinalInterior / 2;
 
     const leftFinal = (window.innerWidth - anchoFinalInterior) / 2;
     const topFinal = (window.innerHeight - altoDestino) / 2;
