@@ -339,7 +339,10 @@ include ("../layout/user/part1.php");
             <button type="button" id="ver-una-pagina" class="toggle-vista">1 página</button>
             <button type="button" id="ver-dos-paginas" class="toggle-vista activo">2 páginas</button>
         </div>
-
+        <div id="cargando-libro" class="cargando-libro">
+            <div class="spinner"></div>
+            <span>Cargando libro...</span>
+        </div>
         <div id="libro-abierto" class="libro-abierto">
             <div id="paginas-interior" class="paginas-interior">
                 <div class="hoja hoja-izq">

@@ -46,6 +46,7 @@ import * as THREE from 'three';
   const infoDisponibilidad = document.getElementById('info-disponibilidad');
   const botonLeerPdf = document.getElementById('boton-leer-pdf');
   const botonLeerAnimado = document.getElementById('boton-leer-animado');
+  const cargandoLibroEl = document.getElementById('cargando-libro');
 
   // ============================================================
   // LECTOR DE PDF
@@ -81,6 +82,55 @@ const portadaFlipFallback = document.getElementById('portada-flip-fallback');
 const portadaFlipTitulo = document.getElementById('portada-flip-titulo');
 const portadaFlipAutor = document.getElementById('portada-flip-autor');
 const vueloContenedor = document.getElementById('vuelo-3d-contenedor');
+// ============================================================
+// ZOOM (lupa) sobre las páginas del lector
+// ============================================================
+const ZOOM_NIVEL = 2.2;
+let zoomActivo = false;
+let factorResolucionExtra = 1; // 1 = resolución normal; > 1 = zoom, más nítido
+ 
+libroAbiertoEl.style.cursor = 'zoom-in';
+ 
+paginasInteriorEl.addEventListener('click', (ev) => {
+  alternarZoomLector(ev);
+});
+ 
+function alternarZoomLector(ev) {
+  if (zoomActivo) {
+    restaurarZoomLector();
+    rerenderizarPaginasEnAltaResolucion(); // vuelve a la resolución normal
+    return;
+  }
+ 
+  const rect = libroAbiertoEl.getBoundingClientRect();
+  const origenX = ((ev.clientX - rect.left) / rect.width) * 100;
+  const origenY = ((ev.clientY - rect.top) / rect.height) * 100;
+ 
+  libroAbiertoEl.style.transformOrigin = `${origenX}% ${origenY}%`;
+  libroAbiertoEl.style.transform = `scale(${ZOOM_NIVEL})`;
+  libroAbiertoEl.style.cursor = 'zoom-out';
+  libroAbiertoEl.style.zIndex = '10';
+ 
+  zoomActivo = true;
+ 
+  // Re-renderizamos el PDF con más resolución real, acorde al nivel
+  // de zoom, así al agrandarlo con CSS se ve nítido y no borroso.
+  factorResolucionExtra = ZOOM_NIVEL;
+  rerenderizarPaginasEnAltaResolucion();
+}
+ 
+function restaurarZoomLector() {
+  if (!zoomActivo) return;
+  libroAbiertoEl.style.transform = 'scale(1)';
+  libroAbiertoEl.style.cursor = 'zoom-in';
+  zoomActivo = false;
+ 
+  // Al no estar zoomeado no hace falta la resolución extra —
+  // esto se aplica la próxima vez que se renderice una página
+  // (por ejemplo dentro de renderizarPaginasActuales, que ya
+  // llama a restaurarZoomLector() antes de renderizar).
+  factorResolucionExtra = 1;
+}
 
 let escenaVuelo = null;
 let camaraVuelo = null;
@@ -92,6 +142,12 @@ let totalPaginasPdf = 0;
 let paginaIzqActual = 1;
 let modoUnaPagina = window.matchMedia('(max-width: 768px)').matches;
 let mallaOrigenLectura = null; // la malla 3D que se ocultó al abrir el lector
+
+let rutaPdfActual = null; // qué PDF está abierto ahora, para guardar/leer su página
+ 
+function claveUltimaPagina(ruta) {
+  return `libro_ultima_pagina:${ruta}`;
+}
 
 function esMovilLector() {
   return window.matchMedia('(max-width: 768px)').matches;
@@ -130,7 +186,7 @@ function sincronizarAnchoPortada(anchoUnaPagina) {
 function calcularTamanoDestino(aspectoPagina) {
   const margenVertical = 140; // deja espacio para controles arriba/abajo
   const altoMax = window.innerHeight - margenVertical;
-  const anchoMax = window.innerWidth * 0.9;
+  const anchoMax = window.innerWidth * 1;
 
   if (modoUnaPagina) {
     let alto = altoMax;
@@ -186,18 +242,41 @@ function obtenerEstanteDeMallaGlobal(malla) {
 }
 
 async function renderizarPaginasActuales() {
+ 
+  restaurarZoomLector();
+ 
   if (!pdfActual) return;
-
+ 
   await renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
-
+ 
   if (!modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf) {
     canvasDer.style.visibility = 'visible';
     await renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer);
   } else {
     canvasDer.style.visibility = 'hidden';
   }
-
+ 
   actualizarIndicadorYBotones();
+ 
+  // Guardamos en qué página quedó ESTE libro, para retomarlo la
+  // próxima vez que se abra.
+  if (rutaPdfActual) {
+    try {
+      localStorage.setItem(claveUltimaPagina(rutaPdfActual), String(paginaIzqActual));
+    } catch (e) {
+      // idem arriba: si falla, no pasa nada, simplemente no se recuerda.
+    }
+  }
+}
+
+async function rerenderizarPaginasEnAltaResolucion() {
+  if (!pdfActual) return;
+ 
+  await renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
+ 
+  if (!modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf) {
+    await renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer);
+  }
 }
 
 async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
@@ -227,7 +306,7 @@ async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
   const escala = Math.min(
     anchoDisponible / escalaBase.width,
     altoDisponible / escalaBase.height
-  ) * dpr;
+  ) * dpr * factorResolucionExtra;
 
   if (!isFinite(escala) || escala <= 0) return;
 
@@ -328,6 +407,12 @@ async function recalcularTamanoYRenderizar() {
 }
 
 function cerrarLector() {
+
+  cargandoLibroEl.classList.remove('visible'); // ← LÍNEA NUEVA
+
+  restaurarZoomLector();
+  salirDePantallaCompleta();
+
   portadaFlipEl.classList.remove('oculta');
   portadaFlipEl.style.transition = 'none';
   portadaFlipEl.style.transform = 'rotateY(0deg)';
@@ -1199,11 +1284,21 @@ function cerrarLector() {
 
       // Botón "LEER" → dispara la animación del lector 3D
       botonLeerAnimado.style.display = 'flex';
-      botonLeerAnimado.onclick = () => {
-        const malla = seleccionGlobal ? seleccionGlobal.malla : null;
-        infoLibro.classList.remove('visible');
-        volarLibroYAbrir(rutaPdfAbsoluta, malla);   // ← antes decía abrirLector(rutaPdfAbsoluta, malla)
-      };
+      botonLeerAnimado.onclick = async () => {
+      const malla = seleccionGlobal ? seleccionGlobal.malla : null;
+      infoLibro.classList.remove('visible');
+
+      await solicitarPantallaCompleta();
+
+      // Un par de frames de margen: el fullscreen puede "resolver" la
+      // promesa un instante antes de que innerWidth/innerHeight ya estén
+      // actualizados del todo — esto evita esa carrera.
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+
+      volarLibroYAbrir(rutaPdfAbsoluta, malla);
+    };
     } else {
       botonLeerPdf.removeAttribute('href');
       botonLeerPdf.style.display = 'none';
@@ -1658,7 +1753,7 @@ function cargarImagen(src) {
 function calcularTamanoCubierta(aspectoPagina) {
   const margenVertical = 140;
   const altoMax = window.innerHeight - margenVertical;
-  const anchoMax = window.innerWidth * 0.42; // una sola página no pasa de ~42% del ancho
+  const anchoMax = window.innerWidth * 0.5; // una sola página no pasa de ~42% del ancho
 
   let alto = altoMax;
   let ancho = alto * aspectoPagina;
@@ -1739,6 +1834,8 @@ function destruirRendererVuelo() {
 //     - al terminar el vuelo, destruye el renderer de vuelo antes
 //       de abrir el lector 2D
 // ------------------------------------------------------------------
+
+
 
 function volarLibroYAbrir(rutaPdf, malla) {
   if (!malla) {
@@ -1885,7 +1982,18 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
   try {
     pdfActual = await pdfjsLib.getDocument(rutaPdf).promise;
     totalPaginasPdf = pdfActual.numPages;
+    rutaPdfActual = rutaPdf;
+
     paginaIzqActual = 1;
+    try {
+      const guardada = Number(localStorage.getItem(claveUltimaPagina(rutaPdf)));
+      if (guardada >= 1 && guardada <= totalPaginasPdf) {
+        paginaIzqActual = guardada;
+      }
+    } catch (e) {
+      // localStorage puede fallar (modo privado, cuota llena, etc.) —
+      // no es grave, simplemente arranca en la página 1.
+    }
 
     // PASO 1: la tapa empieza a girar
     await esperar(30);
@@ -1933,6 +2041,40 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     cerrarLector();
   }
 }
+
+function solicitarPantallaCompleta() {
+  // Si ya está en fullscreen (lo activó a mano antes), no hacemos nada
+  // y devolvemos una promesa ya resuelta.
+  if (document.fullscreenElement) return Promise.resolve();
+
+  const el = document.documentElement;
+  const solicitar =
+    el.requestFullscreen ||
+    el.webkitRequestFullscreen ||
+    el.mozRequestFullScreen ||
+    el.msRequestFullscreen;
+
+  if (!solicitar) return Promise.resolve();
+
+  return solicitar.call(el).catch(() => {
+    // el navegador lo bloqueó o no lo soporta acá; seguimos igual
+  });
+}
+ 
+function salirDePantallaCompleta() {
+  const salir =
+    document.exitFullscreen ||
+    document.webkitExitFullscreen ||
+    document.mozCancelFullScreen ||
+    document.msExitFullscreen;
+ 
+  if (document.fullscreenElement && salir) {
+    salir.call(document).catch(() => {});
+  }
+}
+ 
+ 
+
 
 })();
 
