@@ -1712,6 +1712,10 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
+.lector-navegacion {
+  bottom: 75px;
+}
+
 @media (max-width: 600px) {
   .estanteria-app .botones-lectura {
     top: 10px;

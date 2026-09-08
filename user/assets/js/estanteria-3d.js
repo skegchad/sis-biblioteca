@@ -283,57 +283,38 @@ async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
   if (numeroPagina < 1 || numeroPagina > totalPaginasPdf) return;
 
   const pagina = await pdfActual.getPage(numeroPagina);
-
   const contenedor = canvas.parentElement;
-
-  // Tamaño original de la página a escala 1
   const escalaBase = pagina.getViewport({ scale: 1 });
-
   const rectContenedor = contenedor.getBoundingClientRect();
-
-  const anchoDisponible =
-    contenedor.clientWidth || rectContenedor.width;
-
-  const altoDisponible =
-    contenedor.clientHeight || rectContenedor.height;
-
+  const anchoDisponible = contenedor.clientWidth || rectContenedor.width;
+  const altoDisponible = contenedor.clientHeight || rectContenedor.height;
   if (!anchoDisponible || !altoDisponible) return;
 
   const dpr = window.devicePixelRatio || 1;
-
-  // Calculamos cuánto debe escalarse el PDF para entrar
-  // dentro del espacio disponible.
   const escala = Math.min(
     anchoDisponible / escalaBase.width,
     altoDisponible / escalaBase.height
   ) * dpr * factorResolucionExtra;
-
   if (!isFinite(escala) || escala <= 0) return;
 
-  // IMPORTANTE:
-  // La propiedad de PDF.js se llama "scale",
-  // pero nuestra variable se llama "escala".
-  const viewport = pagina.getViewport({
-    scale: escala
-  });
+  const viewport = pagina.getViewport({ scale: escala });
 
-  // Resolución real del canvas
-  canvas.width = Math.round(viewport.width);
-  canvas.height = Math.round(viewport.height);
+  // Renderizamos en un canvas OFFSCREEN, invisible para el usuario.
+  const bufferCanvas = document.createElement('canvas');
+  bufferCanvas.width = Math.round(viewport.width);
+  bufferCanvas.height = Math.round(viewport.height);
+  await pagina.render({
+    canvasContext: bufferCanvas.getContext('2d'),
+    viewport,
+  }).promise;
 
-  // Tamaño visual en CSS
+  // Recién cuando terminó, volcamos todo de una sola vez al canvas visible.
+  // Así el canvas visible nunca pasa por un estado "en blanco".
+  canvas.width = bufferCanvas.width;
+  canvas.height = bufferCanvas.height;
   canvas.style.width = `${viewport.width / dpr}px`;
   canvas.style.height = `${viewport.height / dpr}px`;
-
-  const ctx = canvas.getContext('2d');
-
-  // Limpiamos el canvas anterior
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  await pagina.render({
-    canvasContext: ctx,
-    viewport: viewport
-  }).promise;
+  canvas.getContext('2d').drawImage(bufferCanvas, 0, 0);
 }
 
 
