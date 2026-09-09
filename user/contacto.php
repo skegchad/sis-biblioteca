@@ -14,4 +14,9 @@ if($cargo=="Administrador"){
 include ("../layout/user/part1.php");
 ?>
 
+<?php 
+include ("../layout/user/contacto.php");
+?>
+
+
 <?php include("../ai/chat_widget.php"); ?>
