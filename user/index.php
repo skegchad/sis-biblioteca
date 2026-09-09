@@ -94,9 +94,9 @@ include ("../layout/user/part1.php");
     <div class="banner-biblioteca-wrapper" id="bannerWrapper">
 
         <div class="banner-slides-track" id="slidesTrack">
-            <div class="banner-slide" data-file="libross.jpeg" style="background-image: linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross.jpeg'); ?>');"></div>
+            <div class="banner-slide" data-file="libross.jpeg" style="background-image: url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross.jpeg'); ?>');"></div>
 
-            <div class="banner-slide" data-file="libross2.jpeg" style="background-image: linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross2.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross2.jpeg'); ?>');"></div>
+            <div class="banner-slide" data-file="libross2.jpeg" style="background-image: url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross2.jpeg?v=<?php echo filemtime($ROOT . 'public/assets/img/grupoProyecto/libross2.jpeg'); ?>');"></div>
         </div>
 
         <span class="texto-banner">Biblioteca P. Luigi Ghezzi</span>
@@ -255,74 +255,7 @@ include ("../layout/user/part1.php");
 
     <footer>
       <div class="container">
-        <div class="row">
-          <div class="span4">
-            <div class="widget">
-              <h5 class="widgetheading">Browse pages</h5>
-              <ul class="link-list">
-                <li><a href="#">Our company</a></li>
-                <li><a href="#">Terms and conditions</a></li>
-                <li><a href="#">Privacy policy</a></li>
-                <li><a href="#">Press release</a></li>
-                <li><a href="#">What we have done</a></li>
-                <li><a href="#">Our support forum</a></li>
-              </ul>
-
-            </div>
-          </div>
-          <div class="span4">
-            <div class="widget">
-              <h5 class="widgetheading">Get in touch</h5>
-              <address>
-							<strong>Eterna company Inc.</strong><br>
-							Somestreet 200 VW, Suite Village A.001<br>
-							Jakarta 13426 Indonesia
-						</address>
-              <p>
-                <i class="icon-phone"></i> (123) 456-7890 - (123) 555-7891 <br>
-                <i class="icon-envelope-alt"></i> email@domainname.com
-              </p>
-            </div>
-          </div>
-          <div class="span4">
-            <div class="widget">
-              <h5 class="widgetheading">Subscribe newsletter</h5>
-              <p>
-                Keep updated for new releases and freebies. Enter your e-mail and subscribe to our newsletter.
-              </p>
-              <form class="subscribe">
-                <div class="input-append">
-                  <input class="span2" id="appendedInputButton" type="text">
-                  <button class="btn btn-theme" type="submit">Subscribe</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="sub-footer">
-        <div class="container">
-          <div class="row">
-            <div class="span6">
-              <div class="copyright">
-                <p><span>&copy; Eterna company. All right reserved</span></p>
-              </div>
-
-            </div>
-
-            <div class="span6">
-              <div class="credits">
-                <!--
-                  All the links in the footer should remain intact.
-                  You can delete the links only if you purchased the pro version.
-                  Licensing information: https://bootstrapmade.com/license/
-                  Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/buy/?theme=Eterna
-                -->
-                Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <p>Sergio hizo todo atte:Sergio e Ibarra.
       </div>
     </footer>
   </div>
@@ -527,7 +460,7 @@ include ("../layout/user/part1.php");
           if (data.success) {
               const nuevaUrl = "<?php echo $URL; ?>/public/assets/img/grupoProyecto/" + nombreArchivo + "?v=" + new Date().getTime();
               slideActivo.style.backgroundImage =
-                  `linear-gradient(rgba(42, 0, 192, 0.3), rgba(255, 0, 0, 0.3)), url('${nuevaUrl}')`;
+                  ` url('${nuevaUrl}')`;
           } else {
               alert(data.message || 'Error al subir el banner');
           }
@@ -631,7 +564,7 @@ include ("../layout/user/part1.php");
     border-radius:12px;
     background-size:cover;
     background-position:center;
-    background-color: #0d6efd;
+    background-color: #397ce0;
     transition:transform .25s;
     box-shadow:0 4px 12px rgba(0,0,0,.15);
   }

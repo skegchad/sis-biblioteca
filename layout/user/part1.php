@@ -194,7 +194,7 @@
 =========================== */
 
 .header-principal{
-    background:#0d6efd;
+    background:#397ce0;
     box-shadow:0 2px 10px rgba(0,0,0,.15);
 }
 
@@ -375,8 +375,7 @@
     height:280px;
     margin:35px auto;
     border-radius:12px;
-    background-image:
-    linear-gradient(rgba(42,0,192,.25),rgba(255,0,0,.25)),
+,
     url('<?php echo $URL; ?>/public/assets/img/grupoProyecto/libross.jpeg');
     background-size:cover;
     background-position:center;
