@@ -268,6 +268,7 @@
               data-accordion="false"
               id="navigation"
             >
+              
               <li class="nav-item" data-menu-id="usuarios">
                 <a href="#" class="nav-link active">
                   <i class="nav-icon bi bi-people-fill"></i>
@@ -302,6 +303,12 @@
               id="navigation"
             >
 
+              <li class="nav-item">
+                <a href="<?php echo $URL; ?>/admin/mensajes" class="nav-link active">
+                  <i class="nav-icon bi bi-chat-right-text-fill"></i>
+                  <p>Mensajes</p>
+                </a>
+              </li>
               <!-- ===== SECCIÓN LIBROS (contenedor principal) ===== -->
               <li class="nav-item" data-menu-id="libros">
                 <a href="#" class="nav-link active">

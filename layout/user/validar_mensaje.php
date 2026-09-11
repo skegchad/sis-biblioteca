@@ -67,8 +67,8 @@ if (strlen($mensaje) > 3000) {
 // ---------------------------------------------------------------
 try {
     $query = $pdo->prepare(
-        'INSERT INTO mensajes_contacto (id_usuario, email, asunto, mensaje, fyh_envio)
-         VALUES (:id_usuario, :email, :asunto, :mensaje, NOW())'
+        'INSERT INTO mensajes (id_usuario, email, asunto, mensaje, fyh_envio)
+        VALUES (:id_usuario, :email, :asunto, :mensaje, NOW())'
     );
  
     $query->bindParam(':id_usuario', $id, PDO::PARAM_INT);
