@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 31-08-2026 a las 19:56:56
+-- Tiempo de generación: 11-09-2026 a las 18:46:29
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -110,6 +110,20 @@ INSERT INTO `libro_tema` (`id_libro`, `tema_id`) VALUES
 (11, 10),
 (11, 11),
 (11, 31);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `mensajes`
+--
+
+CREATE TABLE `mensajes` (
+  `id_usuario` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `asunto` varchar(150) DEFAULT NULL,
+  `mensaje` text DEFAULT NULL,
+  `fyh_envio` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 -- --------------------------------------------------------
 
