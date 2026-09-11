@@ -315,9 +315,9 @@ include ("../layout/user/part1.php");
                   html: `
                       <p>Para obtener un mejor resultado en el carrusel:</p>
                       <ul style="text-align:left;display:inline-block;">
-                          <li>📐 Relación de aspecto recomendada: <b>4:1</b>.</li>
-                          <li>🖼️ Formatos permitidos: JPG, PNG o WEBP.</li>
-                          <li>📦 Tamaño máximo: 5 MB.</li>
+                          <li>Relación de aspecto recomendada: <b>4:1</b>.</li>
+                          <li>Formatos permitidos: JPG, PNG o WEBP.</li>
+                          <li>Tamaño máximo: 5 MB.</li>
                       </ul>
                   `,
                   icon: 'info',

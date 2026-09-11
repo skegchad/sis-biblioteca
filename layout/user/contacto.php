@@ -142,7 +142,7 @@
             <div class="status alert-success"></div>
             <form id="main-contact-form" action="<?php echo $URL; ?>/layout/user/validar_mensaje.php" method="post">
 				<input type="text" name="nombre" class="form-control" required placeholder="Nombre" value="<?php echo $nombre;?>" disabled>
-                <input type="text" name="nombre" class="form-control" required placeholder="Nombre" value="<?php echo $nombreusuario;?>" disabled>
+                <input type="text" name="nombreusuario" class="form-control" required placeholder="Nombre" value="<?php echo $nombreusuario;?>" disabled>
                 <input type="email" name="email" class="form-control" required placeholder="Email">
                 <input type="text" name="asunto" class="form-control" required placeholder="Asunto">
                 <textarea name="mensaje" required class="form-control" placeholder="Escribe tu mensaje"></textarea>
