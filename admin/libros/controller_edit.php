@@ -1,6 +1,8 @@
 <?php
 include ("../../app/config/config.php");
 include ("../../app/config/conexion.php");
+require_once ("../../app/helpers/cache_libro.php");
+
 
 // Solo aceptar peticiones POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -76,6 +78,23 @@ if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
         $rutaFoto = "public/uploads/img/libros/" . $nombreArchivo;
 
     }
+}
+
+// ---------- Caché del libro ----------
+
+$paginas = (int)($_POST['paginas'] ?? 0);
+
+$grosorCache = calcularGrosorCache($paginas);
+
+if ($rutaFoto !== "public/uploads/img/libros/default.jpg") {
+
+    $rutaFotoAbsoluta = __DIR__ . "/../../" . $rutaFoto;
+
+    $colorCache = calcularColorDominante($rutaFotoAbsoluta);
+
+} else {
+
+    $colorCache = '#8C7355';
 }
 
 
