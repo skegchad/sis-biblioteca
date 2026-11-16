@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-09-2026 a las 20:19:27
+-- Tiempo de generación: 16-11-2026 a las 18:29:14
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -114,6 +114,45 @@ INSERT INTO `libro_tema` (`id_libro`, `tema_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `listas_usuario`
+--
+
+CREATE TABLE `listas_usuario` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `nombre` varchar(40) NOT NULL,
+  `tipo` enum('leyendo','quiero_leer','leido','favoritos','personalizada') NOT NULL DEFAULT 'personalizada',
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `listas_usuario`
+--
+
+INSERT INTO `listas_usuario` (`id`, `usuario_id`, `nombre`, `tipo`, `fecha_creacion`) VALUES
+(1, 11, 'Leyendo', 'leyendo', '2026-11-13 16:12:46'),
+(2, 11, 'Quiero leer', 'quiero_leer', '2026-11-13 16:12:47'),
+(3, 11, 'Ya leído', 'leido', '2026-11-13 16:12:48'),
+(4, 11, 'Favoritos', 'favoritos', '2026-11-13 16:12:48'),
+(5, 11, 'jjjjjj', 'personalizada', '2026-11-13 16:28:11'),
+(6, 11, 'sigma boy 2', 'personalizada', '2026-11-13 16:28:18');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `lista_libros`
+--
+
+CREATE TABLE `lista_libros` (
+  `id` int(11) NOT NULL,
+  `lista_id` int(11) NOT NULL,
+  `libro_id` int(11) NOT NULL,
+  `fecha_agregado` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `mensajes`
 --
 
@@ -124,6 +163,15 @@ CREATE TABLE `mensajes` (
   `mensaje` text DEFAULT NULL,
   `fyh_envio` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `mensajes`
+--
+
+INSERT INTO `mensajes` (`id_usuario`, `email`, `asunto`, `mensaje`, `fyh_envio`) VALUES
+(11, 'chae30865@gmail.com', 'fgdgf', 'io9iom,', '2026-09-11 11:51:55'),
+(11, 'chae308265@gmail.com', 'fgdgf', '3533535', '2026-09-11 12:16:18'),
+(3, 'soyburro@gmail.com', 'aaaa', 'OKKEEEY Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\r\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', '2026-09-11 12:29:10');
 
 -- --------------------------------------------------------
 
@@ -144,9 +192,7 @@ INSERT INTO `noticias` (`id_noticia`, `ruta_foto`) VALUES
 (1, 'public/uploads/img/noticias/noticia1.jpg'),
 (2, 'public/uploads/img/noticias/noticia2.jpg'),
 (3, 'public/uploads/img/noticias/noticia3.jpg'),
-(8, 'public/uploads/img/noticias/noticia8.jpg'),
-(9, 'public/uploads/img/noticias/noticia9.jpg'),
-(10, 'public/uploads/img/noticias/noticia10.jpg');
+(11, 'public/uploads/img/noticias/noticia11.png');
 
 -- --------------------------------------------------------
 
@@ -237,27 +283,25 @@ CREATE TABLE `tb_libros` (
   `fyh_creacion` datetime DEFAULT NULL,
   `fyh_actualizacion` datetime DEFAULT NULL,
   `fyh_eliminacion` datetime DEFAULT NULL,
-  `estado` varchar(11) NOT NULL DEFAULT '1',
-  `grosor_cache` decimal(5,3) DEFAULT NULL COMMENT 'Grosor del lomo 3D, precalculado',
-  `color_cache` varchar(32) DEFAULT NULL COMMENT 'Color dominante de la portada, precalculado'
+  `estado` varchar(11) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 --
 -- Volcado de datos para la tabla `tb_libros`
 --
 
-INSERT INTO `tb_libros` (`id_libro`, `titulo`, `autor`, `descripcion`, `idioma`, `disponibilidad`, `temas`, `tipo`, `edicion`, `ano`, `cdd`, `bloque`, `categoria`, `subcategoria`, `seccion`, `editorial`, `ejemplares`, `prestados`, `ruta_pdf`, `ruta_foto`, `fyh_creacion`, `fyh_actualizacion`, `fyh_eliminacion`, `estado`, `grosor_cache`, `color_cache`) VALUES
-(1, 'Así habló Zaratustra', 'Friedrich Nietzsche', 'Obra de género híbrido —poema, relato, ensayo filosófico— que expone las principales ideas filosóficas de Nietzsche', 'Español', 1, 'Ideas, Crítica Religiosa, Cristianismo, Filosofia', 'Obra Filosofica', 'Educ.ar', '1886', '193', '100', 'Filosofía y Psicología', 'Filosofía Moderna', 'A1', 'Educ.ar', 3, 2, 'public/uploads/pdf/libros/libro_6a4afdbff2a95.pdf', 'public/uploads/img/libros/portadaZaratustra.png', '2026-07-05 19:58:39', '2026-07-22 23:58:52', NULL, '1', NULL, NULL),
-(2, 'La metamorfosis', 'Franz Kafka', 'La metamorfosis (1915), escrita por Franz Kafka, narra la historia de Gregorio Samsa, un viajante de comercio que despierta una mañana convertido en un monstruoso insecto. La obra explora el impacto de este suceso en su vida y en la de su familia, reflejando temas como la alienación, el aislamiento y el peso de la responsabilidad.', 'Español', 0, 'Identidad, Soledad, Existencial, Culpa', 'Novela', 'Libricultura', '1915', '833', '800', 'Literatura Retorica', 'Novela', 'A1', 'Editorial alma', 1, 1, 'public/uploads/pdf/libros/libro_6a51cf4abce30.pdf', 'public/uploads/img/libros/libro_6a51cf4abcc31.png', '2026-07-11 00:06:18', '2026-07-22 21:21:18', NULL, '1', NULL, NULL),
-(3, 'Anticristo', 'Friedrich Nietzsche', 'Obra filosófica en la que Friedrich Nietzsche realiza una crítica profunda al cristianismo, la moral tradicional y los valores occidentales. El autor propone una reevaluación de los valores humanos y defiende una visión de la vida basada en la afirmación, la fuerza creadora y la superación del ser humano.', 'Español', 1, 'Filosofia, Crítica Religiosa, Moral, Valores, Nihilismo, Cristianismo', 'Obra Filosofica', 'Biblioteca Digital del ILCE', '1895', '193', '100', 'Filosofía y Psicología', 'Filosofía Moderna', 'A1', 'Biblioteca Digital del ILCE', 1, 0, 'public/uploads/pdf/libros/libro_6a51e241ef253.pdf', 'public/uploads/img/libros/libro_6a51e241eeeb8.png', '2026-07-11 01:27:13', '2026-07-20 18:03:12', NULL, '1', NULL, NULL),
-(4, 'aa', 'aa', 'aaa', 'Español', 1, 'Aventura', 'Novela', 'Libricultura', '1', '1223', '122', 'Ciencias Sociales', 'Sociología', '1212', 'Educ.ar', 12, 1, NULL, NULL, '2026-07-11 23:36:38', NULL, '2026-07-11 23:40:58', '0', NULL, NULL),
-(5, 'The C Programming Language', 'Brian W. Kernighan y Dennis M. Ritchie', 'El libro \"The C Programming Language\" (conocido como K&R), escrito por Brian Kernighan y Dennis Ritchie (creador del lenguaje), es la guía de referencia definitiva y el texto fundamental que popularizó el lenguaje C.', 'Inglés', 1, 'Programación,C,Computadoras,Informática', 'Enciclopedia', 'Prentice Hall', '1978', '005.133', '000', 'Tecnología', 'Programación', 'B1', 'Prentice Hall', 1, 0, 'public/uploads/pdf/libros/libro_6a531ca17acfe.pdf', 'public/uploads/img/libros/libro_6a531ca17aa85.png', '2026-07-11 23:48:33', NULL, NULL, '1', NULL, NULL),
-(6, 'Omori Manga - Vol 1', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934a83125e1.pdf', 'public/uploads/img/libros/libro_6a934a83123ee.jpg', '2026-08-31 11:59:42', NULL, NULL, '1', NULL, NULL),
-(7, 'Omori Manga - Vol 2', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Seinen,Psicología,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934b33782ff.pdf', 'public/uploads/img/libros/libro_6a934b3377f8b.jpg', '2026-08-31 12:11:48', NULL, NULL, '1', NULL, NULL),
-(8, 'Omori Manga - Vol 3', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934bb2d726d.pdf', 'public/uploads/img/libros/libro_6a934bb2d70b0.jpg', '2026-08-31 12:35:17', NULL, NULL, '1', NULL, NULL),
-(9, 'Omori Manga - Vol 4', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934c01e5b76.pdf', 'public/uploads/img/libros/libro_6a934c01e5987.jpg', '2026-08-31 12:39:49', NULL, NULL, '1', NULL, NULL),
-(10, 'Omori Manga - Vol 5 Cap 19-20', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Seinen, Adaptacion, Terror, Psicología', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934c990bdcb.pdf', 'public/uploads/img/libros/libro_6a934c990bbf4.png', '2026-08-31 12:42:12', '2026-08-31 12:42:29', NULL, '1', NULL, NULL),
-(11, 'El Principito', 'Antoine de Saint-Exupéry', 'El Principito, escrito por Antoine de Saint-Exupéry, narra la historia de un piloto cuyo avión sufre una avería en medio del desierto del Sahara, donde conoce a un pequeño y enigmático príncipe proveniente de un lejano asteroide. A través de sus conversaciones, el niño le relata su travesía por distintos planetas habitados por adultos absurdos y su llegada a la Tierra, un viaje de aprendizaje donde descubre de la mano de un zorro el valor del amor, la amistad y que lo esencial es invisible para los ojos.', 'Español', 1, 'Aventura,Soledad,Identidad,Relaciones Humanas', 'Novela', 'Fundacion Editorial El perro y La rana', '1943', '843', '800', 'Literatura Retorica', 'Novela', 'B2', 'Fundacion Editorial El perro y La rana', 1, 0, 'public/uploads/pdf/libros/libro_6a946f134536b.pdf', 'public/uploads/img/libros/libro_6a946f1344e6c.png', '2026-08-31 12:46:24', NULL, NULL, '1', NULL, NULL);
+INSERT INTO `tb_libros` (`id_libro`, `titulo`, `autor`, `descripcion`, `idioma`, `disponibilidad`, `temas`, `tipo`, `edicion`, `ano`, `cdd`, `bloque`, `categoria`, `subcategoria`, `seccion`, `editorial`, `ejemplares`, `prestados`, `ruta_pdf`, `ruta_foto`, `fyh_creacion`, `fyh_actualizacion`, `fyh_eliminacion`, `estado`) VALUES
+(1, 'Así habló Zaratustra', 'Friedrich Nietzsche', 'Obra de género híbrido —poema, relato, ensayo filosófico— que expone las principales ideas filosóficas de Nietzsche', 'Español', 1, 'Ideas, Crítica Religiosa, Cristianismo, Filosofia', 'Obra Filosofica', 'Educ.ar', '1886', '193', '100', 'Filosofía y Psicología', 'Filosofía Moderna', 'A1', 'Educ.ar', 3, 2, 'public/uploads/pdf/libros/libro_6a4afdbff2a95.pdf', 'public/uploads/img/libros/portadaZaratustra.png', '2026-07-05 19:58:39', '2026-07-22 23:58:52', NULL, '1'),
+(2, 'La metamorfosis', 'Franz Kafka', 'La metamorfosis (1915), escrita por Franz Kafka, narra la historia de Gregorio Samsa, un viajante de comercio que despierta una mañana convertido en un monstruoso insecto. La obra explora el impacto de este suceso en su vida y en la de su familia, reflejando temas como la alienación, el aislamiento y el peso de la responsabilidad.', 'Español', 0, 'Identidad, Soledad, Existencial, Culpa', 'Novela', 'Libricultura', '1915', '833', '800', 'Literatura Retorica', 'Novela', 'A1', 'Editorial alma', 1, 1, 'public/uploads/pdf/libros/libro_6a51cf4abce30.pdf', 'public/uploads/img/libros/libro_6a51cf4abcc31.png', '2026-07-11 00:06:18', '2026-07-22 21:21:18', NULL, '1'),
+(3, 'Anticristo', 'Friedrich Nietzsche', 'Obra filosófica en la que Friedrich Nietzsche realiza una crítica profunda al cristianismo, la moral tradicional y los valores occidentales. El autor propone una reevaluación de los valores humanos y defiende una visión de la vida basada en la afirmación, la fuerza creadora y la superación del ser humano.', 'Español', 1, 'Filosofia, Crítica Religiosa, Moral, Valores, Nihilismo, Cristianismo', 'Obra Filosofica', 'Biblioteca Digital del ILCE', '1895', '193', '100', 'Filosofía y Psicología', 'Filosofía Moderna', 'A1', 'Biblioteca Digital del ILCE', 1, 0, 'public/uploads/pdf/libros/libro_6a51e241ef253.pdf', 'public/uploads/img/libros/libro_6a51e241eeeb8.png', '2026-07-11 01:27:13', '2026-07-20 18:03:12', NULL, '1'),
+(4, 'aa', 'aa', 'aaa', 'Español', 1, 'Aventura', 'Novela', 'Libricultura', '1', '1223', '122', 'Ciencias Sociales', 'Sociología', '1212', 'Educ.ar', 12, 1, NULL, NULL, '2026-07-11 23:36:38', NULL, '2026-07-11 23:40:58', '0'),
+(5, 'The C Programming Language', 'Brian W. Kernighan y Dennis M. Ritchie', 'El libro \"The C Programming Language\" (conocido como K&R), escrito por Brian Kernighan y Dennis Ritchie (creador del lenguaje), es la guía de referencia definitiva y el texto fundamental que popularizó el lenguaje C.', 'Inglés', 1, 'Programación,C,Computadoras,Informática', 'Enciclopedia', 'Prentice Hall', '1978', '005.133', '000', 'Tecnología', 'Programación', 'B1', 'Prentice Hall', 1, 0, 'public/uploads/pdf/libros/libro_6a531ca17acfe.pdf', 'public/uploads/img/libros/libro_6a531ca17aa85.png', '2026-07-11 23:48:33', NULL, NULL, '1'),
+(6, 'Omori Manga - Vol 1', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934a83125e1.pdf', 'public/uploads/img/libros/libro_6a934a83123ee.jpg', '2026-08-31 11:59:42', NULL, NULL, '1'),
+(7, 'Omori Manga - Vol 2', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Seinen,Psicología,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934b33782ff.pdf', 'public/uploads/img/libros/libro_6a934b3377f8b.jpg', '2026-08-31 12:11:48', NULL, NULL, '1'),
+(8, 'Omori Manga - Vol 3', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934bb2d726d.pdf', 'public/uploads/img/libros/libro_6a934bb2d70b0.jpg', '2026-08-31 12:35:17', NULL, NULL, '1'),
+(9, 'Omori Manga - Vol 4', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Adaptacion,Psicología,Seinen,Terror', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934c01e5b76.pdf', 'public/uploads/img/libros/libro_6a934c01e5987.jpg', '2026-08-31 12:39:49', NULL, NULL, '1'),
+(10, 'Omori Manga - Vol 5 Cap 19-20', 'Omocat, Nui Konoito', 'El manga de OMORI es una obra de terror psicológico ilustrada por Nui Konoito y escrita por OMOCAT, adaptando de forma directa el aclamado videojuego homónimo. La historia sigue a Sunny, un joven atormentado y aislado del mundo tras un trágico incidente familiar, quien divide su realidad entre los tensos reencuentros con sus antiguos amigos en el mundo real y las surrealistas aventuras de su alter ego, Omori, en un colorido pero siniestro mundo de ensueño llamado Headspace. A través de una narrativa visualmente impactante, el manga profundiza en la depresión, la culpa y la crudeza del trauma, ofreciendo una perspectiva más expresiva y compacta idónea tanto para fanáticos del juego como para nuevos lectores.', 'Español', 1, 'Seinen, Adaptacion, Terror, Psicología', 'Manga', 'Milky Way ediciones', '2024', '741.5952', '700', 'Artes', 'Novelas Gráficas', 'B2', 'Milky Way ediciones', 1, 0, 'public/uploads/pdf/libros/libro_6a934c990bdcb.pdf', 'public/uploads/img/libros/libro_6a934c990bbf4.png', '2026-08-31 12:42:12', '2026-08-31 12:42:29', NULL, '1'),
+(11, 'El Principito', 'Antoine de Saint-Exupéry', 'El Principito, escrito por Antoine de Saint-Exupéry, narra la historia de un piloto cuyo avión sufre una avería en medio del desierto del Sahara, donde conoce a un pequeño y enigmático príncipe proveniente de un lejano asteroide. A través de sus conversaciones, el niño le relata su travesía por distintos planetas habitados por adultos absurdos y su llegada a la Tierra, un viaje de aprendizaje donde descubre de la mano de un zorro el valor del amor, la amistad y que lo esencial es invisible para los ojos.', 'Español', 1, 'Aventura,Soledad,Identidad,Relaciones Humanas', 'Novela', 'Fundacion Editorial El perro y La rana', '1943', '843', '800', 'Literatura Retorica', 'Novela', 'B2', 'Fundacion Editorial El perro y La rana', 1, 0, 'public/uploads/pdf/libros/libro_6a946f134536b.pdf', 'public/uploads/img/libros/libro_6a946f1344e6c.png', '2026-08-31 12:46:24', NULL, NULL, '1');
 
 -- --------------------------------------------------------
 
@@ -288,7 +332,7 @@ CREATE TABLE `tb_usuarios` (
 
 INSERT INTO `tb_usuarios` (`id_usuario`, `nombre_completo`, `apellidos`, `cedula`, `nombre_usuario`, `password`, `foto`, `cargo`, `fyh_creacion`, `fyh_actualizacion`, `fyh_eliminacion`, `curso`, `paralelo`, `estado`) VALUES
 (1, 'Sergio', 'Martínez', '0951348952', 'admin', '$2y$10$YjDjXATMLc8rmq4TlL9ZWeHih0GA350gWb9Fb9tjcGlshRxIT9DRy', 'public/uploads/img/admin/usuario1.webp', 'Administrador', '2026-06-10 23:16:13', '2026-06-28 12:20:40', NULL, NULL, NULL, '1'),
-(3, 'DIEGO', 'CEREZO', '6767676767', 'ELBURRO67', '$2y$10$zccD.DVJldWy/97DjnsW7uCX88yA8JBNLQvsTKLyLioYAAq6DXyg6', 'public/uploads/img/admin/user_6a4157c013d5f.jpg', 'Estudiante', '2026-06-21 01:03:00', '2026-06-28 12:20:00', NULL, '3ro Bachillerato', 'INFORMÁTICA', '1'),
+(3, 'DIEGO', 'CEREZO', '6767676767', 'ELBURRO67', '$2y$10$YjDjXATMLc8rmq4TlL9ZWeHih0GA350gWb9Fb9tjcGlshRxIT9DRy', 'public/uploads/img/admin/usuario3.png', 'Estudiante', '2026-06-21 01:03:00', '2026-06-28 12:20:00', NULL, '3ro Bachillerato', 'INFORMÁTICA', '1'),
 (4, 'Jose Maria', 'Nevarez', '9999999999', 'jose', '$2y$10$QQ4Wvv08uJ/530L/NcahqeRS7xlUrYt4NqoOkQpcZBur1bVoAv0lO', NULL, 'Administrador', '2026-06-21 01:32:00', NULL, NULL, NULL, NULL, '1'),
 (5, 'Juan', 'Cabello', '555555555', 'aaaaaa', '$2y$10$uAsdd9fow.T.yGxZ05Nmn.1jpR5jIRmrAWL7HnJr2jSsyW/Ky41MK', NULL, 'Estudiante', '2026-06-21 01:45:21', NULL, NULL, '10mo', 'C', '1'),
 (6, 'KRISTYN', 'LUNA', '12121212', 'BURRA', '$2y$10$spOCic1biV5LwH3/TD.y9u6cdOuJLwpgNjLphv699UT/sopbyIJfm', NULL, 'Estudiante', '2026-06-21 03:00:28', NULL, NULL, '3ro Bachillerato', 'INFORMÁTICA', '1'),
@@ -396,6 +440,20 @@ ALTER TABLE `libro_tema`
   ADD KEY `tema_id` (`tema_id`);
 
 --
+-- Indices de la tabla `listas_usuario`
+--
+ALTER TABLE `listas_usuario`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_usuario_nombre` (`usuario_id`,`nombre`);
+
+--
+-- Indices de la tabla `lista_libros`
+--
+ALTER TABLE `lista_libros`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_lista_libro` (`lista_id`,`libro_id`);
+
+--
 -- Indices de la tabla `noticias`
 --
 ALTER TABLE `noticias`
@@ -452,10 +510,22 @@ ALTER TABLE `categorias`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT de la tabla `listas_usuario`
+--
+ALTER TABLE `listas_usuario`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `lista_libros`
+--
+ALTER TABLE `lista_libros`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `noticias`
 --
 ALTER TABLE `noticias`
-  MODIFY `id_noticia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id_noticia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `prestamos`
@@ -503,6 +573,12 @@ ALTER TABLE `tipos`
 ALTER TABLE `libro_tema`
   ADD CONSTRAINT `libro_tema_ibfk_1` FOREIGN KEY (`id_libro`) REFERENCES `tb_libros` (`id_libro`) ON DELETE CASCADE,
   ADD CONSTRAINT `libro_tema_ibfk_2` FOREIGN KEY (`tema_id`) REFERENCES `temas` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `lista_libros`
+--
+ALTER TABLE `lista_libros`
+  ADD CONSTRAINT `lista_libros_ibfk_1` FOREIGN KEY (`lista_id`) REFERENCES `listas_usuario` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `prestamos`
