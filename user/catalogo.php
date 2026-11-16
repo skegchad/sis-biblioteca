@@ -20,7 +20,86 @@ include ("../layout/user/part1.php");
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria.css">
+<style>
+    a.btn-mis-libros,
+a.btn-mis-libros:link,
+a.btn-mis-libros:visited,
+a.btn-mis-libros:hover,
+a.btn-mis-libros:focus,
+a.btn-mis-libros:active {
+    color: #2b2b2b !important;
+    text-decoration: none !important;
+    font-weight: 400 !important;
+}
 
+a.btn-mis-libros {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid #d9d0b8;
+    background-color: #f5f2ea;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+a.btn-mis-libros:hover {
+    background-color: #ebe5d3;
+    border-color: #b8a77a;
+}
+
+a.btn-mis-libros:active {
+    transform: scale(0.97);
+}
+/* ===== Agregar a lista / estado de lectura ===== */
+.la-caja { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.la-btn {
+    padding: 9px 14px; border-radius: 999px; border: 1px solid #d9d0b8;
+    background: #f5f2ea; color: #2b2b2b; font-size: .82rem; cursor: pointer;
+    box-sizing: border-box; transition: background .2s, border-color .2s;
+}
+.la-btn:hover { background: #ebe5d3; }
+.la-btn.azul { background: #4A90E2; border-color: #4A90E2; color: #fff; }
+.la-btn.activo { background: #4A90E2; border-color: #4A90E2; color: #fff; }
+.la-estados { display: flex; gap: 6px; flex-wrap: wrap; }
+.la-estados .la-btn { flex: 1 1 auto; padding: 8px 10px; font-size: .76rem; }
+.la-fav.activo { background: #e0457b; border-color: #e0457b; }
+
+.la-fondo {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none;
+    align-items: center; justify-content: center; padding: 16px; z-index: 100000;
+}
+.la-fondo.ver { display: flex; }
+.la-panel {
+    background: #f5f2ea; border: 1px solid #d9d0b8; border-radius: 16px; padding: 20px;
+    width: 100%; max-width: 380px; max-height: 80vh; overflow-y: auto; box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+.la-panel h3 { text-align: center; font-size: 1.05rem; margin: 0 0 12px; }
+.la-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff;
+    border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-size: .9rem;
+}
+.la-item input { width: 18px; height: 18px; cursor: pointer; }
+.la-vacio { text-align: center; color: #6b7280; font-size: .85rem; margin: 10px 0; }
+.la-nueva { display: flex; gap: 8px; margin-top: 12px; }
+.la-nueva input {
+    flex: 1; min-width: 0; padding: 9px 14px; border-radius: 999px;
+    border: 1px solid #d9d0b8; background: #fff; font-size: .85rem; box-sizing: border-box;
+}
+.la-cerrar { display: block; margin: 14px auto 0; }
+.la-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 999px;
+    font-size: .85rem; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 100001;
+}
+.la-toast.ver { opacity: 1; }
+</style>
 <div class="estanteria-app">
 
     <!-- ============================================================
@@ -39,7 +118,7 @@ include ("../layout/user/part1.php");
 <div class="controles-catalogo">
 
     <div class="busqueda-catalogo">
-
+<a href="mis_libros.php" class="btn-mis-libros">Mis libros</a>
         <input
             type="text"
             id="f-buscar"
@@ -308,7 +387,10 @@ include ("../layout/user/part1.php");
             </button>
         </div>
         <div class="info-libro-contenido">
-            <div class="info-portada-container"><img id="info-portada" src="" alt="Portada del libro"></div>
+  <div class="info-portada-container">
+    <img id="info-portada" src="" alt="Portada del libro">
+    <div id="lista-acciones"></div>
+</div>
             <div class="info-datos">
                 <h2 id="info-titulo"></h2>
                 <p class="info-autor" id="info-autor"></p>
@@ -389,7 +471,126 @@ include ("../layout/user/part1.php");
     }
 }
 </script>
+<script>
+const API_LISTAS = 'listas/api.php';
+const ESTADOS = [
+    { key: 'leyendo',     label: 'Leyendo' },
+    { key: 'quiero_leer', label: 'Quiero leer' },
+    { key: 'leido',       label: 'Ya leído' }
+];
 
+function apiL(d) {
+    return fetch(API_LISTAS, { method: 'POST', body: new URLSearchParams(d) }).then(r => r.json());
+}
+function laEl(tag, clase, texto) {
+    const e = document.createElement(tag);
+    if (clase) e.className = clase;
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+}
+function laAviso(txt) {
+    let t = document.getElementById('laToast');
+    if (!t) { t = laEl('div', 'la-toast'); t.id = 'laToast'; document.body.appendChild(t); }
+    t.textContent = txt; t.classList.add('ver');
+    setTimeout(() => t.classList.remove('ver'), 2200);
+}
+
+function cargarAccionesLista(libroId, contenedor) {
+    contenedor = contenedor || document.getElementById('lista-acciones');
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
+
+    apiL({ accion: 'listas_de_libro', libro_id: libroId }).then(res => {
+        if (!res.ok) { contenedor.appendChild(laEl('p', 'la-vacio', res.mensaje || 'No disponible')); return; }
+        let estado = res.estado, favorito = res.favorito, listas = res.listas;
+
+        const caja = laEl('div', 'la-caja');
+
+        const bAgregar = laEl('button', 'la-btn azul', 'Agregar a lista');
+        bAgregar.onclick = () => abrirPanelListas(libroId, listas, () => cargarAccionesLista(libroId, contenedor));
+        caja.appendChild(bAgregar);
+
+        const fila = laEl('div', 'la-estados');
+        ESTADOS.forEach(e => {
+            const b = laEl('button', 'la-btn' + (estado === e.key ? ' activo' : ''), e.label);
+            b.onclick = () => {
+                const nuevo = (estado === e.key) ? 'ninguno' : e.key;
+                apiL({ accion: 'cambiar_estado', libro_id: libroId, estado: nuevo }).then(r => {
+                    laAviso(r.ok ? (nuevo === 'ninguno' ? 'Estado quitado' : 'Marcado como ' + e.label) : r.mensaje);
+                    if (r.ok) cargarAccionesLista(libroId, contenedor);
+                });
+            };
+            fila.appendChild(b);
+        });
+        caja.appendChild(fila);
+
+        const bFav = laEl('button', 'la-btn la-fav' + (favorito ? ' activo' : ''), favorito ? '♥ En favoritos' : '♡ Favorito');
+        bFav.onclick = () => {
+            apiL({ accion: 'toggle_favorito', libro_id: libroId }).then(r => {
+                laAviso(r.mensaje);
+                if (r.ok) cargarAccionesLista(libroId, contenedor);
+            });
+        };
+        caja.appendChild(bFav);
+
+        contenedor.appendChild(caja);
+    });
+}
+
+function abrirPanelListas(libroId, listas, alCerrar) {
+    const fondo = laEl('div', 'la-fondo ver');
+    const panel = laEl('div', 'la-panel');
+    panel.appendChild(laEl('h3', '', 'Agregar a lista'));
+
+    const cuerpo = laEl('div');
+    panel.appendChild(cuerpo);
+
+    function pintar(lista) {
+        cuerpo.innerHTML = '';
+        const propias = lista.filter(l => l.tipo === 'personalizada');
+        if (!propias.length) cuerpo.appendChild(laEl('p', 'la-vacio', 'Aún no tienes listas. Crea la primera abajo.'));
+        propias.forEach(l => {
+            const fila = laEl('label', 'la-item');
+            const chk = document.createElement('input');
+            chk.type = 'checkbox'; chk.checked = l.contiene;
+            chk.onchange = () => {
+                apiL({ accion: chk.checked ? 'agregar_a_lista' : 'quitar_de_lista', lista_id: l.id, libro_id: libroId })
+                    .then(r => { laAviso(r.mensaje); if (!r.ok) chk.checked = !chk.checked; else l.contiene = chk.checked; });
+            };
+            fila.appendChild(chk);
+            fila.appendChild(laEl('span', '', l.nombre));
+            cuerpo.appendChild(fila);
+        });
+    }
+    pintar(listas);
+
+    const nueva = laEl('div', 'la-nueva');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.maxLength = 40; inp.placeholder = 'Nueva lista...';
+    const bCrear = laEl('button', 'la-btn azul', '+ Crear');
+    bCrear.onclick = () => {
+        apiL({ accion: 'crear_lista', nombre: inp.value }).then(r => {
+            laAviso(r.mensaje);
+            if (!r.ok) return;
+            apiL({ accion: 'listas_de_libro', libro_id: libroId }).then(x => {
+                if (x.ok) { listas = x.listas; pintar(listas); inp.value = ''; }
+            });
+        });
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') bCrear.click(); };
+    nueva.appendChild(inp); nueva.appendChild(bCrear);
+    panel.appendChild(nueva);
+
+    const bCerrar = laEl('button', 'la-btn la-cerrar', 'Listo');
+    const cerrar = () => { fondo.remove(); if (alCerrar) alCerrar(); };
+    bCerrar.onclick = cerrar;
+    fondo.onclick = e => { if (e.target === fondo) cerrar(); };
+    panel.appendChild(bCerrar);
+
+    fondo.appendChild(panel);
+    document.body.appendChild(fondo);
+}
+</script>
 <script
     type="module"
     src="<?= $URL ?>/user/assets/js/estanteria-3d.js"

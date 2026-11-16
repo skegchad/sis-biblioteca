@@ -483,7 +483,7 @@
         left: -280px;
         width: 260px;
         height: 100vh;
-        background: #0d6efd;
+        background: #397ce0;
         transition: .3s;
         z-index: 9999;
         padding-top: 90px;
@@ -615,11 +615,7 @@
                             </a>
                         </li>
 
-                        <li>
-                            <a href="<?php echo $URL; ?>/user/modelo.php">
-                                Conoce a BMO
-                            </a>
-                        </li>
+
 
                     </ul>
                 </nav>

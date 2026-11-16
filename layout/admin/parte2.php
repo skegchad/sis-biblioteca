@@ -169,7 +169,7 @@
         legend: {
           show: false,
         },
-        colors: ['#0d6efd', '#20c997'],
+        colors: ['#397ce0', '#20c997'],
         dataLabels: {
           enabled: false,
         },

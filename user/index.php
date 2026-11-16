@@ -58,21 +58,21 @@ include ("../layout/user/part1.php");
 }
 .camera_prev > span::before,
 .camera_next > span::before {
-    border-color: #0d6efd !important;
+    border-color: #397ce0 !important;
 }
 
 .camera_prev > span,
 .camera_next > span {
-    color: #0d6efd !important;
-    background-color: #0d6efd !important;
+    color: #397ce0 !important;
+    background-color: #397ce0 !important;
 }
 
 .camera_prev:hover span::before,
 .camera_next:hover span::before,
 .camera_prev:hover span,
 .camera_next:hover span {
-    border-color: #0d6efd !important;
-    background-color: #0d6efd !important;
+    border-color: #397ce0 !important;
+    background-color: #397ce0 !important;
 }
 </style>
 
@@ -253,11 +253,7 @@ include ("../layout/user/part1.php");
       </div>
     </section>
 
-    <footer>
-      <div class="container">
-        <p>Sergio hizo todo atte:Sergio e Ibarra.
-      </div>
-    </footer>
+    
   </div>
   <a href="#" class="scrollup"><i class="icon-angle-up icon-square icon-bglight icon-2x active"></i></a>
 

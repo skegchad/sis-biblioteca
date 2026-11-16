@@ -100,6 +100,88 @@ include ("../layout/user/part1.php");
             display: block;
             border-radius: 16px;
         }
+       /* ===== Recordatorio (ocupa todo el ancho) ===== */
+.biblio-reminder {
+    display: block;
+    width: 100%;
+    margin-top: 28px;
+}
+
+.biblio-reminder p {
+    width: 100%;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #1f2937;
+}
+
+/* Si todavía tienes el SVG de la flecha, esto lo oculta */
+.biblio-reminder-icon {
+    display: none;
+}
+
+/* ===== Horario (diseño original + centrado vertical) ===== */
+.biblio-schedule {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-items: center;
+    margin-top: 28px;
+}
+
+@media (min-width: 600px) {
+    .biblio-schedule {
+        grid-template-columns: 1.3fr 1fr;
+        align-items: center;
+    }
+}
+
+.biblio-schedule-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.biblio-schedule h3 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.biblio-schedule ul {
+    list-style: disc;
+    padding-left: 20px;
+}
+
+.biblio-schedule li {
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.biblio-schedule li:last-child {
+    margin-bottom: 0;
+}
+
+.biblio-schedule-img {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    min-height: 200px;
+    background-color: #cbd5e1;
+}
+
+.biblio-schedule-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -125,7 +207,41 @@ include ("../layout/user/part1.php");
             </div>
 
         </div>
+        <!-- Recordatorio -->
+<div class="biblio-reminder">
+    <p>
+        <strong>Recuerda:</strong> Los libros deben ser devueltos en la fecha acordada y
+        en el mismo estado en que se realizó el préstamo, para que de esa manera
+        otros estudiantes puedan disfrutar de ellos.
+    </p>
+    
+</div>
+
+<!-- Horario de préstamos -->
+<div class="biblio-schedule">
+    <div class="biblio-schedule-text">
+        <h3>Horario de préstamos:</h3>
+        <ul>
+            <li>
+                El préstamo de los libros se realizará solamente los días
+                viernes en el horario de 7:10 a.m. hasta las 12:45 p.m.
+            </li>
+            <li>
+                Pueden solicitarlo a cualquier hora dentro del horario
+                anteriormente mencionado, teniendo en cuenta que debe ser
+                fuera de sus horas de clase, o en cierta ocasión que tenga
+                permiso autorizado por su docente.
+            </li>
+        </ul>
     </div>
+
+    <div class="biblio-schedule-img">
+        <img
+            src="../public/assets/img/grupoProyecto/pila%20de%20libros.png"
+            alt="Pila de libros de la biblioteca"
+        />
+    </div>
+</div>
    
 
 </body>

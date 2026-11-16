@@ -99,6 +99,8 @@ include("../../layout/admin/parte1.php");?>
                                             <option value="MECANIZADO">MECANIZADO</option>
                                             <option value="ELECTROMECANICA">ELECTROMECANICA</option>
                                             <option value="CONTABILIDAD">CONTABILIDAD</option>
+                                            <option value="REDES Y TELECOMUNICACIONES">REDES Y TELECOMUNICACIONES</option>
+                                            <option value="GESTIÓN FINANCIERA Y CONTABLE">GESTIÓN FINANCIERA Y CONTABLE</option>
                                         </select>
                                     </div>
                                 </div>

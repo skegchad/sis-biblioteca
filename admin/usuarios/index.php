@@ -70,16 +70,16 @@ $contador = 0;?>
 
 /* Hover */
 .dataTables_paginate .paginate_button:hover {
-  background: #0d6efd;
+  background: #397ce0;
   color: #ffffff !important;
-  border-color: #0d6efd;
+  border-color: #397ce0;
 }
 
 /* Página activa */
 .dataTables_paginate .paginate_button.current {
-  background: #0d6efd;
+  background: #397ce0;
   color: #ffffff !important;
-  border-color: #0d6efd;
+  border-color: #397ce0;
   font-weight: bold;
 }
 

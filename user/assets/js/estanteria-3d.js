@@ -47,6 +47,7 @@ import * as THREE from 'three';
   const botonLeerPdf = document.getElementById('boton-leer-pdf');
   const botonLeerAnimado = document.getElementById('boton-leer-animado');
   const cargandoLibroEl = document.getElementById('cargando-libro');
+  
 
   // ============================================================
   // LECTOR DE PDF

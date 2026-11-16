@@ -3,10 +3,10 @@ Default accent color
 
 */
 a:hover {
-	color:#0d6efd;
+	color:#397ce0;
 }
 #inner-headline ul.breadcrumb li a {
-	color:#0d6efd;
+	color:#397ce0
 }
 
 /* heading */
@@ -33,23 +33,23 @@ header ul.nav .dropdown-menu li > a:hover,
 .dropdown-submenu:hover > a, 
 .dropdown-menu .active > a,
 .dropdown-menu .active > a:hover {
-  background: #0d6efd;
+  background: #397ce0;
 }
 
 /* slider */
 .camera_prev > span:before {
-  background: #0d6efd;
+  background: #397ce0;
 }
 .camera_next > span:before {
-  background: #0d6efd;
+  background: #397ce0;
 }
 
 /* parallax c slider */
 .da-arrows span.da-arrows-prev:before {
-  background: #0d6efd;
+  background: #397ce0;
 }
 .da-arrows span.da-arrows-next:before {
-  background: #0d6efd;
+  background: #397ce0;
 }
 .da-slide .da-link:hover{
 	background: #e96b56;
@@ -109,19 +109,19 @@ div.tabbable.tabs-right  ul.nav-tabs li.active a {
 
 /* icon */
 [class^="icon-"].active {
-	color:#0d6efd;
+	color:#397ce0;
 }
 
 a i.icon-bglight:hover,
 a i.icon-bgdark:hover {
-  background: #0d6efd;
+  background: #397ce0;
 }
 i.icon-bglight.active {
-  background: #0d6efd;
+  background: #397ce0;
 }
 
 i.icon-bgdark.active {
-  background: #0d6efd;
+  background: #397ce0;
 }
 ul.styledlist li:before {
 	color:#e96b56;
