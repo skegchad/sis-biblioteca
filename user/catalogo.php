@@ -20,6 +20,7 @@ include ("../layout/user/part1.php");
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria.css">
+<link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria-madera.css">
 <style>
     a.btn-mis-libros,
 a.btn-mis-libros:link,
@@ -598,5 +599,6 @@ function abrirPanelListas(libroId, listas, alCerrar) {
     type="module"
     src="<?= $URL ?>/user/assets/js/estanteria-3d.js"
 ></script>
+<script src="<?= $URL ?>/user/assets/js/estanteria-decoracion.js"></script>
 
 <?php include("../ai/chat_widget.php"); ?>

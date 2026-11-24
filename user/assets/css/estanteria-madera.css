@@ -1,0 +1,294 @@
+/* ============================================================
+   ESTANTERÍA DE MADERA — un solo mueble con las categorías apiladas
+   Cargar DESPUÉS de estanteria.css. Solo cambia aspecto:
+   no toca la lógica ni el backend.
+
+   - #estantes-categorias es el MUEBLE: marco, postes laterales,
+     travesaño de arriba, zócalo y patitas.
+   - Cada categoría es un COMPARTIMENTO dentro de ese mueble: interior
+     oscuro + tabla de madera donde se apoyan los libros (esa tabla es
+     el divisor con el compartimento de abajo).
+   - La placa del título va colgada bajo la tabla de arriba, y las
+     flechas / puntos de grupos van sobre la tabla de abajo.
+   - Los compartimentos impares (1, 3, 5...) llevan un compartimento
+     aparte con UN solo adorno, alternando derecha / izquierda
+     (lo crea estanteria-decoracion.js).
+   ============================================================ */
+
+.estanteria-app .estantes-categorias {
+  /* medidas (si cambias --alto-estante, todo se reacomoda) */
+  --alto-estante: 450px;   /* alto de cada compartimento, incluye la tabla */
+  --borde-sup: 44px;       /* zona oscura bajo la tabla de arriba (aquí va la placa) */
+  --plancha: 26px;         /* grosor de la tabla donde se apoyan los libros */
+  --divisor: 13px;         /* grosor de las tablitas de la columna decorativa */
+  --poste: 22px;           /* ancho de los postes laterales */
+
+  /* colores */
+  --interior-1: #2e1d13;
+  --interior-2: #1c110a;
+  --laton-1: #e8cb8a;
+  --laton-2: #c49b4f;
+  --crema: #f3e3c8;
+
+  /* veta de la madera (SVG inline, sin imágenes externas) */
+  --grano-h: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='120'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.32' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.08  0 0 0 0 0.03  1.5 0 0 0 -0.5'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  --grano-v: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='320'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.32 0.006' numOctaves='3' seed='3'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.08  0 0 0 0 0.03  1.5 0 0 0 -0.5'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+
+  /* tamaño base de un adorno: ~un tercio del alto libre del estante */
+  --item-grande: calc((var(--alto-estante) - var(--borde-sup) - var(--plancha)) / 3);
+  --ancho-deco: 150px;     /* ancho del compartimento del adorno */
+
+  /* ---- el mueble ---- */
+  position: relative;
+  gap: 0;                                  /* sin separación entre estantes */
+  padding: 14px var(--poste) 16px;         /* travesaño de arriba / zócalo de abajo */
+  border-radius: 6px 6px 2px 2px;
+  background:
+    var(--grano-v) left top / var(--poste) 240px repeat-y,
+    linear-gradient(90deg, #583420, #7d4e2d 45%, #6a4127) left top / var(--poste) 100% no-repeat,
+    var(--grano-v) right top / var(--poste) 240px repeat-y,
+    linear-gradient(270deg, #583420, #7d4e2d 45%, #6a4127) right top / var(--poste) 100% no-repeat,
+    var(--grano-h) 0 0 / 320px 120px repeat,
+    linear-gradient(180deg, #8a5a36, #6e4427 6%, #6e4427 94%, #5a3620);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    inset 0 -2px 0 rgba(0, 0, 0, .3),
+    0 2px 4px rgba(0, 0, 0, .3),
+    0 24px 32px -20px rgba(30, 16, 6, .75);
+}
+
+/* patitas del mueble */
+.estanteria-app .estantes-categorias::before,
+.estanteria-app .estantes-categorias::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  width: 20px;
+  height: 11px;
+  background: linear-gradient(180deg, #2b2b2b, #111);
+  border-radius: 0 0 4px 4px;
+}
+.estanteria-app .estantes-categorias::before { left: calc(var(--poste) + 8px); }
+.estanteria-app .estantes-categorias::after  { right: calc(var(--poste) + 8px); }
+
+
+/* ------------------------------------------------------------
+   Cada categoría = un compartimento (sin marco propio)
+   ------------------------------------------------------------ */
+.estanteria-app .estante-categoria {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "lienzo";
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+
+/* ------------------------------------------------------------
+   Título: placa de latón colgada bajo la tabla de arriba
+   (comparte la celda del lienzo, en su esquina superior izquierda)
+   ------------------------------------------------------------ */
+.estanteria-app .estante-categoria .titulo-estante {
+  grid-area: lienzo;
+  justify-self: start;
+  align-self: start;
+  z-index: 3;
+  margin: 8px 0 0 14px;
+  padding: 6px 15px 7px;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.1;
+  letter-spacing: .01em;
+  color: #3a230f;
+  background: linear-gradient(180deg, var(--laton-1), var(--laton-2));
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .55),
+    0 1px 2px rgba(0, 0, 0, .55);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+
+/* ------------------------------------------------------------
+   Interior + tabla donde se apoyan los libros.
+   El canvas de Three.js queda transparente encima del fondo
+   (hay que quitar escena.background, ver instrucciones).
+   ------------------------------------------------------------ */
+.estanteria-app .lienzo-estante {
+  grid-area: lienzo;
+  height: var(--alto-estante);
+  border-radius: 0;
+  border-top: var(--borde-sup) solid var(--interior-1);
+  border-bottom: var(--plancha) solid transparent;
+  background:
+    var(--grano-h) left bottom / 320px var(--plancha) repeat-x,
+    linear-gradient(180deg, #b98150 0 2px, #865530 2px 55%, #6b4226 55% 100%) left bottom / 100% var(--plancha) no-repeat,
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .22) 0 1px, transparent 1px 52px),
+    linear-gradient(180deg, var(--interior-1), var(--interior-2));
+  background-origin: border-box;
+  background-clip: border-box;
+  box-shadow:
+    inset 12px 0 16px -10px rgba(0, 0, 0, .8),
+    inset -12px 0 16px -10px rgba(0, 0, 0, .8);
+}
+
+/* sombra de profundidad (arriba y a los lados), por encima de los libros */
+.estanteria-app .lienzo-estante::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .5), transparent 12%),
+    linear-gradient(90deg, rgba(0, 0, 0, .4), transparent 4%, transparent 96%, rgba(0, 0, 0, .4));
+}
+
+.estanteria-app .lienzo-estante .estante-vacio { color: #e8d9bd; }
+
+.estanteria-app .lienzo-estante .cargando-estante {
+  background: rgba(26, 15, 8, .8);
+  color: var(--crema);
+}
+.estanteria-app .lienzo-estante .cargando-estante .spinner {
+  border-color: rgba(243, 227, 200, .25);
+  border-top-color: var(--crema);
+}
+
+
+/* ------------------------------------------------------------
+   Flechas y puntos de grupos: sobre la tabla, abajo al centro
+   ------------------------------------------------------------ */
+.estanteria-app .estante-categoria .navegacion-grupos-libros {
+  grid-area: lienzo;
+  align-self: end;
+  justify-self: center;
+  z-index: 3;
+  height: var(--plancha);
+  min-height: 0;
+  margin: 0;
+  max-width: none;
+  gap: 10px;
+}
+.estanteria-app .estante-categoria .puntos-grupos-libros {
+  margin: 0;
+  min-height: 0;
+}
+.estanteria-app .estante-categoria .flecha-grupo-libros {
+  height: var(--plancha);
+  padding: 0 8px;
+  font-size: 20px;
+  line-height: var(--plancha);
+  color: var(--crema);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .6);
+}
+.estanteria-app .estante-categoria .punto-grupo-libros {
+  background: rgba(243, 227, 200, .45);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .45);
+}
+.estanteria-app .estante-categoria .punto-grupo-libros[aria-current="true"] {
+  background: #f6d98f;
+}
+.estanteria-app .estante-categoria .punto-grupo-libros:focus-visible {
+  outline-color: var(--crema);
+}
+
+
+/* ------------------------------------------------------------
+   Compartimento del adorno (estantes impares)
+   ------------------------------------------------------------ */
+.estanteria-app .estante-categoria.con-decoracion {
+  column-gap: 12px; /* deja ver la madera como tabla divisoria vertical */
+}
+/* adorno a la derecha */
+.estanteria-app .estante-categoria.con-decoracion.deco-der {
+  grid-template-columns: minmax(0, 1fr) var(--ancho-deco);
+  grid-template-areas: "lienzo deco";
+}
+/* adorno a la izquierda */
+.estanteria-app .estante-categoria.con-decoracion.deco-izq {
+  grid-template-columns: var(--ancho-deco) minmax(0, 1fr);
+  grid-template-areas: "deco lienzo";
+}
+
+.estanteria-app .estante-decoracion {
+  grid-area: deco;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: var(--borde-sup) solid var(--interior-1);
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .22) 0 1px, transparent 1px 52px),
+    linear-gradient(180deg, var(--interior-1), var(--interior-2));
+  background-origin: border-box;
+  box-shadow:
+    inset 8px 0 12px -8px rgba(0, 0, 0, .8),
+    inset -8px 0 12px -8px rgba(0, 0, 0, .8);
+}
+
+.estanteria-app .deco-celda {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 8px var(--divisor);
+}
+/* una sola repisa: la tabla es igual de gruesa que la de los libros */
+.estanteria-app .deco-celda::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--divisor);
+  background:
+    var(--grano-h) left bottom / 320px var(--divisor) repeat-x,
+    linear-gradient(180deg, #b98150 0 2px, #865530 2px 55%, #6b4226 55% 100%);
+  box-shadow: 0 -4px 6px -2px rgba(0, 0, 0, .45);
+}
+.estanteria-app .deco-celda:last-child { padding-bottom: var(--plancha); }
+.estanteria-app .deco-celda:last-child::after { height: var(--plancha); }
+
+.estanteria-app .deco-item {
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
+  height: calc(var(--item-grande) * var(--h, 1));
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .5));
+}
+
+
+/* ------------------------------------------------------------
+   Pantallas chicas
+   ------------------------------------------------------------ */
+@media (max-width: 600px) {
+  .estanteria-app .estantes-categorias {
+    --alto-estante: 370px;
+    --poste: 14px;
+    padding-top: 10px;
+  }
+  .estanteria-app .estante-categoria .titulo-estante {
+    margin: 7px 0 0 10px;
+    font-size: 13px;
+    padding: 5px 11px 6px;
+  }
+}
+
+/* en celular la columna de adornos le quitaría demasiado ancho a los libros */
+@media (max-width: 640px) {
+  .estanteria-app .estante-categoria.con-decoracion.deco-der,
+  .estanteria-app .estante-categoria.con-decoracion.deco-izq {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "lienzo";
+  }
+  .estanteria-app .estante-decoracion { display: none; }
+}

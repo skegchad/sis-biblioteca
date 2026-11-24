@@ -819,7 +819,7 @@ function cerrarLector() {
       if (this.renderer) return;
 
       this.escena = new THREE.Scene();
-      this.escena.background = new THREE.Color(0xede7da);
+      this.escena.background = null;
 
       this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
       this.camara.position.set(0, ALTO_LIBRO / 2, 5);
@@ -2312,4 +2312,3 @@ function salirDePantallaCompleta() {
 
 
 })();
-
