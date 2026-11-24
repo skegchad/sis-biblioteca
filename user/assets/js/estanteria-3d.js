@@ -4,6 +4,10 @@ import * as THREE from 'three';
   const BASE = (window.APP_URL || '').replace(/\/$/, '');
   const API_BUSCAR = `${BASE}/user/backend/api/buscar_libros.php`;
   const API_FILTROS = `${BASE}/user/backend/api/filtros.php`;
+  const TAMANO_PAGINA_LIBROS = 24;
+  const parametrosURL = new URLSearchParams(window.location.search);
+  const cantidadPrueba = Number(parametrosURL.get('prueba_rendimiento'));
+  const modoPruebaRendimiento = window.PUEDE_PROBAR_RENDIMIENTO === true && [100, 200].includes(cantidadPrueba);
 
   const contenedorPrincipal = document.getElementById('estantes-categorias');
   const cargandoGlobal = document.getElementById('cargando-estantes');
@@ -53,17 +57,18 @@ import * as THREE from 'three';
   // LECTOR DE PDF
   // ============================================================
 
-  let pdfjsListo = (async () => {
-    const modulo = await import(
-      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs'
-    );
-
-    modulo.GlobalWorkerOptions.workerSrc =
-      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
-
-    window.pdfjsLib = modulo; // por si algo más del código lo referencia como global
-    return modulo;
-  })();
+  let pdfjsListo = null;
+  function obtenerPdfjs() {
+    if (!pdfjsListo) {
+      pdfjsListo = import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs').then((modulo) => {
+        modulo.GlobalWorkerOptions.workerSrc =
+          'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+        window.pdfjsLib = modulo;
+        return modulo;
+      });
+    }
+    return pdfjsListo;
+  }
 
 const lectorPdf = document.getElementById('lector-pdf');
 const cerrarLectorBtn = document.getElementById('cerrar-lector');
@@ -472,7 +477,7 @@ function cerrarLector() {
     return MIN_GROSOR + t * (MAX_GROSOR - MIN_GROSOR);
   }
 
-  const ESCALA_LOMO = 900;
+  const ESCALA_LOMO = 480;
   function texturaLomo(libro, grosor) {
     const anchoPx = Math.max(48, Math.round(grosor * ESCALA_LOMO));
     const altoPx = Math.round(ALTO_LIBRO * ESCALA_LOMO);
@@ -523,7 +528,7 @@ function cerrarLector() {
     lineas.slice(0, 2).forEach((l, i) => ctx.fillText(l, x, inicioY + i * alturaLinea));
   }
 
-  const ESCALA_PORTADA = 700;
+  const ESCALA_PORTADA = 480;
   function texturaPortada(libro) {
     const anchoPx = Math.round(PROFUNDIDAD_LIBRO * ESCALA_PORTADA);
     const altoPx = Math.round(ALTO_LIBRO * ESCALA_PORTADA);
@@ -605,20 +610,6 @@ function cerrarLector() {
   });
 
   async function crearLibro3D(libro) {
-
-    let colorReal = libro.color;
-
-    if (libro.rutaFotoAbsoluta) {
-      try {
-        const img = await cargarImagen(libro.rutaFotoAbsoluta);
-        colorReal = extraerColorDominante(img);
-      } catch (e) {
-        // si falla la carga (CORS, 404, etc.), se queda con libro.color
-      }
-    }
-
-    const libroConColor = { ...libro, color: colorReal };
-
     const grosor = grosorPorPaginas(libro.paginas);
     const geometria = new THREE.BoxGeometry(grosor, ALTO_LIBRO, PROFUNDIDAD_LIBRO);
 
@@ -693,6 +684,13 @@ function cerrarLector() {
       this.id = categoria.id;
       this.nombre = categoria.nombre;
       this.datosLibros = [];
+      this.totalLibros = 0;
+      this.cargarPagina = null;
+      this.tokenPagina = 0;
+      this.datosPrueba = null;
+      this.gruposPrueba = null;
+      this.paginaLibros = 0;
+      this.librosPorPagina = 24;
 
       this.libros = [];        // mallas 3D, solo existen si renderer está vivo
       this.anchoFila = 1;
@@ -725,6 +723,22 @@ function cerrarLector() {
 
       const lienzo = document.createElement('div');
       lienzo.className = 'lienzo-estante';
+
+      const puntosGrupos = document.createElement('div');
+      puntosGrupos.className = 'puntos-grupos-libros';
+      puntosGrupos.setAttribute('role', 'group');
+      puntosGrupos.setAttribute('aria-label', `Grupos de libros de ${this.nombre}`);
+      this.puntosGrupos = puntosGrupos;
+      this.btnGrupoAnterior = document.createElement('button');
+      this.btnGrupoAnterior.type = 'button';
+      this.btnGrupoAnterior.className = 'flecha-grupo-libros';
+      this.btnGrupoAnterior.textContent = '‹';
+      this.btnGrupoAnterior.setAttribute('aria-label', 'Grupo anterior');
+      this.btnGrupoSiguiente = document.createElement('button');
+      this.btnGrupoSiguiente.type = 'button';
+      this.btnGrupoSiguiente.className = 'flecha-grupo-libros';
+      this.btnGrupoSiguiente.textContent = '›';
+      this.btnGrupoSiguiente.setAttribute('aria-label', 'Grupo siguiente');
 
       const cargando = document.createElement('div');
       cargando.className = 'cargando-estante';
@@ -760,7 +774,10 @@ function cerrarLector() {
 
       // <-- el append va DESPUÉS de declarar todo lo anterior
       lienzo.append(mensajeVacio, cargando, botonInfo, controles);
-      seccion.append(titulo, lienzo);
+      const navegacionGrupos = document.createElement('div');
+      navegacionGrupos.className = 'navegacion-grupos-libros';
+      navegacionGrupos.append(this.btnGrupoAnterior, puntosGrupos, this.btnGrupoSiguiente);
+      seccion.append(titulo, lienzo, navegacionGrupos);
       contenedorPrincipal.appendChild(seccion);
 
       this.seccionEl = seccion;
@@ -770,6 +787,10 @@ function cerrarLector() {
       this.controlesEl = controles;
       this.btnAnteriorEl = btnAnt;
       this.btnSiguienteEl = btnSig;
+
+      this._dibujarPuntosGrupos();
+      this.btnGrupoAnterior.addEventListener('click', () => this.irAGrupo(this.paginaLibros - 1));
+      this.btnGrupoSiguiente.addEventListener('click', () => this.irAGrupo(this.paginaLibros + 1));
 
       btnAnt.addEventListener('click', (ev) => { ev.stopPropagation(); this.seleccionarAdyacente(-1); });
       btnSig.addEventListener('click', (ev) => { ev.stopPropagation(); this.seleccionarAdyacente(1); });
@@ -803,7 +824,7 @@ function cerrarLector() {
       this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
       this.camara.position.set(0, ALTO_LIBRO / 2, 5);
 
-      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
       this.lienzoEl.prepend(this.renderer.domElement);
       this.renderer.domElement.classList.add('canvas-estante');
 
@@ -852,7 +873,7 @@ function cerrarLector() {
       const ancho = this.lienzoEl.clientWidth;
       const alto = this.lienzoEl.clientHeight;
       if (!ancho || !alto) return;
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       this.renderer.setSize(ancho, alto, false);
       this._ajustarCamara();
     }
@@ -875,15 +896,121 @@ function cerrarLector() {
     // -------------------- Contenido --------------------
 
     async establecerLibros(libros) {
+      await this.establecerPagina(libros, libros.length, 0);
+    }
+
+    establecerTotal(total) {
+      this.totalLibros = Math.max(0, Number(total) || 0);
+      this.paginaLibros = Math.min(
+        this.paginaLibros,
+        Math.max(0, Math.ceil(this.totalLibros / this.librosPorPagina) - 1)
+      );
+      this._actualizarTitulo(this.totalLibros);
+      this._dibujarPuntosGrupos();
+    }
+
+    prepararGruposPrueba() {
+      if (!this.datosPrueba) return;
+      const ancho = this.lienzoEl.clientWidth || 960;
+      // La cámara encuadra la altura del libro; usar el ancho real del marco
+      // en unidades de mundo evita asumir un número fijo por grupo.
+      const altoMundo = window.matchMedia('(max-width: 768px)').matches ? 1.6 : 1.58;
+      const anchoMundo = altoMundo * (ancho / (this.lienzoEl.clientHeight || 480));
+      this.gruposPrueba = [];
+      let grupo = [], ocupado = 0;
+      for (const libro of this.datosPrueba) {
+        const w = grosorPorPaginas(libro.paginas) + SEPARACION;
+        if (grupo.length && ocupado + w > anchoMundo) {
+          this.gruposPrueba.push(grupo);
+          grupo = [];
+          ocupado = 0;
+        }
+        grupo.push(libro);
+        ocupado += w;
+      }
+      if (grupo.length) this.gruposPrueba.push(grupo);
+      this.librosPorPagina = Math.max(1, ...this.gruposPrueba.map((g) => g.length));
+    }
+
+    obtenerGrupo(pagina) {
+      if (this.gruposPrueba) return this.gruposPrueba[pagina] || [];
+      const inicio = pagina * this.librosPorPagina;
+      return this.datosPrueba.slice(inicio, inicio + this.librosPorPagina);
+    }
+
+    async establecerPagina(libros, total = this.totalLibros, pagina = this.paginaLibros) {
+      const paginaAnterior = this.paginaLibros;
+      const cambiarGrupo = pagina !== paginaAnterior && this.libros.length > 0;
+      const direccion = pagina > paginaAnterior ? 1 : -1;
+      if (cambiarGrupo) await this._animarSalidaGrupo();
       this.datosLibros = libros;
-      this._actualizarTitulo(libros.length);
-      if (this.renderer) {
-        await this._pintar(libros);
+      this.paginaLibros = pagina;
+      this.totalLibros = Math.max(0, Number(total) || 0);
+      this._actualizarTitulo(this.totalLibros);
+      this._dibujarPuntosGrupos();
+      if (this.renderer) await this._pintar(libros, cambiarGrupo ? direccion : 0);
+    }
+
+    _animarSalidaGrupo() {
+      const inicio = performance.now();
+      const duracion = 220;
+      const posiciones = this.libros.map((libro) => libro.position.x);
+      return new Promise((resolve) => {
+        const paso = (ahora) => {
+          const progreso = Math.min(1, (ahora - inicio) / duracion);
+          const suavizado = progreso * progreso * (3 - 2 * progreso);
+          this.libros.forEach((libro, indice) => {
+            libro.position.x = posiciones[indice] - 5 * suavizado;
+            libro.scale.setScalar(1 - 0.12 * suavizado);
+          });
+          if (progreso < 1) requestAnimationFrame(paso);
+          else resolve();
+        };
+        requestAnimationFrame(paso);
+      });
+    }
+
+    _dibujarPuntosGrupos() {
+      const cantidad = this.gruposPrueba ? this.gruposPrueba.length : Math.ceil(this.totalLibros / this.librosPorPagina);
+      this.puntosGrupos.replaceChildren();
+      this.puntosGrupos.hidden = cantidad <= 1;
+      this.btnGrupoAnterior.hidden = cantidad <= 1;
+      this.btnGrupoSiguiente.hidden = cantidad <= 1;
+      this.btnGrupoAnterior.disabled = this.paginaLibros <= 0;
+      this.btnGrupoSiguiente.disabled = this.paginaLibros >= cantidad - 1;
+      for (let pagina = 0; pagina < cantidad; pagina++) {
+        const punto = document.createElement('button');
+        punto.type = 'button';
+        punto.className = 'punto-grupo-libros';
+        punto.setAttribute('aria-label', `Mostrar grupo ${pagina + 1} de ${cantidad}`);
+        punto.setAttribute('aria-current', pagina === this.paginaLibros ? 'true' : 'false');
+        punto.title = `Grupo ${pagina + 1} de ${cantidad}`;
+        punto.addEventListener('click', () => {
+          if (pagina === this.paginaLibros) return;
+          if (this.datosPrueba) {
+            this.establecerPagina(this.obtenerGrupo(pagina), this.totalLibros, pagina);
+          } else if (this.cargarPagina) {
+            this.cargarPagina(pagina);
+          }
+        });
+        this.puntosGrupos.appendChild(punto);
       }
     }
 
-    async _pintar(libros) {
+    async irAGrupo(pagina, seleccionarBorde = null) {
+      const cantidad = this.gruposPrueba ? this.gruposPrueba.length : Math.ceil(this.totalLibros / this.librosPorPagina);
+      if (pagina < 0 || pagina >= cantidad || pagina === this.paginaLibros) return;
+      if (this.datosPrueba) {
+        await this.establecerPagina(this.obtenerGrupo(pagina), this.totalLibros, pagina);
+      } else if (this.cargarPagina) {
+        await this.cargarPagina(pagina);
+      }
+      if (seleccionarBorde && this.libros.length) this.seleccionar(seleccionarBorde === 'ultimo' ? this.libros.at(-1) : this.libros[0]);
+    }
+
+    async _pintar(libros, direccionEntrada = 0) {
       const miToken = ++this._tokenPintura;
+      const librosVisibles = libros.slice(0, this.librosPorPagina);
 
       // Mostrar spinner ANTES de tocar nada
       this.cargandoEl.classList.remove('oculto');
@@ -907,7 +1034,7 @@ function cerrarLector() {
       }
       this.mensajeVacioEl.style.display = 'none';
 
-      for (const libro of libros) {
+      for (const libro of librosVisibles) {
         // Si mientras esperábamos la textura llegó una búsqueda más nueva
         // para este mismo estante, abandonamos — no seguimos agregando
         // libros de una lista que ya quedó obsoleta.
@@ -927,7 +1054,29 @@ function cerrarLector() {
       if (miToken !== this._tokenPintura) return;
 
       this._acomodarEnFila();
+      if (direccionEntrada !== 0) await this._animarEntradaGrupo(direccionEntrada);
       this.cargandoEl.classList.add('oculto');
+    }
+
+    _animarEntradaGrupo(direccion) {
+      const inicio = performance.now();
+      const duracion = 260;
+      const destinos = this.libros.map((libro) => libro.position.x);
+      this.libros.forEach((libro, indice) => {
+        libro.position.x = destinos[indice] + 5 * direccion;
+      });
+      return new Promise((resolve) => {
+        const paso = (ahora) => {
+          const progreso = Math.min(1, (ahora - inicio) / duracion);
+          const suavizado = 1 - Math.pow(1 - progreso, 3);
+          this.libros.forEach((libro, indice) => {
+            libro.position.x = destinos[indice] + 5 * direccion * (1 - suavizado);
+          });
+          if (progreso < 1) requestAnimationFrame(paso);
+          else resolve();
+        };
+        requestAnimationFrame(paso);
+      });
     }
 
     _acomodarEnFila() {
@@ -1101,7 +1250,15 @@ function cerrarLector() {
       const indice = this.libros.indexOf(this.libroSeleccionado);
       if (indice === -1) return;
       const nuevoIndice = indice + direccion;
-      if (nuevoIndice < 0 || nuevoIndice >= this.libros.length) return;
+      const cantidadGrupos = this.gruposPrueba ? this.gruposPrueba.length : Math.ceil(this.totalLibros / this.librosPorPagina);
+      if (nuevoIndice < 0) {
+        if (this.paginaLibros > 0) this.irAGrupo(this.paginaLibros - 1, 'ultimo');
+        return;
+      }
+      if (nuevoIndice >= this.libros.length) {
+        if (this.paginaLibros < cantidadGrupos - 1) this.irAGrupo(this.paginaLibros + 1, 'primero');
+        return;
+      }
       this.seleccionar(this.libros[nuevoIndice]);
     }
 
@@ -1112,8 +1269,12 @@ function cerrarLector() {
       }
       this.controlesEl.style.display = 'flex';
       const indice = this.libros.indexOf(this.libroSeleccionado);
-      this.btnAnteriorEl.disabled = indice <= 0;
-      this.btnSiguienteEl.disabled = indice >= this.libros.length - 1;
+      const inicioGrupo = this.gruposPrueba
+        ? this.gruposPrueba.slice(0, this.paginaLibros).reduce((n, grupo) => n + grupo.length, 0)
+        : this.paginaLibros * this.librosPorPagina;
+      const indiceAbsoluto = inicioGrupo + indice;
+      this.btnAnteriorEl.disabled = indiceAbsoluto <= 0;
+      this.btnSiguienteEl.disabled = indiceAbsoluto >= this.totalLibros - 1;
     }
 
     // Posiciona el botón de info flotando sobre la esquina del libro abierto
@@ -1146,6 +1307,7 @@ function cerrarLector() {
   let estanteResultados = null; // estante especial para modo búsqueda/filtro
   let modoActual = 'categorias'; // 'categorias' | 'resultados'
   let tokenBusqueda = 0;
+  let resumenCategorias = new Map();
 
   const observadorVisibilidad = new IntersectionObserver(
     (entradas) => {
@@ -1154,12 +1316,16 @@ function cerrarLector() {
         if (!estante) return;
         if (entrada.isIntersecting) {
           estante.inicializar();
+          if (!estante.datosPrueba && estante.datosLibros.length === 0 && estante.cargarPagina) {
+            estante.cargarPagina(estante.paginaLibros);
+          }
         } else {
           estante.destruir();
         }
       });
     },
-    { root: null, rootMargin: '600px 0px', threshold: 0 }
+    // Mantiene pocos contextos WebGL activos: solo prepara la categoría visible.
+    { root: null, rootMargin: '0px', threshold: 0 }
   );
 
   function crearEstantesCategorias(categorias) {
@@ -1172,6 +1338,8 @@ function cerrarLector() {
 
   categorias.forEach((categoria) => {
     const estante = new Estante(categoria);
+    estante.librosPorPagina = TAMANO_PAGINA_LIBROS;
+    estante.cargarPagina = (pagina) => cargarPaginaCategoria(estante, pagina);
     estantes.push(estante);
     observadorVisibilidad.observe(estante.seccionEl);
   });
@@ -1189,7 +1357,7 @@ function cerrarLector() {
       boton.type = 'button';
       boton.className = 'tab-categoria';
       boton.dataset.categoriaId = estante.id;
-      boton.textContent = `${estante.nombre} (${estante.datosLibros.length})`;
+      boton.textContent = `${estante.nombre} (${estante.totalLibros})`;
       boton.addEventListener('click', () => {
         estante.seccionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
@@ -1200,8 +1368,11 @@ function cerrarLector() {
   // ============================================================
   // Loop de render único: recorre solo los estantes con renderer activo
   // ============================================================
-  (function animar() {
+  let ultimoFrameRender = 0;
+  (function animar(tiempo) {
   requestAnimationFrame(animar);
+  if (document.hidden || tiempo - ultimoFrameRender < 1000 / 30) return;
+  ultimoFrameRender = tiempo;
 
   const activos = estanteResultados ? [...estantes, estanteResultados] : estantes;
   activos.forEach((estante) => {
@@ -1387,6 +1558,57 @@ function cerrarLector() {
     });
   }
 
+  function crearLibrosPrueba(cantidad) {
+    const colores = ['#70402E', '#245C68', '#775C2E', '#4E4772', '#48613D', '#873F55'];
+    return Array.from({ length: cantidad }, (_, indice) => ({
+      id: `prueba-${indice + 1}`,
+      titulo: `Libro de prueba ${String(indice + 1).padStart(3, '0')}`,
+      autor: `Autor de prueba ${indice % 12 + 1}`,
+      descripcion: 'Registro sintético para revisar la carga por grupos. No se guarda en la base de datos.',
+      idioma: 'Español', disponibilidad: 1, temas: 'Prueba', tipo: 'Prueba', edicion: '1',
+      ano: '2026', cdd: '', bloque: '', categoria: 'Prueba de rendimiento', subcategoria: '',
+      seccion: '', editorial: 'Datos sintéticos', ejemplares: 1, prestados: 0,
+      paginas: 100 + (indice % 300), color: colores[indice % colores.length],
+      ruta_foto: null, ruta_pdf: null,
+    }));
+  }
+
+  async function solicitarPagina(params, pagina) {
+    const consulta = new URLSearchParams(params);
+    consulta.set('limite', String(TAMANO_PAGINA_LIBROS));
+    consulta.set('offset', String(pagina * TAMANO_PAGINA_LIBROS));
+    const respuesta = await fetch(`${API_BUSCAR}?${consulta.toString()}`);
+    if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+    return {
+      libros: await respuesta.json(),
+      total: Number(respuesta.headers.get('X-Total-Count')) || 0,
+    };
+  }
+
+  async function cargarPaginaCategoria(estante, pagina) {
+    const token = ++estante.tokenPagina;
+    estante.cargandoEl.classList.remove('oculto');
+    try {
+      if (estante.datosPrueba) {
+        const desde = pagina * TAMANO_PAGINA_LIBROS;
+        await estante.establecerPagina(estante.datosPrueba.slice(desde, desde + TAMANO_PAGINA_LIBROS), estante.totalLibros, pagina);
+        return;
+      }
+      const params = new URLSearchParams({ categoria: estante.nombre });
+      const resultado = await solicitarPagina(params, pagina);
+      if (token !== estante.tokenPagina) return;
+      await estante.establecerPagina(resultado.libros, resultado.total, pagina);
+    } catch (err) {
+      if (token === estante.tokenPagina) {
+        console.error(`No se pudo cargar ${estante.nombre}`, err);
+        estante.mensajeVacioEl.textContent = 'No se pudieron cargar los libros.';
+        estante.mensajeVacioEl.style.display = 'flex';
+      }
+    } finally {
+      if (token === estante.tokenPagina) estante.cargandoEl.classList.add('oculto');
+    }
+  }
+
   async function buscarLibros() {
     const miToken = ++tokenBusqueda;
     mostrarCarga();
@@ -1402,44 +1624,67 @@ function cerrarLector() {
     temasSeleccionados.forEach((id) => params.append('temas[]', id));
 
     try {
-      const res = await fetch(`${API_BUSCAR}?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const libros = await res.json();
-
-      if (miToken !== tokenBusqueda) return; // ya hay una búsqueda más nueva en curso
-
       if (estantes.length === 0) {
-        crearEstantesCategorias(datosFiltros.categorias);
+        const categorias = [...datosFiltros.categorias];
+        if (modoPruebaRendimiento) categorias.push({ id: 'prueba-rendimiento', nombre: 'Prueba de rendimiento' });
+        crearEstantesCategorias(categorias);
       }
 
-      if (hayFiltrosActivos()) {
-        await mostrarModoResultados();
-        if (miToken !== tokenBusqueda) return;
-        await estanteResultados.establecerLibros(libros);
-      } else {
-        mostrarModoCategorias();
-
-        const grupos = {};
-        libros.forEach((libro) => {
-          const categoria = libro.categoria || 'Sin categoría';
-          if (!grupos[categoria]) grupos[categoria] = [];
-          grupos[categoria].push(libro);
+      if (!hayFiltrosActivos()) {
+        estantes.forEach((estante) => {
+          if (estante.datosPrueba) return;
+          estante.tokenPagina++;
+          estante.datosLibros = [];
+          estante.paginaLibros = 0;
+          estante.paginaLibros = 0;
+          estante._dibujarPuntosGrupos();
         });
-
+        mostrarModoCategorias();
+        const respuestaResumen = await fetch(`${API_BUSCAR}?resumen=1`);
+        if (!respuestaResumen.ok) throw new Error(`HTTP ${respuestaResumen.status}`);
+        const resumen = await respuestaResumen.json();
+        if (miToken !== tokenBusqueda) return;
+        resumenCategorias = new Map(resumen.map((fila) => [fila.categoria, Number(fila.total)]));
         for (const estante of estantes) {
-          if (miToken !== tokenBusqueda) return; // obsoleta a mitad de recorrer las categorías
-          const librosCategoria = grupos[estante.nombre] || [];
-          await estante.establecerLibros(librosCategoria);
+          if (estante.datosPrueba) {
+            estante.prepararGruposPrueba();
+            estante.establecerTotal(cantidadPrueba);
+            const datosPagina = estante.obtenerGrupo(0);
+            await estante.establecerPagina(datosPagina, cantidadPrueba, 0);
+          } else {
+            estante.establecerTotal(resumenCategorias.get(estante.nombre) || 0);
+          }
         }
-
         construirTabsCategorias();
+        const totalCatalogo = resumen.reduce((suma, fila) => suma + Number(fila.total), 0) + (modoPruebaRendimiento ? cantidadPrueba : 0);
+        sinResultados.style.display = totalCatalogo === 0 ? 'block' : 'none';
+        sinResultados.textContent = 'No se encontraron libros.';
+        ocultarCarga();
+        return;
       }
 
+      const { libros, total } = await solicitarPagina(params, 0);
       if (miToken !== tokenBusqueda) return;
-
-      sinResultados.style.display = libros.length === 0 ? 'block' : 'none';
+      await mostrarModoResultados();
+      if (miToken !== tokenBusqueda) return;
+      const estante = estanteResultados;
+      estante.cargarPagina = async (pagina) => {
+        const tokenPagina = ++estante.tokenPagina;
+        estante.cargandoEl.classList.remove('oculto');
+        try {
+          const paginaResultado = await solicitarPagina(params, pagina);
+          if (tokenPagina === estante.tokenPagina) {
+            await estante.establecerPagina(paginaResultado.libros, paginaResultado.total, pagina);
+          }
+        } catch (err) {
+          console.error('No se pudo cargar la página de resultados', err);
+        } finally {
+          if (tokenPagina === estante.tokenPagina) estante.cargandoEl.classList.add('oculto');
+        }
+      };
+      await estante.establecerPagina(libros, total, 0);
+      sinResultados.style.display = total === 0 ? 'block' : 'none';
       sinResultados.textContent = 'No se encontraron libros.';
-
       ocultarCarga();
     } catch (err) {
       if (miToken !== tokenBusqueda) return; // error de una búsqueda ya obsoleta, ignorar
@@ -1520,7 +1765,15 @@ function ocultarCarga() {
   // Arranque
   // ============================================================
   await cargarFiltros();
-  crearEstantesCategorias(datosFiltros.categorias);
+  const categoriasCatalogo = [...datosFiltros.categorias];
+  if (modoPruebaRendimiento) {
+    categoriasCatalogo.push({ id: 'prueba-rendimiento', nombre: 'Prueba de rendimiento' });
+  }
+  crearEstantesCategorias(categoriasCatalogo);
+  if (modoPruebaRendimiento) {
+    const estantePrueba = estantes.find((estante) => estante.id === 'prueba-rendimiento');
+    if (estantePrueba) estantePrueba.datosPrueba = crearLibrosPrueba(cantidadPrueba);
+  }
   aplicarFiltrosDesdeURL(); // <-- NUEVO: lee ?categoria=...&tema=... antes de buscar
   await buscarLibros();
 
@@ -1781,8 +2034,8 @@ function crearRendererVuelo() {
   camaraVuelo = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
   camaraVuelo.position.set(0, 0, 5);
 
-  rendererVuelo = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  rendererVuelo.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  rendererVuelo = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
+  rendererVuelo.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   vueloContenedor.appendChild(rendererVuelo.domElement);
 }
 
@@ -1926,7 +2179,7 @@ function volarLibroYAbrir(rutaPdf, malla) {
 }
 
 async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
-  const pdfjsLib = await pdfjsListo;
+  const pdfjsLib = await obtenerPdfjs();
 
   mallaOrigenLectura = malla;
   const libro = malla ? malla.userData.libro : null;

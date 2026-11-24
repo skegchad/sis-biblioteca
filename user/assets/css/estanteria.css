@@ -71,6 +71,47 @@
   height:100%;
 }
 
+.estanteria-app .puntos-grupos-libros{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+  min-height:24px;
+  margin:12px auto 4px;
+}
+.estanteria-app .navegacion-grupos-libros{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px auto 4px;}
+.estanteria-app .flecha-grupo-libros{border:0;background:transparent;color:#6b5740;font-size:25px;line-height:1;cursor:pointer;padding:3px 7px;}
+.estanteria-app .flecha-grupo-libros:disabled{opacity:.35;cursor:default;}
+.estanteria-app .puntos-grupos-libros[hidden]{display:none;}
+.estanteria-app .punto-grupo-libros{
+  width:10px;
+  height:10px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#c8beaa;
+  cursor:pointer;
+  transition:transform .18s ease, background-color .18s ease;
+}
+.estanteria-app .punto-grupo-libros:hover{transform:scale(1.25);}
+.estanteria-app .punto-grupo-libros[aria-current="true"]{
+  background:#8C7355;
+  transform:scale(1.35);
+}
+.estanteria-app .punto-grupo-libros:focus-visible{
+  outline:2px solid #4a3927;
+  outline-offset:3px;
+}
+@media (prefers-reduced-motion: reduce){
+  .estanteria-app .punto-grupo-libros{transition:none;}
+}
+.estanteria-app .puntos-grupos-libros{
+  text-align:center;
+  color:var(--tinta-suave);
+  font-size:12px;
+}
+
 .estanteria-app .sin-resultados{
   text-align:center;
   color:var(--tinta-suave);

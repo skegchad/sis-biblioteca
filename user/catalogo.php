@@ -458,6 +458,9 @@ a.btn-mis-libros:active {
 
 <script>
     window.APP_URL = "<?= $URL ?>";
+    window.PUEDE_PROBAR_RENDIMIENTO = <?= json_encode(
+        ($cargo ?? '') === 'Administrador' || in_array(strtolower($_SERVER['HTTP_HOST'] ?? ''), ['localhost', '127.0.0.1'], true)
+    ) ?>;
 </script>
 
 <!-- ================================================================

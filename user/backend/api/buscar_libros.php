@@ -11,6 +11,16 @@ require_once __DIR__ . '/../helpers/DominantColor.php';
 
 $RAIZ_PROYECTO = realpath(__DIR__ . '/../../../');
 
+if (isset($_GET['resumen'])) {
+    $resumen = $pdo->query("SELECT categoria, COUNT(*) AS total
+        FROM tb_libros
+        WHERE estado = 1
+        GROUP BY categoria
+        ORDER BY categoria ASC")->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($resumen, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 
 // ============================================================
 // FILTROS
@@ -62,7 +72,11 @@ $sql = "SELECT
     l.ejemplares,
     l.prestados,
     l.ruta_pdf,
-    l.ruta_foto
+    l.ruta_foto,
+    l.paginas_pdf_cache,
+    l.paginas_pdf_cache_key,
+    l.color_portada_cache,
+    l.color_portada_cache_key
 FROM tb_libros AS l
 WHERE l.estado = 1";
 
@@ -182,10 +196,28 @@ if (!empty($temas)) {
 
 
 // ============================================================
+// PAGINACIÓN opcional. Sin `limite` se conserva la respuesta completa.
+// El catálogo usa páginas pequeñas para no transferir todo el catálogo.
+$limite = isset($_GET['limite']) ? max(1, min(48, (int) $_GET['limite'])) : null;
+$offset = max(0, (int) ($_GET['offset'] ?? 0));
+$total = null;
+
+if ($limite !== null) {
+    $posicionFrom = strpos($sql, 'FROM tb_libros');
+    $sqlConteo = 'SELECT COUNT(*) ' . substr($sql, $posicionFrom);
+    $stmtConteo = $pdo->prepare($sqlConteo);
+    $stmtConteo->execute($params);
+    $total = (int) $stmtConteo->fetchColumn();
+}
+
 // ORDEN
 // ============================================================
 
 $sql .= " ORDER BY l.titulo ASC";
+
+if ($limite !== null) {
+    $sql .= ' LIMIT :limite OFFSET :offset';
+}
 
 
 // ============================================================
@@ -193,7 +225,15 @@ $sql .= " ORDER BY l.titulo ASC";
 // ============================================================
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+foreach ($params as $nombre => $valor) {
+    $stmt->bindValue($nombre, $valor);
+}
+if ($limite !== null) {
+    $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    header('X-Total-Count: ' . $total);
+}
+$stmt->execute();
 
 $libros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -206,6 +246,13 @@ $resultado = [];
 
 $debug = isset($_GET['debug']);
 
+$actualizarCache = $pdo->prepare("UPDATE tb_libros
+    SET paginas_pdf_cache = :paginas,
+        paginas_pdf_cache_key = :pdf_key,
+        color_portada_cache = :color,
+        color_portada_cache_key = :foto_key
+    WHERE id_libro = :id");
+
 
 foreach ($libros as $libro) {
 
@@ -217,6 +264,7 @@ foreach ($libros as $libro) {
     // --------------------------------------------------------
 
     $paginas = 150;
+    $pdfKey = null;
 
     if (!empty($libro['ruta_pdf'])) {
 
@@ -224,11 +272,19 @@ foreach ($libros as $libro) {
             $RAIZ_PROYECTO . '/' .
             ltrim($libro['ruta_pdf'], '/');
 
-        $paginasCalculadas =
-            contarPaginasPDF($rutaAbsolutaPdf);
-
-        $paginas =
-            $paginasCalculadas ?: $paginas;
+        $pdfStat = @stat($rutaAbsolutaPdf);
+        if ($pdfStat) {
+            $pdfKey = hash('sha256', $libro['ruta_pdf'] . '|' . $pdfStat['mtime'] . '|' . $pdfStat['size']);
+            if ($libro['paginas_pdf_cache_key'] === $pdfKey && $libro['paginas_pdf_cache'] !== null) {
+                $paginas = (int) $libro['paginas_pdf_cache'];
+                $paginasCalculadas = $paginas;
+            } else {
+                $paginasCalculadas = contarPaginasPDF($rutaAbsolutaPdf);
+                $paginas = $paginasCalculadas ?: $paginas;
+            }
+        } else {
+            $paginasCalculadas = null;
+        }
 
 
         if ($debug) {
@@ -250,6 +306,7 @@ foreach ($libros as $libro) {
     // --------------------------------------------------------
 
     $color = '#8C7355';
+    $fotoKey = null;
 
     if (!empty($libro['ruta_foto'])) {
 
@@ -257,11 +314,18 @@ foreach ($libros as $libro) {
             $RAIZ_PROYECTO . '/' .
             ltrim($libro['ruta_foto'], '/');
 
-        $colorCalculado =
-            colorDominante($rutaAbsolutaFoto);
-
-        $color =
-            $colorCalculado ?: $color;
+        $fotoStat = @stat($rutaAbsolutaFoto);
+        if ($fotoStat) {
+            $fotoKey = hash('sha256', $libro['ruta_foto'] . '|' . $fotoStat['mtime'] . '|' . $fotoStat['size']);
+            if ($libro['color_portada_cache_key'] === $fotoKey && !empty($libro['color_portada_cache'])) {
+                $colorCalculado = $libro['color_portada_cache'];
+            } else {
+                $colorCalculado = colorDominante($rutaAbsolutaFoto);
+            }
+            $color = $colorCalculado ?: $color;
+        } else {
+            $colorCalculado = null;
+        }
 
 
         if ($debug) {
@@ -277,6 +341,18 @@ foreach ($libros as $libro) {
         }
     }
 
+
+    // Guardar los cálculos solo cuando cambian los archivos fuente.
+    if (($pdfKey !== null && ($libro['paginas_pdf_cache_key'] !== $pdfKey || $libro['paginas_pdf_cache'] === null)) ||
+        ($fotoKey !== null && ($libro['color_portada_cache_key'] !== $fotoKey || empty($libro['color_portada_cache'])))) {
+        $actualizarCache->execute([
+            ':paginas' => $paginas,
+            ':pdf_key' => $pdfKey,
+            ':color' => $color,
+            ':foto_key' => $fotoKey,
+            ':id' => (int) $libro['id_libro'],
+        ]);
+    }
 
     // --------------------------------------------------------
     // DISPONIBILIDAD REAL
