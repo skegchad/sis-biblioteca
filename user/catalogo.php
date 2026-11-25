@@ -19,7 +19,7 @@ include ("../layout/user/part1.php");
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria.css">
+<link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria.css?v=<?= filemtime(__DIR__ . '/assets/css/estanteria.css') ?>">
 <link rel="stylesheet" href="<?= $URL ?>/user/assets/css/estanteria-madera.css">
 <style>
     a.btn-mis-libros,
@@ -450,7 +450,23 @@ a.btn-mis-libros:active {
 
         <div class="lector-navegacion">
             <button type="button" id="pagina-anterior" class="nav-pagina" aria-label="Páginas anteriores">◀</button>
-            <span id="lector-indicador" class="lector-indicador">1 / 1</span>
+            <span class="lector-pagina-indicador">
+                <span id="lector-pagina-izquierda" class="lector-pagina-izquierda">1-</span>
+                <input
+                    type="number"
+                    id="lector-indicador"
+                    class="lector-indicador"
+                    min="2"
+                    max="1"
+                    step="2"
+                    value="2"
+                    disabled
+                    inputmode="numeric"
+                    aria-label="Ir a la página"
+                    title="En vista doble, escribe un número par. Por ejemplo, 26 abre las páginas 25-26."
+                >
+            </span>
+            <span id="lector-total-paginas" class="lector-total-paginas">/ 1</span>
             <button type="button" id="pagina-siguiente" class="nav-pagina" aria-label="Páginas siguientes">▶</button>
         </div>
     </div>
@@ -597,7 +613,7 @@ function abrirPanelListas(libroId, listas, alCerrar) {
 </script>
 <script
     type="module"
-    src="<?= $URL ?>/user/assets/js/estanteria-3d.js"
+    src="<?= $URL ?>/user/assets/js/estanteria-3d.js?v=<?= filemtime(__DIR__ . '/assets/js/estanteria-3d.js') ?>"
 ></script>
 <script src="<?= $URL ?>/user/assets/js/estanteria-decoracion.js"></script>
 

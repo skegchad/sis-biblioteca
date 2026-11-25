@@ -95,6 +95,8 @@ const canvasDer = document.getElementById('canvas-pagina-der');
 const btnPaginaAnterior = document.getElementById('pagina-anterior');
 const btnPaginaSiguiente = document.getElementById('pagina-siguiente');
 const lectorIndicador = document.getElementById('lector-indicador');
+const lectorPaginaIzquierda = document.getElementById('lector-pagina-izquierda');
+const lectorTotalPaginas = document.getElementById('lector-total-paginas');
 const btnVerUna = document.getElementById('ver-una-pagina');
 const btnVerDos = document.getElementById('ver-dos-paginas');
 const paginasInteriorEl = document.getElementById('paginas-interior');
@@ -167,6 +169,7 @@ let rutaPaginasActuales = null;
 let versionPaginasActuales = '';
 const imagenesPaginaCache = new Map();
 let modoUnaPagina = window.matchMedia('(max-width: 768px)').matches;
+let cambioPaginaEnCurso = false;
 let mallaOrigenLectura = null; // la malla 3D que se ocultó al abrir el lector
 
 let rutaPdfActual = null; // qué PDF está abierto ahora, para guardar/leer su página
@@ -285,7 +288,9 @@ async function renderizarPaginasActuales() {
   // Mostrar el primer folio apenas termine de dibujarse; no esperar al
   // segundo folio para quitar el estado de carga del libro.
   await tareaIzquierda;
-  if (lectorPdf.classList.contains('visible')) cargandoLibroEl.classList.remove('visible');
+  if (lectorPdf.classList.contains('visible') && !cambioPaginaEnCurso) {
+    cargandoLibroEl.classList.remove('visible');
+  }
   if (tareaDerecha) await tareaDerecha;
  
   actualizarIndicadorYBotones();
@@ -383,17 +388,249 @@ async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
 
 
 function actualizarIndicadorYBotones() {
+  const ocupado = cambioPaginaEnCurso;
+  const ultimaPaginaPar = Math.max(2, totalPaginasPdf + (totalPaginasPdf % 2));
+  const paginaCampo = modoUnaPagina
+    ? paginaIzqActual
+    : (paginaIzqActual + 1 <= totalPaginasPdf ? paginaIzqActual + 1 : ultimaPaginaPar);
+  lectorIndicador.min = modoUnaPagina ? '1' : '2';
+  lectorIndicador.max = String(modoUnaPagina ? Math.max(1, totalPaginasPdf) : ultimaPaginaPar);
+  lectorIndicador.step = modoUnaPagina ? '1' : '2';
+  lectorIndicador.value = String(Math.max(1, paginaCampo));
+  lectorIndicador.disabled = ocupado || totalPaginasPdf < 1;
+  lectorIndicador.setCustomValidity('');
+  lectorPaginaIzquierda.hidden = modoUnaPagina;
+  lectorPaginaIzquierda.textContent = `${paginaIzqActual}-`;
+  lectorTotalPaginas.textContent = `/ ${totalPaginasPdf}`;
   if (modoUnaPagina) {
-    lectorIndicador.textContent = `${paginaIzqActual} / ${totalPaginasPdf}`;
-    btnPaginaAnterior.disabled = paginaIzqActual <= 1;
-    btnPaginaSiguiente.disabled = paginaIzqActual >= totalPaginasPdf;
+    btnPaginaAnterior.disabled = ocupado || paginaIzqActual <= 1;
+    btnPaginaSiguiente.disabled = ocupado || paginaIzqActual >= totalPaginasPdf;
   } else {
-    const finRango = Math.min(paginaIzqActual + 1, totalPaginasPdf);
-    lectorIndicador.textContent = `${paginaIzqActual}-${finRango} / ${totalPaginasPdf}`;
-    btnPaginaAnterior.disabled = paginaIzqActual <= 1;
-    btnPaginaSiguiente.disabled = paginaIzqActual + 1 >= totalPaginasPdf;
+    btnPaginaAnterior.disabled = ocupado || paginaIzqActual <= 1;
+    btnPaginaSiguiente.disabled = ocupado || paginaIzqActual + 1 >= totalPaginasPdf;
   }
 }
+
+function colocarCanvasEnCara(canvas, cara) {
+  if (!canvas || !cara) return;
+  canvas.classList.remove('canvas-pagina-preparada');
+  canvas.style.position = 'relative';
+  canvas.style.left = '';
+  canvas.style.top = '';
+  canvas.style.visibility = 'visible';
+  canvas.style.pointerEvents = 'none';
+  cara.appendChild(canvas);
+}
+
+function crearHojaEnGiro(direccion, paginaFrontalActual, paginaPosteriorPreparada) {
+  if (!paginaFrontalActual?.width || !paginaFrontalActual?.height) return null;
+  const capa = document.createElement('div');
+  capa.className = `pagina-en-giro ${direccion}${modoUnaPagina ? ' pagina-unica' : ''}`;
+  capa.setAttribute('aria-hidden', 'true');
+
+  const frente = document.createElement('div');
+  frente.className = 'pagina-en-giro-cara frente';
+  // Se mueve el canvas actual a la hoja que gira: no se crea un clon frontal.
+  colocarCanvasEnCara(paginaFrontalActual, frente);
+
+  const reverso = document.createElement('div');
+  reverso.className = 'pagina-en-giro-cara reverso';
+  colocarCanvasEnCara(paginaPosteriorPreparada, reverso);
+
+  capa.append(frente, reverso);
+  paginasInteriorEl.appendChild(capa);
+  return capa;
+}
+
+async function prepararPaginasDestino(paginaInicial) {
+  const destino = [{ numero: paginaInicial, visible: canvasIzq }];
+  if (!modoUnaPagina && paginaInicial + 1 <= totalPaginasPdf) {
+    destino.push({ numero: paginaInicial + 1, visible: canvasDer });
+  }
+
+  const preparadas = destino.map(({ numero, visible }) => {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'canvas-pagina-preparada';
+    canvas.style.position = 'absolute';
+    canvas.style.left = '0';
+    canvas.style.top = '0';
+    visible.parentElement.appendChild(canvas);
+    return { numero, visible, contenedor: visible.parentElement, canvas };
+  });
+
+  try {
+    await Promise.all(preparadas.map(({ numero, canvas }) =>
+      renderizarPaginaEnCanvas(numero, canvas)
+    ));
+    return preparadas;
+  } catch (error) {
+    preparadas.forEach(({ canvas }) => canvas.remove());
+    throw error;
+  }
+}
+
+function mostrarPaginasPreparadas(preparadas) {
+  preparadas.forEach(({ visible, contenedor, canvas }) => {
+    contenedor.appendChild(visible);
+    visible.style.position = '';
+    visible.style.left = '';
+    visible.style.top = '';
+    visible.style.pointerEvents = '';
+    visible.width = canvas.width;
+    visible.height = canvas.height;
+    visible.style.width = canvas.style.width;
+    visible.style.height = canvas.style.height;
+    const contexto = visible.getContext('2d');
+    contexto.clearRect(0, 0, visible.width, visible.height);
+    contexto.drawImage(canvas, 0, 0);
+    canvas.remove();
+  });
+  canvasDer.style.visibility = !modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf
+    ? 'visible'
+    : 'hidden';
+}
+
+function mostrarPaginaBajoHoja(preparadas, direccion) {
+  if (modoUnaPagina) return;
+  // La página que no gira se coloca debajo de la hoja en movimiento para que
+  // aparezca durante el giro, en el lado al que realmente pertenece.
+  const indice = direccion === 'adelante' ? 1 : 0;
+  const pagina = preparadas[indice];
+  if (!pagina) return;
+  pagina.canvas.classList.remove('canvas-pagina-preparada');
+  pagina.canvas.style.position = 'relative';
+  pagina.canvas.style.left = '';
+  pagina.canvas.style.top = '';
+  pagina.canvas.style.visibility = 'visible';
+  pagina.canvas.style.pointerEvents = 'none';
+  pagina.contenedor.appendChild(pagina.canvas);
+}
+
+function animarHojaEnGiro(capa) {
+  if (!capa) return Promise.resolve();
+  return new Promise((resolve) => {
+    let finalizada = false;
+    const terminar = () => {
+      if (finalizada) return;
+      finalizada = true;
+      resolve();
+    };
+    capa.addEventListener('animationend', terminar, { once: true });
+    requestAnimationFrame(() => capa.classList.add('animando'));
+    // Respaldo por si el navegador no dispara animationend (p. ej. pestaña suspendida).
+    window.setTimeout(terminar, 700);
+  });
+}
+
+async function navegarPaginas(direccion) {
+  if (cambioPaginaEnCurso) return;
+  const salto = modoUnaPagina ? 1 : 2;
+  const paginaAnterior = paginaIzqActual;
+  const siguientePagina = direccion === 'adelante'
+    ? Math.min(totalPaginasPdf, paginaAnterior + salto)
+    : Math.max(1, paginaAnterior - salto);
+  if (siguientePagina === paginaAnterior) return;
+
+  cambioPaginaEnCurso = true;
+  actualizarIndicadorYBotones();
+  restaurarZoomLector();
+  let capa = null;
+  let preparadas = [];
+
+  try {
+    // Renderiza en canvases ocultos. El pliego visible permanece intacto
+    // durante la carga y el giro, evitando saltos entre páginas o de marco.
+    preparadas = await prepararPaginasDestino(siguientePagina);
+    // La hoja que gira siempre conserva su página actual al frente. La nueva
+    // página del pliego opuesto se coloca en el reverso de esa misma hoja.
+    const canvasFrontalActual = !modoUnaPagina && direccion === 'adelante'
+      ? canvasDer
+      : canvasIzq;
+    const indiceReverso = !modoUnaPagina && preparadas[1]
+      ? (direccion === 'adelante' ? 0 : 1)
+      : 0;
+    capa = crearHojaEnGiro(
+      direccion,
+      canvasFrontalActual,
+      preparadas[indiceReverso]?.canvas
+    );
+    mostrarPaginaBajoHoja(preparadas, direccion);
+    await animarHojaEnGiro(capa);
+    paginaIzqActual = siguientePagina;
+    mostrarPaginasPreparadas(preparadas);
+    preparadas = [];
+
+    if (rutaPdfActual) {
+      try {
+        localStorage.setItem(claveUltimaPagina(rutaPdfActual), String(paginaIzqActual));
+      } catch (_) { /* recordar la página es opcional */ }
+    }
+  } catch (error) {
+    console.error('No se pudo cambiar de página', error);
+  } finally {
+    capa?.remove();
+    preparadas.forEach(({ canvas }) => canvas.remove());
+    cambioPaginaEnCurso = false;
+    actualizarIndicadorYBotones();
+  }
+}
+
+async function saltarAPaginaIntroducida() {
+  if (cambioPaginaEnCurso || totalPaginasPdf < 1) return;
+  const numero = Number(lectorIndicador.value);
+  if (lectorIndicador.value.trim() === '' || !Number.isFinite(numero)) {
+    actualizarIndicadorYBotones();
+    return;
+  }
+
+  if (!modoUnaPagina && (Math.trunc(numero) < 2 || Math.trunc(numero) % 2 !== 0)) {
+    lectorIndicador.setCustomValidity('En vista de dos páginas, escribe un número par (por ejemplo, 26).');
+    lectorIndicador.reportValidity();
+    return;
+  }
+
+  const ultimaPaginaPar = Math.max(2, totalPaginasPdf + (totalPaginasPdf % 2));
+  const paginaSolicitada = modoUnaPagina
+    ? Math.min(totalPaginasPdf, Math.max(1, Math.trunc(numero)))
+    : Math.min(ultimaPaginaPar, Math.max(2, Math.trunc(numero)));
+  const destinoIzquierdo = modoUnaPagina ? paginaSolicitada : paginaSolicitada - 1;
+  if (destinoIzquierdo === paginaIzqActual) {
+    actualizarIndicadorYBotones();
+    return;
+  }
+
+  cambioPaginaEnCurso = true;
+  actualizarIndicadorYBotones();
+  restaurarZoomLector();
+  let preparadas = [];
+  try {
+    // Prepara el destino fuera de la vista y cambia el pliego completo cuando
+    // ambas páginas estén listas, sin animar una página de dirección incorrecta.
+    preparadas = await prepararPaginasDestino(destinoIzquierdo);
+    paginaIzqActual = destinoIzquierdo;
+    mostrarPaginasPreparadas(preparadas);
+    preparadas = [];
+    if (rutaPdfActual) {
+      try {
+        localStorage.setItem(claveUltimaPagina(rutaPdfActual), String(paginaIzqActual));
+      } catch (_) { /* recordar la página es opcional */ }
+    }
+  } catch (error) {
+    console.error('No se pudo saltar a la página solicitada', error);
+  } finally {
+    preparadas.forEach(({ canvas }) => canvas.remove());
+    cambioPaginaEnCurso = false;
+    actualizarIndicadorYBotones();
+  }
+}
+
+lectorIndicador.addEventListener('change', saltarAPaginaIntroducida);
+lectorIndicador.addEventListener('input', () => lectorIndicador.setCustomValidity(''));
+lectorIndicador.addEventListener('keydown', (evento) => {
+  if (evento.key !== 'Enter') return;
+  evento.preventDefault();
+  saltarAPaginaIntroducida();
+});
 
 function actualizarModoVista() {
   paginasInteriorEl.classList.toggle('modo-una-pagina', modoUnaPagina);
@@ -401,31 +638,46 @@ function actualizarModoVista() {
   btnVerDos.classList.toggle('activo', !modoUnaPagina);
 }
 
-btnPaginaAnterior.addEventListener('click', async () => {
-  const salto = modoUnaPagina ? 1 : 2;
-  paginaIzqActual = Math.max(1, paginaIzqActual - salto);
-  await renderizarPaginasActuales();
-});
+btnPaginaAnterior.addEventListener('click', () => navegarPaginas('atras'));
 
-btnPaginaSiguiente.addEventListener('click', async () => {
-  const salto = modoUnaPagina ? 1 : 2;
-  paginaIzqActual = Math.min(totalPaginasPdf, paginaIzqActual + salto);
-  await renderizarPaginasActuales();
-});
+btnPaginaSiguiente.addEventListener('click', () => navegarPaginas('adelante'));
 
-btnVerUna.addEventListener('click', async () => {
-  if (esMovilLector()) return;
-  modoUnaPagina = true;
+async function cambiarModoLector(nuevoModoUnaPagina) {
+  if (esMovilLector() || cambioPaginaEnCurso || modoUnaPagina === nuevoModoUnaPagina) return;
+
+  cambioPaginaEnCurso = true;
+  modoUnaPagina = nuevoModoUnaPagina;
+  if (!modoUnaPagina && paginaIzqActual % 2 === 0) {
+    paginaIzqActual = Math.max(1, paginaIzqActual - 1);
+  }
   actualizarModoVista();
-  await recalcularTamanoYRenderizar();
-});
+  actualizarIndicadorYBotones();
+  restaurarZoomLector();
+  cargandoLibroEl.classList.add('visible');
 
-btnVerDos.addEventListener('click', async () => {
-  if (esMovilLector()) return;
-  modoUnaPagina = false;
-  actualizarModoVista();
-  await recalcularTamanoYRenderizar();
-});
+  // Reinicia los bitmaps del visor para evitar que sobrevivan restos del modo anterior.
+  paginasInteriorEl.querySelectorAll('.canvas-pagina-preparada, .pagina-en-giro').forEach((elemento) => elemento.remove());
+  [canvasIzq, canvasDer].forEach((canvas) => {
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.style.width = '0px';
+    canvas.style.height = '0px';
+  });
+  canvasDer.style.visibility = 'hidden';
+
+  try {
+    await recalcularTamanoYRenderizar();
+  } catch (error) {
+    console.error('No se pudo reiniciar el visor al cambiar el modo de páginas', error);
+  } finally {
+    cargandoLibroEl.classList.remove('visible');
+    cambioPaginaEnCurso = false;
+    actualizarIndicadorYBotones();
+  }
+}
+
+btnVerUna.addEventListener('click', () => cambiarModoLector(true));
+btnVerDos.addEventListener('click', () => cambiarModoLector(false));
 
 async function recalcularTamanoYRenderizar() {
   if (!pdfActual && !rutaPaginasActuales) return;
@@ -2290,7 +2542,10 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null, rutaPaginas = nu
     canvas.style.height = '0px';
   }
   canvasDer.style.visibility = 'hidden';
-  lectorIndicador.textContent = '';
+  lectorIndicador.value = '';
+  lectorIndicador.max = '1';
+  lectorIndicador.disabled = true;
+  lectorTotalPaginas.textContent = '/ 0';
   btnPaginaAnterior.disabled = true;
   btnPaginaSiguiente.disabled = true;
 
@@ -2354,6 +2609,9 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null, rutaPaginas = nu
     } catch (e) {
       // localStorage puede fallar (modo privado, cuota llena, etc.) —
       // no es grave, simplemente arranca en la página 1.
+    }
+    if (!modoUnaPagina && paginaIzqActual % 2 === 0) {
+      paginaIzqActual = Math.max(1, paginaIzqActual - 1);
     }
 
     // PASO 1: la tapa empieza a girar
