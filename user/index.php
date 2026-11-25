@@ -1,5 +1,8 @@
 <?php
 include ("../app/config/config.php");
+
+// Ngrok expone el sitio mediante HTTPS; evita generar recursos con HTTP.
+$URL = preg_replace('/^http:\/\//i', 'https://', $URL);
 include ("../app/config/conexion.php");
 include ("../layout/admin/login.php");
 include ("../layout/admin/datos_usuario.php");

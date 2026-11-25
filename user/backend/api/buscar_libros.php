@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../../app/config/conexion.php';
 
 require_once __DIR__ . '/../helpers/PdfPages.php';
 require_once __DIR__ . '/../helpers/DominantColor.php';
+require_once __DIR__ . '/../../../app/helpers/pdf_paginas.php';
 
 
 $RAIZ_PROYECTO = realpath(__DIR__ . '/../../../');
@@ -393,7 +394,16 @@ foreach ($libros as $libro) {
             'color'            => $color,
             'ruta_foto'        => $libro['ruta_foto'],
             'ruta_pdf'         => $libro['ruta_pdf'],
+            'ruta_paginas'     => null,
         ];
+
+    $manifestPaginas = pdfPaginasManifest((int)$libro['id_libro']);
+    $pdfParaPaginas = !empty($libro['ruta_pdf'])
+        ? $RAIZ_PROYECTO . '/' . ltrim($libro['ruta_pdf'], '/')
+        : null;
+    if ($manifestPaginas && ((!$pdfParaPaginas && empty($libro['ruta_pdf'])) || pdfPaginasCompletas((int)$libro['id_libro'], $pdfParaPaginas))) {
+        $item['ruta_paginas'] = 'public/uploads/pdf/paginas/' . (int)$libro['id_libro'];
+    }
 
 
     if ($debug) {

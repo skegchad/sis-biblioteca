@@ -1,0 +1,43 @@
+# Entorno local y datos sensibles
+.env
+.env.*
+!.env.example
+!.env.*.example
+app/config/config.local.php
+app/config/config.*.local.php
+
+# Sistemas operativos y editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporales, registros y cachés
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+/tmp/
+/temp/
+/cache/
+/.phpunit.cache/
+/ai/debug*.txt
+/ai/*debug*.log
+/ai/php_errors.log
+
+# Datos de biblioteca y archivos que se regeneran o suben en producción
+/database/bd_sis_biblioteca.sql
+/public/uploads/pdf/
+/public/uploads/img/admin/*
+!/public/uploads/img/admin/default.jpg
+/public/uploads/img/libros/libro_*
+/public/uploads/img/libros/portada*
+/public/uploads/img/libros/categorias/cat_*
+/public/uploads/img/noticias/noticia*
+
+# No ignorar código ni dependencias necesarias para el despliegue.

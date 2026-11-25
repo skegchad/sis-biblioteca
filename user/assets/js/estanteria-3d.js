@@ -58,6 +58,7 @@ import * as THREE from 'three';
   // ============================================================
 
   let pdfjsListo = null;
+  const pdfPrecargas = new Map();
   function obtenerPdfjs() {
     if (!pdfjsListo) {
       pdfjsListo = import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs').then((modulo) => {
@@ -68,6 +69,22 @@ import * as THREE from 'three';
       });
     }
     return pdfjsListo;
+  }
+
+  function precargarPdf(rutaPdf) {
+    if (!pdfPrecargas.has(rutaPdf)) {
+      // Solicita primero metadatos y los rangos necesarios; no descarga en
+      // secuencia el PDF completo antes de poder mostrar la primera página.
+      const promesa = obtenerPdfjs().then((lib) => lib.getDocument({
+        url: rutaPdf,
+        rangeChunkSize: 1024 * 1024,
+        disableStream: true,
+        disableAutoFetch: true,
+      }).promise);
+      pdfPrecargas.set(rutaPdf, promesa);
+      promesa.catch(() => pdfPrecargas.delete(rutaPdf));
+    }
+    return pdfPrecargas.get(rutaPdf);
   }
 
 const lectorPdf = document.getElementById('lector-pdf');
@@ -146,6 +163,9 @@ let mallaVuelo = null;
 let pdfActual = null;
 let totalPaginasPdf = 0;
 let paginaIzqActual = 1;
+let rutaPaginasActuales = null;
+let versionPaginasActuales = '';
+const imagenesPaginaCache = new Map();
 let modoUnaPagina = window.matchMedia('(max-width: 768px)').matches;
 let mallaOrigenLectura = null; // la malla 3D que se ocultó al abrir el lector
 
@@ -251,16 +271,22 @@ async function renderizarPaginasActuales() {
  
   restaurarZoomLector();
  
-  if (!pdfActual) return;
+  if (!pdfActual && !rutaPaginasActuales) return;
  
-  await renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
- 
+  const tareaIzquierda = renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
+  const tareaDerecha = !modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf
+    ? renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer)
+    : null;
   if (!modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf) {
     canvasDer.style.visibility = 'visible';
-    await renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer);
   } else {
     canvasDer.style.visibility = 'hidden';
   }
+  // Mostrar el primer folio apenas termine de dibujarse; no esperar al
+  // segundo folio para quitar el estado de carga del libro.
+  await tareaIzquierda;
+  if (lectorPdf.classList.contains('visible')) cargandoLibroEl.classList.remove('visible');
+  if (tareaDerecha) await tareaDerecha;
  
   actualizarIndicadorYBotones();
  
@@ -276,17 +302,48 @@ async function renderizarPaginasActuales() {
 }
 
 async function rerenderizarPaginasEnAltaResolucion() {
-  if (!pdfActual) return;
+  if (!pdfActual && !rutaPaginasActuales) return;
  
-  await renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq);
- 
+  const tareas = [renderizarPaginaEnCanvas(paginaIzqActual, canvasIzq)];
   if (!modoUnaPagina && paginaIzqActual + 1 <= totalPaginasPdf) {
-    await renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer);
+    tareas.push(renderizarPaginaEnCanvas(paginaIzqActual + 1, canvasDer));
   }
+  await Promise.all(tareas);
 }
 
 async function renderizarPaginaEnCanvas(numeroPagina, canvas) {
   if (numeroPagina < 1 || numeroPagina > totalPaginasPdf) return;
+
+  if (rutaPaginasActuales) {
+    const url = `${rutaPaginasActuales}/page-${String(numeroPagina).padStart(4, '0')}.jpg?v=${encodeURIComponent(versionPaginasActuales)}`;
+    let imagen = imagenesPaginaCache.get(url);
+    if (!imagen) {
+      imagen = new Image();
+      imagenesPaginaCache.set(url, imagen);
+      imagenesPaginaCache.set(url, new Promise((resolve, reject) => {
+        imagen.onload = () => resolve(imagen);
+        imagen.onerror = reject;
+        imagen.src = url;
+      }));
+      imagenesPaginaCache.set(url, await imagenesPaginaCache.get(url));
+      while (imagenesPaginaCache.size > 4) imagenesPaginaCache.delete(imagenesPaginaCache.keys().next().value);
+      imagen = imagenesPaginaCache.get(url);
+    } else if (imagen instanceof Promise) {
+      imagen = await imagen;
+    }
+    const contenedor = canvas.parentElement;
+    const ancho = contenedor.clientWidth || contenedor.getBoundingClientRect().width;
+    const alto = contenedor.clientHeight || contenedor.getBoundingClientRect().height;
+    if (!ancho || !alto) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const escala = Math.min(ancho / imagen.naturalWidth, alto / imagen.naturalHeight) * dpr * factorResolucionExtra;
+    canvas.width = Math.round(imagen.naturalWidth * escala);
+    canvas.height = Math.round(imagen.naturalHeight * escala);
+    canvas.style.width = `${canvas.width / dpr}px`;
+    canvas.style.height = `${canvas.height / dpr}px`;
+    canvas.getContext('2d').drawImage(imagen, 0, 0, canvas.width, canvas.height);
+    return;
+  }
 
   const pagina = await pdfActual.getPage(numeroPagina);
   const contenedor = canvas.parentElement;
@@ -371,11 +428,17 @@ btnVerDos.addEventListener('click', async () => {
 });
 
 async function recalcularTamanoYRenderizar() {
-  if (!pdfActual) return;
+  if (!pdfActual && !rutaPaginasActuales) return;
 
-  const pagina = await pdfActual.getPage(1);
-  const vp = pagina.getViewport({ scale: 1 });
-  const aspecto = vp.width / vp.height;
+  let aspecto;
+  if (rutaPaginasActuales) {
+    const img = await cargarImagenPagina(1);
+    aspecto = img.naturalWidth / img.naturalHeight;
+  } else {
+    const pagina = await pdfActual.getPage(1);
+    const vp = pagina.getViewport({ scale: 1 });
+    aspecto = vp.width / vp.height;
+  }
 
   const altoDestino = parseFloat(libroAbiertoEl.style.height) || window.innerHeight * 0.6;
   const anchoCubierta = altoDestino * aspecto;
@@ -391,6 +454,19 @@ async function recalcularTamanoYRenderizar() {
   lomoFlipEl.style.width = `${anchoCubierta}px`;
 
   await renderizarPaginasActuales();
+}
+
+function cargarImagenPagina(numero) {
+  const url = `${rutaPaginasActuales}/page-${String(numero).padStart(4, '0')}.jpg?v=${encodeURIComponent(versionPaginasActuales)}`;
+  if (imagenesPaginaCache.has(url)) return Promise.resolve(imagenesPaginaCache.get(url));
+  const promesa = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('No se pudo cargar una página optimizada.'));
+    img.src = url;
+  });
+  imagenesPaginaCache.set(url, promesa);
+  return promesa.then(img => { imagenesPaginaCache.set(url, img); return img; });
 }
 
 function cerrarLector() {
@@ -413,8 +489,19 @@ function cerrarLector() {
     mallaOrigenLectura = null;
   }
 
+  const documentoCerrado = pdfActual;
   pdfActual = null;
   totalPaginasPdf = 0;
+  rutaPaginasActuales = null;
+  versionPaginasActuales = '';
+  imagenesPaginaCache.clear();
+  if (rutaPdfActual) {
+    pdfPrecargas.delete(rutaPdfActual);
+    rutaPdfActual = null;
+  }
+  // Liberar buffers y recursos del documento al cerrar; mantener muchos PDFs
+  // abiertos en caché elevaría el uso de RAM en equipos modestos.
+  if (documentoCerrado) documentoCerrado.destroy().catch(() => {});
 }
 
   cerrarLectorBtn.addEventListener('click', cerrarLector);
@@ -1428,12 +1515,20 @@ function cerrarLector() {
       infoDisponibilidad.classList.add('prestado');
     }
 
-    if (libro.ruta_pdf) {
+    if (libro.ruta_pdf || libro.ruta_paginas) {
       const rutaPdfAbsoluta = `${BASE}/${libro.ruta_pdf}`.replace(/([^:]\/)\/+/g, '$1');
+      const rutaPaginasAbsoluta = libro.ruta_paginas
+        ? `${BASE}/${libro.ruta_paginas}`.replace(/([^:]\/)\/+/g, '$1')
+        : null;
 
       // Botón "LEER PDF" → abre el archivo directo en pestaña nueva
-      botonLeerPdf.href = rutaPdfAbsoluta;
-      botonLeerPdf.style.display = 'flex';
+      if (libro.ruta_pdf) {
+        botonLeerPdf.href = rutaPdfAbsoluta;
+        botonLeerPdf.style.display = 'flex';
+      } else {
+        botonLeerPdf.removeAttribute('href');
+        botonLeerPdf.style.display = 'none';
+      }
 
       // Botón "LEER" → dispara la animación del lector 3D
       botonLeerAnimado.style.display = 'flex';
@@ -1443,6 +1538,11 @@ function cerrarLector() {
 
       await solicitarPantallaCompleta();
 
+      // Empieza la descarga mientras corre el vuelo, pero sin cubrir pantalla.
+      if (!rutaPaginasAbsoluta && rutaPdfAbsoluta) {
+        precargarPdf(rutaPdfAbsoluta).catch((err) => console.error('No se pudo preparar el PDF', err));
+      }
+
       // Un par de frames de margen: el fullscreen puede "resolver" la
       // promesa un instante antes de que innerWidth/innerHeight ya estén
       // actualizados del todo — esto evita esa carrera.
@@ -1450,7 +1550,7 @@ function cerrarLector() {
         requestAnimationFrame(() => requestAnimationFrame(resolve));
       });
 
-      volarLibroYAbrir(rutaPdfAbsoluta, malla);
+      volarLibroYAbrir(rutaPdfAbsoluta, malla, rutaPaginasAbsoluta);
     };
     } else {
       botonLeerPdf.removeAttribute('href');
@@ -2072,9 +2172,9 @@ function destruirRendererVuelo() {
 
 
 
-function volarLibroYAbrir(rutaPdf, malla) {
+function volarLibroYAbrir(rutaPdf, malla, rutaPaginas = null) {
   if (!malla) {
-    abrirLector(rutaPdf, null);
+    abrirLector(rutaPdf, null, null, rutaPaginas);
     return;
   }
 
@@ -2083,7 +2183,7 @@ function volarLibroYAbrir(rutaPdf, malla) {
   const rect = obtenerRectPantalla(malla);
   if (!rect) {
     destruirRendererVuelo();
-    abrirLector(rutaPdf, malla);
+    abrirLector(rutaPdf, malla, null, rutaPaginas);
     return;
   }
 
@@ -2171,21 +2271,35 @@ function volarLibroYAbrir(rutaPdf, malla) {
     vueloContenedor.classList.remove('visible');
     destruirRendererVuelo(); // <- se destruye acá, no se deja vivo
 
-    abrirLector(rutaPdf, malla, rectFinal);
+    abrirLector(rutaPdf, malla, rectFinal, rutaPaginas);
   }
 
   // ESTA LÍNEA ES LA QUE FALTABA EN TU CÓDIGO ORIGINAL:
   requestAnimationFrame(paso);
 }
 
-async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
-  const pdfjsLib = await obtenerPdfjs();
+async function abrirLector(rutaPdf, malla, rectYaGrande = null, rutaPaginas = null) {
+
+  // No dejar visibles páginas ni numeración del libro abierto anteriormente.
+  for (const canvas of [canvasIzq, canvasDer]) {
+    const contexto = canvas.getContext('2d');
+    contexto.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.style.width = '0px';
+    canvas.style.height = '0px';
+  }
+  canvasDer.style.visibility = 'hidden';
+  lectorIndicador.textContent = '';
+  btnPaginaAnterior.disabled = true;
+  btnPaginaSiguiente.disabled = true;
 
   mallaOrigenLectura = malla;
   const libro = malla ? malla.userData.libro : null;
   const rect = rectYaGrande || (malla ? obtenerRectPantalla(malla) : null);
 
   lectorPdf.classList.add('visible');
+  cargandoLibroEl.classList.remove('visible');
   if (libro) construirTapaHTML(libro);
 
   // --- Estado inicial: tapa y libro en la misma posición/tamaño, sin transición ---
@@ -2215,8 +2329,20 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
   actualizarModoVista();
 
   try {
-    pdfActual = await pdfjsLib.getDocument(rutaPdf).promise;
-    totalPaginasPdf = pdfActual.numPages;
+    rutaPaginasActuales = rutaPaginas;
+    if (rutaPaginasActuales) {
+      const manifestResponse = await fetch(`${rutaPaginasActuales}/manifest.json`, { cache: 'force-cache' });
+      if (!manifestResponse.ok) throw new Error('No se encontró el índice de páginas optimizadas.');
+      const manifest = await manifestResponse.json();
+      totalPaginasPdf = Number(manifest.pages) || 0;
+      if (!totalPaginasPdf) throw new Error('El índice de páginas optimizadas está vacío.');
+      versionPaginasActuales = String(manifest.generated_at || manifest.source_mtime || '1');
+      pdfActual = null;
+    } else {
+      const pdfjsLib = await obtenerPdfjs();
+      pdfActual = await precargarPdf(rutaPdf);
+      totalPaginasPdf = pdfActual.numPages;
+    }
     rutaPdfActual = rutaPdf;
 
     paginaIzqActual = 1;
@@ -2239,9 +2365,15 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     // el tamaño ACTUAL de la ventana) y se lo aplicamos tanto al libro
     // real como a la tapa (misma posición en pantalla, para que el
     // resto del giro se vea proporcional).
-    const paginaRef = await pdfActual.getPage(1);
-    const vpRef = paginaRef.getViewport({ scale: 1 });
-    const aspectoPagina = vpRef.width / vpRef.height;
+    let aspectoPagina;
+    if (rutaPaginasActuales) {
+      const imgRef = await cargarImagenPagina(1);
+      aspectoPagina = imgRef.naturalWidth / imgRef.naturalHeight;
+    } else {
+      const paginaRef = await pdfActual.getPage(1);
+      const vpRef = paginaRef.getViewport({ scale: 1 });
+      aspectoPagina = vpRef.width / vpRef.height;
+    }
 
     // Reutilizamos la misma función que ya usa recalcularTamanoYRenderizar(),
     // así el tamaño inicial y los resizes posteriores son consistentes y
@@ -2265,7 +2397,13 @@ async function abrirLector(rutaPdf, malla, rectYaGrande = null) {
     await esperar(750);
 
     // PASO 3: layout ya asentado y correcto -> recién ahora renderizamos
+    Object.assign(cargandoLibroEl.style, {
+      left: `${leftFinal}px`, top: `${topFinal}px`,
+      width: `${anchoFinalInterior}px`, height: `${altoDestino}px`,
+    });
+    cargandoLibroEl.classList.add('visible');
     await renderizarPaginasActuales();
+    cargandoLibroEl.classList.remove('visible');
 
     // PASO 4: la tapa termina de girar y se desvanece, revelando el libro real
     portadaFlipEl.style.transform = 'rotateY(-180deg)';

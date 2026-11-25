@@ -154,6 +154,13 @@ table.dataTable {
     <i class="ti ti-circle-check"></i> ¡Libro actualizado!
 </div>
 <?php endif; ?>
+<?php if(isset($_GET['paginas']) && $_GET['paginas'] === 'pendiente'): ?>
+<div id="toast-success-eliminado" style="background:#b7791f;animation:none">
+    El libro se guardó, pero sus páginas quedaron pendientes. Revisa «Optimizar páginas de libros».
+</div>
+<?php elseif(isset($_GET['paginas']) && $_GET['paginas'] === 'procesado'): ?>
+<div id="toast-success"><i class="ti ti-circle-check"></i> Páginas optimizadas para el lector.</div>
+<?php endif; ?>
 <?php if(isset($_GET['success']) && $_GET['success'] === 'eliminado'): ?>
 <div id="toast-success-eliminado">
     <i class="bi bi-trash"></i> ¡Libro eliminado!
@@ -198,6 +205,9 @@ table.dataTable {
                             class="btn btn-outline-danger btn-sm">
                             Ver PDF actual
                             </a>
+                    <a href="<?php echo $URL . '/admin/libros/migrar_paginas.php'; ?>" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="bi bi-images"></i> Optimizar páginas de libros
+                    </a>
                     <table id="tablaLibros" class="table table-hover">
                         <thead>
                             <tr>

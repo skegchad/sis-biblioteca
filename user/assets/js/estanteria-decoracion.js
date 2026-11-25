@@ -44,28 +44,28 @@
     <path d="M9 48h26l-3 22H12z" fill="#efe7d6"/>
     <rect x="7" y="44" width="30" height="7" rx="2" fill="#fbf6ea"/>`, escala);
 
-  // Libros "caídos": tres de pie, dos que se van inclinando como fichas de dominó
-  // y uno acostado en el suelo sobre el que se apoyan.
-  const librosCaidos = (escala = 1) => svg(116, 100, `
-    <rect x="72" y="86" width="42" height="14" rx="1.5" fill="#48613d"/>
-    <rect x="104" y="86" width="10" height="14" fill="#f2ead6"/>
-    <rect x="78" y="86" width="2.5" height="14" fill="#d9b66a"/>
-    <rect x="4" y="22" width="13" height="78" rx="1.5" fill="#7a3b2e"/>
-    <rect x="4" y="30" width="13" height="3" fill="#d9b66a"/>
-    <rect x="18" y="28" width="12" height="72" rx="1.5" fill="#2f5d62"/>
-    <rect x="18" y="36" width="12" height="3" fill="#d9b66a"/>
-    <g transform="rotate(8 45 100)">
-      <rect x="31" y="24" width="14" height="76" rx="1.5" fill="#c9a24a"/>
-      <rect x="31" y="32" width="14" height="3" fill="#7a3b2e"/>
+  // Libros "caídos": tres libros con el MISMO alto que los libros del catálogo
+  // (el svg ocupa todo el alto libre del estante: escala 3 = alto del lienzo).
+  // Dos de pie y uno inclinado hacia la izquierda: su esquina de arriba se arrima al libro azul (se dibuja detrás de él).
+  const librosCaidos = (escala = 3) => svg(204, 380, `
+    <g transform="rotate(-6 196.5 380)">
+      <rect x="146.5" y="0" width="50" height="380" rx="4" fill="#873f55"/>
+      <rect x="146.5" y="44" width="50" height="10" fill="#d9b66a"/>
+      <rect x="146.5" y="64" width="50" height="3" fill="#d9b66a" opacity=".7"/>
+      <rect x="146.5" y="326" width="50" height="8" fill="#d9b66a"/>
+      <rect x="151.5" y="130" width="5" height="130" rx="2.5" fill="#fff" opacity=".16"/>
     </g>
-    <g transform="rotate(20 59 100)">
-      <rect x="46" y="30" width="13" height="70" rx="1.5" fill="#4e4772"/>
-      <rect x="46" y="38" width="13" height="3" fill="#d9b66a"/>
-    </g>
-    <g transform="rotate(38 72 100)">
-      <rect x="60" y="36" width="12" height="64" rx="1.5" fill="#873f55"/>
-      <rect x="60" y="44" width="12" height="3" fill="#d9b66a"/>
-    </g>`, escala);
+    <rect x="56" y="0" width="52" height="380" rx="4" fill="#2f5d62"/>
+    <rect x="56" y="40" width="52" height="10" fill="#d9b66a"/>
+    <rect x="56" y="60" width="52" height="3" fill="#d9b66a" opacity=".7"/>
+    <rect x="56" y="326" width="52" height="8" fill="#d9b66a"/>
+    <rect x="61" y="120" width="5" height="150" rx="2.5" fill="#fff" opacity=".16"/>
+    <rect x="0" y="0" width="56" height="380" rx="4" fill="#7a3b2e"/>
+    <rect x="0" y="48" width="56" height="10" fill="#d9b66a"/>
+    <rect x="0" y="68" width="56" height="3" fill="#d9b66a" opacity=".7"/>
+    <rect x="0" y="326" width="56" height="8" fill="#d9b66a"/>
+    <rect x="5" y="140" width="5" height="160" rx="2.5" fill="#fff" opacity=".16"/>
+    <rect x="0" y="372" width="108" height="8" fill="#000" opacity=".25"/>`, escala);
 
   const jarronDorado = (escala = 1) => svg(40, 80, `
     <path d="M20 34C18 21 14 13 10 5M20 34C20 21 21 12 22 3M20 34C23 22 28 15 33 9" stroke="#8a6a3a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
@@ -77,19 +77,49 @@
     <path d="M26 79c4-8 8-16 6-28-1-8-6-10-6-17h-3c0 7 4 9 5 17 2 12-1 20-5 28z" fill="#a87b22" opacity=".7"/>
     <rect x="13" y="31" width="14" height="4" rx="1.5" fill="#e6c25e"/>`, escala);
 
-  const pina = (escala = 1) => svg(44, 90, `
-    <defs><clipPath id="deco-pina"><ellipse cx="22" cy="63" rx="16" ry="26.5"/></clipPath></defs>
-    <path d="M22 42C14 30 12 16 16 3c4 9 6 20 6 39z" fill="#3c7f43"/>
-    <path d="M22 42C30 30 32 16 28 3c-4 9-6 20-6 39z" fill="#3c7f43"/>
-    <path d="M22 42C18 26 20 10 22 0c2 10 4 26 0 42z" fill="#4c9a54"/>
-    <path d="M22 44C10 38 5 30 6 19c8 7 14 16 16 25z" fill="#2f6a3a"/>
-    <path d="M22 44C34 38 39 30 38 19c-8 7-14 16-16 25z" fill="#2f6a3a"/>
-    <ellipse cx="22" cy="63" rx="16" ry="26.5" fill="#e9c640"/>
-    <g clip-path="url(#deco-pina)" stroke="#c4961a" stroke-width="1.3" opacity=".85">
-      <path d="M-6 40L50 96M-6 52L50 108M-6 28L50 84M-6 16L50 72M-6 4L50 60"/>
-      <path d="M50 40L-6 96M50 52L-6 108M50 28L-6 84M50 16L-6 72M50 4L-6 60"/>
-    </g>
-    <ellipse cx="15" cy="58" rx="3" ry="11" fill="#fff" opacity=".18"/>`, escala);
+  // Lirio araña rojo (Lycoris radiata): tallos verdes desnudos y gruesos, cada uno
+  // con una umbela de pétalos ondulados y rizados, y estambres larguísimos con
+  // la punta dorada que sobresalen en abanico.
+  const lirioArana = (escala = 1) => {
+    const f = (n) => Math.round(n * 10) / 10;
+    // pétalo curvado (apunta hacia arriba y se riza hacia la derecha)
+    const P = 'M0 0C-5 -7 -8 -14 -3 -21C0 -25 -1 -29 4 -31C6 -26 9 -23 7 -17C6 -11 3 -5 0 0Z';
+    const petalos = [[-140, .8], [-116, .95], [-92, 1.05], [-68, .9], [-44, 1.05], [-20, .95], [4, 1.1], [26, .9], [48, 1.05], [70, .95], [92, 1.05], [116, .92], [140, .8]];
+    const estambres = [[-118, .8], [-102, 1], [-86, .74], [-70, .96], [-54, .78], [-38, 1], [-22, .72], [-8, .94], [8, .8], [22, 1], [38, .74], [54, .96], [70, .78], [86, 1], [102, .76], [118, .9]];
+
+    const flor = (x, y, s, giro) => {
+      let g = '';
+      // estambres (detrás de los pétalos)
+      estambres.forEach(([a, r]) => {
+        const sg = a < 0 ? -1 : 1;
+        const ex = f(34 * r), ey = f(-52 * r);
+        g += `<g transform="scale(${sg} 1) rotate(${Math.abs(a)})">` +
+          `<path d="M0 0C${f(2 * r)} ${f(-20 * r)} ${f(12 * r)} ${f(-42 * r)} ${ex} ${ey}" stroke="#e4432c" stroke-width="1" stroke-linecap="round" fill="none"/>` +
+          `<ellipse cx="${ex}" cy="${ey}" rx="1.9" ry="2.6" transform="rotate(55 ${ex} ${ey})" fill="#f6bb3a"/></g>`;
+      });
+      // pétalos: capa oscura + capa clara + vena
+      petalos.forEach(([a, sc]) => {
+        const sg = a < 0 ? -1 : 1;
+        g += `<g transform="scale(${sg} 1) rotate(${Math.abs(a)}) scale(${f(1.22 * sc)})">` +
+          `<path d="${P}" fill="#a8101a"/>` +
+          `<path d="${P}" transform="translate(.6 -1.2) scale(.8)" fill="#ec3828"/>` +
+          `<path d="M0 -1C-2 -9 -2 -19 4 -29" stroke="#ff9877" stroke-width=".8" fill="none" opacity=".85"/></g>`;
+      });
+      return `<g transform="translate(${x} ${y}) rotate(${giro}) scale(${s})">${g}<circle r="2.6" fill="#8d0d16"/></g>`;
+    };
+
+    return svg(150, 250, `
+      <path d="M75 218C70 186 50 146 38 114" stroke="#5f6c25" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M75 218C77 160 74 108 76 66" stroke="#6d7b2c" stroke-width="3.8" fill="none" stroke-linecap="round"/>
+      <path d="M75 218C82 188 100 144 112 104" stroke="#5f6c25" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      ${flor(38, 112, 0.72, -10)}
+      ${flor(112, 102, 0.7, 12)}
+      ${flor(76, 62, 1, 0)}
+      <path d="M57 250h36c6-10 9-22 7-34-1-7-5-10-7-14H57c-2 4-6 7-7 14-2 12 1 24 7 34z" fill="#1f3a44"/>
+      <path d="M57 250c-6-10-9-22-7-34 1-7 5-10 7-14h5c-2 4-6 7-7 14-2 12 1 24 7 34z" fill="#2f5a68"/>
+      <rect x="55" y="196" width="40" height="8" rx="2.5" fill="#2a4b58"/>
+      <path d="M52 228h46" stroke="#d9b66a" stroke-width="2.2" opacity=".85"/>`, escala);
+  };
 
   const suculenta = (escala = 1) => {
     const petalos = [-64, -32, 0, 32, 64].map((a, i) =>
@@ -114,13 +144,13 @@
   // El lado se alterna solo: 1.º derecha, 3.º izquierda, 5.º derecha...
   // El número es el tamaño relativo (1 = ~un tercio del alto del estante).
   const DECORACIONES = [
-    () => maceta(1.35),        // 1.º  → maceta
-    () => cactus(1.3),         // 3.º  → cactus
-    () => librosCaidos(0.9),   // 5.º  → libros caídos de lado
-    () => jarronDorado(1.3),   // 7.º  → jarrón dorado
-    () => pina(1.15),          // 9.º  → piña
-    () => suculenta(1.0),      // 11.º → suculenta
-    () => marco(1.1),          // 13.º → marco con foto
+    () => maceta(2.1),        // 1.º  → maceta
+    () => cactus(2.2),         // 3.º  → cactus
+    () => librosCaidos(3),   // 5.º  → libros caídos de lado
+    () => jarronDorado(2.3),   // 7.º  → jarrón dorado
+    () => lirioArana(2.6),     // 9.º  → jarrón con lirios araña rojos
+    () => suculenta(1.6),      // 11.º → suculenta
+    () => marco(1.55),          // 13.º → marco con foto
   ];
 
   function crearDecoracion(adorno) {

@@ -2,6 +2,7 @@
 include ("../../app/config/config.php");
 include ("../../app/config/conexion.php");
 require_once ("../../app/helpers/cache_libro.php");
+require_once ("../../app/helpers/pdf_paginas.php");
 
 // Solo aceptar peticiones POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -147,7 +148,18 @@ try {
     }else{
         $disponibilidad=1;
     }
-    header("Location: " . $URL . "/admin/libros/?success=registrado");
+    $resultadoPaginas = 'omitido';
+    if ($rutaPdf) {
+        try {
+            $pdfAbsoluto = __DIR__ . '/../../' . $rutaPdf;
+            procesarPdfPaginas((int)$id_libro, $pdfAbsoluto);
+            $resultadoPaginas = 'procesado';
+        } catch (Throwable $e) {
+            error_log('Conversión de páginas del libro ' . $id_libro . ': ' . $e->getMessage());
+            $resultadoPaginas = 'pendiente';
+        }
+    }
+    header("Location: " . $URL . "/admin/libros/?success=registrado&paginas=" . $resultadoPaginas);
     exit;
 
 } catch (Exception $e) {

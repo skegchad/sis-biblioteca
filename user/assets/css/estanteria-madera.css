@@ -36,7 +36,7 @@
 
   /* tamaño base de un adorno: ~un tercio del alto libre del estante */
   --item-grande: calc((var(--alto-estante) - var(--borde-sup) - var(--plancha)) / 3);
-  --ancho-deco: 150px;     /* ancho del compartimento del adorno */
+  --ancho-deco: 220px;     /* ancho del compartimento del adorno */
 
   /* ---- el mueble ---- */
   position: relative;
@@ -144,8 +144,8 @@
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, .5), transparent 12%),
-    linear-gradient(90deg, rgba(0, 0, 0, .4), transparent 4%, transparent 96%, rgba(0, 0, 0, .4));
+    linear-gradient(180deg, rgba(0, 0, 0, .55), transparent 14%),
+    linear-gradient(90deg, rgba(0, 0, 0, .5), transparent 6%, transparent 94%, rgba(0, 0, 0, .5));
 }
 
 .estanteria-app .lienzo-estante .estante-vacio { color: #e8d9bd; }
@@ -229,6 +229,18 @@
   box-shadow:
     inset 8px 0 12px -8px rgba(0, 0, 0, .8),
     inset -8px 0 12px -8px rgba(0, 0, 0, .8);
+}
+
+/* sombra de profundidad (arriba y a los lados), igual que la del estante */
+.estanteria-app .estante-decoracion::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .55), transparent 14%),
+    linear-gradient(90deg, rgba(0, 0, 0, .55), transparent 12%, transparent 88%, rgba(0, 0, 0, .55));
 }
 
 .estanteria-app .deco-celda {

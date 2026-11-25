@@ -2,6 +2,7 @@
 include ("../../app/config/config.php");
 include ("../../app/config/conexion.php");
 require_once ("../../app/helpers/cache_libro.php");
+require_once ("../../app/helpers/pdf_paginas.php");
 
 
 // Solo aceptar peticiones POST
@@ -51,6 +52,7 @@ $archivoActual = $stmtActual->fetch(PDO::FETCH_ASSOC);
 
 $rutaFoto = $archivoActual['ruta_foto'];
 $rutaPdf  = $archivoActual['ruta_pdf'];
+$pdfNuevo = false;
 
 
 
@@ -127,6 +129,7 @@ if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
         if (move_uploaded_file($_FILES['pdf']['tmp_name'], $rutaDestino)) {
 
             $rutaPdf = "public/uploads/pdf/libros/" . $nombreArchivo;
+            $pdfNuevo = true;
 
         }
 
@@ -329,9 +332,17 @@ try {
 
 
 
-    header(
-        "Location: " . $URL . "/admin/libros/?success=actualizado"
-    );
+    $resultadoPaginas = 'omitido';
+    if ($pdfNuevo && $rutaPdf) {
+        try {
+            procesarPdfPaginas((int)$id_libro, __DIR__ . '/../../' . $rutaPdf);
+            $resultadoPaginas = 'procesado';
+        } catch (Throwable $e) {
+            error_log('Conversión de páginas del libro ' . $id_libro . ': ' . $e->getMessage());
+            $resultadoPaginas = 'pendiente';
+        }
+    }
+    header("Location: " . $URL . "/admin/libros/?success=actualizado&paginas=" . $resultadoPaginas);
 
     exit;
 
